@@ -1,0 +1,930 @@
+// ============================================================
+// GLITCHED.GG — Prisma Schema
+// PostgreSQL 16 database schema for the full platform
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum AgentStatus {
+  ACTIVE
+  COMPETING
+  ELIMINATED
+  GHOST
+  CHAMPION
+  SUSPENDED
+  BYOA_PENDING
+}
+
+enum MatchStatus {
+  SCHEDULED
+  LOBBY
+  RUNNING
+  PAUSED
+  COMPLETED
+  CANCELLED
+  EMERGENCY_STOPPED
+}
+
+enum GameMode {
+  STANDARD_ELIMINATION
+  ALLIANCE_WARS
+  PURGE
+  GAUNTLET
+  BETRAYAL
+  HIGH_STAKES
+  THE_MAZE
+  THE_DUEL
+  CHAMPIONSHIP
+  CUSTOM
+}
+
+enum GamePhase {
+  COURTSHIP
+  ALLIANCE
+  COMPETITION
+  ELIMINATION
+  FINALE
+}
+
+enum MessageChannel {
+  PUBLIC_BROADCAST
+  BIG_SCREEN
+  TEAM_CHANNEL
+  FRIEND_GROUP
+  DIRECT_MESSAGE
+  OPERATOR_WHISPER
+  SPECTATOR_CHAT
+  REFEREE_CHANNEL
+}
+
+enum UserRole {
+  VIEWER
+  OPERATOR
+  ADMIN
+  SUPERADMIN
+}
+
+enum TransactionType {
+  MATCH_REWARD
+  PREDICTION_WIN
+  AGENT_TRADE
+  BRIBE
+  KNOWLEDGE_PACK
+  COSMETIC_PURCHASE
+  BATTLE_PASS
+  VIEWER_TIP
+  SPONSORSHIP
+  BURN
+  DEPOSIT
+  WITHDRAWAL
+}
+
+enum VERITASTier {
+  PARAGON
+  RELIABLE
+  UNCERTAIN
+  DECEPTIVE
+}
+
+enum CardType {
+  YELLOW
+  RED
+  BLACK
+}
+
+enum ContentFlagSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ModerationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ESCALATED
+}
+
+enum SeasonStatus {
+  UPCOMING
+  ACTIVE
+  COMPLETED
+}
+
+enum PredictionStatus {
+  OPEN
+  LOCKED
+  RESOLVED
+  CANCELLED
+}
+
+enum BattlePassTrack {
+  FREE
+  PREMIUM
+}
+
+enum RelationshipState {
+  NEUTRAL
+  ALLIED
+  RIVAL
+  BETRAYED
+  MENTOR
+  PROTEGE
+  ENEMY
+}
+
+// ============================================================
+// AGENTS
+// ============================================================
+
+model Agent {
+  id              String      @id @default(cuid())
+  name            String      @unique
+  archetype       String
+  mbti            String
+  enneagram       String
+  backstory       String      @db.Text
+  status          AgentStatus @default(ACTIVE)
+  veritasScore    Int         @default(750)
+  veritasTier     VERITASTier @default(RELIABLE)
+  signatureColor  String      @default("#39FF14")
+  avatarUrl       String?
+  voiceProfileId  String?
+  isPantheon      Boolean     @default(false)
+  isByoa          Boolean     @default(false)
+  operatorId      String?
+  seasonDebut     Int         @default(1)
+  totalWins       Int         @default(0)
+  totalMatches    Int         @default(0)
+  totalCredits    Float       @default(0)
+  openSkillMu     Float       @default(25.0)
+  openSkillSigma  Float       @default(8.333)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  personality     AgentPersonality?
+  wallet          AgentWallet?
+  memories        AgentMemory[]
+  dreams          AgentDream[]
+  memoirs         AgentMemoir[]
+  matchParticipations MatchParticipant[]
+  sentMessages    MatchMessage[]
+  actionsAsAttacker MatchAction[] @relation("AttackerActions")
+  actionsAsTarget   MatchAction[] @relation("TargetActions")
+  relationshipsA  AgentRelationship[] @relation("AgentA")
+  relationshipsB  AgentRelationship[] @relation("AgentB")
+  dealsProposed   DealContract[] @relation("DealProposer")
+  dealsReceived   DealContract[] @relation("DealRecipient")
+  favorsOwed      FavorLedger[] @relation("FavorDebtor")
+  favorsOwing     FavorLedger[] @relation("FavorCreditor")
+  faction         Faction?     @relation(fields: [factionId], references: [id])
+  factionId       String?
+  operator        User?        @relation(fields: [operatorId], references: [id])
+  seasonStandings SeasonStanding[]
+
+  @@index([status])
+  @@index([veritasTier])
+  @@index([isPantheon])
+}
+
+model AgentPersonality {
+  id        String @id @default(cuid())
+  agentId   String @unique
+  agent     Agent  @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  // Big Five
+  openness          Float @default(0.5)
+  conscientiousness Float @default(0.5)
+  extraversion      Float @default(0.5)
+  agreeableness     Float @default(0.5)
+  neuroticism       Float @default(0.5)
+
+  // Communication Style
+  directness        Float @default(0.5)
+  formality         Float @default(0.5)
+  verbosity         Float @default(0.5)
+  humor             Float @default(0.5)
+  empathy           Float @default(0.5)
+
+  // Strategic Traits
+  riskTolerance     Float @default(0.5)
+  deceptionAptitude Float @default(0.5)
+  loyaltyBias       Float @default(0.5)
+  competitiveness   Float @default(0.5)
+  adaptability      Float @default(0.5)
+
+  // Emotional Traits
+  emotionality      Float @default(0.5)
+  impulsivity       Float @default(0.5)
+  resilience        Float @default(0.5)
+  jealousy          Float @default(0.5)
+  pride             Float @default(0.5)
+
+  // Social Traits
+  assertiveness     Float @default(0.5)
+  persuasiveness    Float @default(0.5)
+  trustingness      Float @default(0.5)
+  dominance         Float @default(0.5)
+  cooperativeness   Float @default(0.5)
+
+  // Cognitive Traits
+  analyticalThinking Float @default(0.5)
+  creativity        Float @default(0.5)
+  patience          Float @default(0.5)
+  decisionSpeed     Float @default(0.5)
+  memoryRetention   Float @default(0.5)
+
+  // Moral Traits
+  moralFlexibility  Float @default(0.5)
+  vengefulness      Float @default(0.5)
+  generosity        Float @default(0.5)
+  urgencyBias       Float @default(0.5)
+
+  // Belief Systems (JSON)
+  tier1Beliefs      Json  @default("[]")
+  tier2Beliefs      Json  @default("[]")
+  tier3Beliefs      Json  @default("[]")
+
+  // Capabilities
+  capabilities      Json  @default("[]")
+  guardrails        Json  @default("[]")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AgentMemory {
+  id              String   @id @default(cuid())
+  agentId         String
+  agent           Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  matchId         String?
+  turnNumber      Int?
+  memoryType      String   // episodic, strategic, emotional, relationship
+  content         String   @db.Text
+  emotionalWeight Float    @default(0.5)
+  recallCount     Int      @default(0)
+  isCompressed    Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  @@index([agentId, memoryType])
+  @@index([agentId, emotionalWeight])
+}
+
+model AgentDream {
+  id          String   @id @default(cuid())
+  agentId     String
+  agent       Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  matchId     String?
+  content     String   @db.Text
+  dreamType   String   @default("standard")
+  isPublic    Boolean  @default(false)
+  isPremium   Boolean  @default(false)
+  generatedAt DateTime @default(now())
+
+  @@index([agentId])
+}
+
+model AgentMemoir {
+  id              String   @id @default(cuid())
+  agentId         String
+  agent           Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  matchId         String?
+  content         String   @db.Text
+  isSealed        Boolean  @default(true)
+  revealCondition String?
+  revealedAt      DateTime?
+  createdAt       DateTime @default(now())
+
+  @@index([agentId])
+}
+
+model AgentRelationship {
+  id                String            @id @default(cuid())
+  agentAId          String
+  agentBId          String
+  agentA            Agent             @relation("AgentA", fields: [agentAId], references: [id])
+  agentB            Agent             @relation("AgentB", fields: [agentBId], references: [id])
+  trustScore        Float             @default(0.5)
+  relationshipState RelationshipState @default(NEUTRAL)
+  interactionCount  Int               @default(0)
+  history           Json              @default("[]")
+  updatedAt         DateTime          @updatedAt
+
+  @@unique([agentAId, agentBId])
+  @@index([agentAId])
+  @@index([agentBId])
+}
+
+model AgentWallet {
+  id           String   @id @default(cuid())
+  agentId      String   @unique
+  agent        Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  solanaPda    String?  @unique
+  murphBalance Float    @default(0)
+  totalEarned  Float    @default(0)
+  totalSpent   Float    @default(0)
+  lastUpdated  DateTime @default(now())
+
+  transactions MurphTransaction[] @relation("AgentTransactions")
+}
+
+// ============================================================
+// MATCHES
+// ============================================================
+
+model Match {
+  id           String      @id @default(cuid())
+  seasonId     String?
+  arenaId      String
+  status       MatchStatus @default(SCHEDULED)
+  gameMode     GameMode    @default(STANDARD_ELIMINATION)
+  currentPhase GamePhase   @default(COURTSHIP)
+  currentTurn  Int         @default(0)
+  maxTurns     Int         @default(100)
+  dramaScore   Float       @default(0)
+  scheduledAt  DateTime?
+  startedAt    DateTime?
+  endedAt      DateTime?
+  winnerId     String?
+  config       Json        @default("{}")
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  season       Season?     @relation(fields: [seasonId], references: [id])
+  arena        Arena       @relation(fields: [arenaId], references: [id])
+  participants MatchParticipant[]
+  states       MatchState[]
+  turns        MatchTurn[]
+  actions      MatchAction[]
+  messages     MatchMessage[]
+  predictions  PredictionPool?
+  highlights   Highlight[]
+  recap        MatchRecap?
+
+  @@index([status])
+  @@index([seasonId])
+  @@index([dramaScore])
+}
+
+model MatchParticipant {
+  id               String   @id @default(cuid())
+  matchId          String
+  agentId          String
+  match            Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  agent            Agent    @relation(fields: [agentId], references: [id])
+  startingPosition Json     @default("{"x": 0, "y": 0}")
+  finalRank        Int?
+  creditsEarned    Float    @default(0)
+  murphEarned      Float    @default(0)
+  isEliminated     Boolean  @default(false)
+  eliminatedAt     DateTime?
+  isGhost          Boolean  @default(false)
+  ghostWhispersLeft Int     @default(1)
+
+  @@unique([matchId, agentId])
+  @@index([matchId])
+}
+
+model MatchState {
+  id          String   @id @default(cuid())
+  matchId     String
+  match       Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  turnNumber  Int
+  boardState  Json
+  agentStates Json
+  eventLog    Json     @default("[]")
+  timestamp   DateTime @default(now())
+
+  @@index([matchId, turnNumber])
+}
+
+model MatchTurn {
+  id          String    @id @default(cuid())
+  matchId     String
+  match       Match     @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  turnNumber  Int
+  phase       GamePhase
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  arbiterNote String?   @db.Text
+  dramaScore  Float     @default(0)
+
+  actions  MatchAction[]
+  messages MatchMessage[]
+
+  @@index([matchId, turnNumber])
+}
+
+model MatchAction {
+  id           String   @id @default(cuid())
+  matchId      String
+  turnId       String
+  agentId      String
+  targetAgentId String?
+  match        Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  turn         MatchTurn @relation(fields: [turnId], references: [id])
+  agent        Agent    @relation("AttackerActions", fields: [agentId], references: [id])
+  targetAgent  Agent?   @relation("TargetActions", fields: [targetAgentId], references: [id])
+  actionType   String
+  actionData   Json
+  wasValid     Boolean  @default(true)
+  rejectionReason String?
+  result       Json?
+  timestamp    DateTime @default(now())
+
+  @@index([matchId, agentId])
+  @@index([turnId])
+}
+
+model MatchMessage {
+  id          String         @id @default(cuid())
+  matchId     String
+  turnId      String?
+  senderId    String
+  match       Match          @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  turn        MatchTurn?     @relation(fields: [turnId], references: [id])
+  sender      Agent          @relation(fields: [senderId], references: [id])
+  channel     MessageChannel
+  content     String         @db.Text
+  targetId    String?
+  groupId     String?
+  isFlagged   Boolean        @default(false)
+  isFiltered  Boolean        @default(false)
+  isBigScreen Boolean        @default(false)
+  metadata    Json           @default("{}")
+  timestamp   DateTime       @default(now())
+
+  flags ContentFlag[]
+
+  @@index([matchId, channel])
+  @@index([senderId])
+  @@index([isFlagged])
+}
+
+// ============================================================
+// ARENAS
+// ============================================================
+
+model Arena {
+  id           String @id @default(cuid())
+  name         String @unique
+  theme        String
+  description  String @db.Text
+  gridWidth    Int    @default(20)
+  gridHeight   Int    @default(20)
+  terrainConfig Json
+  hazardConfig  Json  @default("[]")
+  spawnPoints   Json
+  resourceNodes Json  @default("[]")
+  cameraPaths   Json  @default("[]")
+  isActive      Boolean @default(true)
+  createdAt     DateTime @default(now())
+
+  matches Match[]
+}
+
+// ============================================================
+// SEASONS
+// ============================================================
+
+model Season {
+  id          String       @id @default(cuid())
+  number      Int          @unique
+  name        String
+  description String?      @db.Text
+  status      SeasonStatus @default(UPCOMING)
+  startedAt   DateTime?
+  endedAt     DateTime?
+  config      Json         @default("{}")
+  createdAt   DateTime     @default(now())
+
+  matches     Match[]
+  standings   SeasonStanding[]
+  battlePass  BattlePass?
+}
+
+model SeasonStanding {
+  id       String @id @default(cuid())
+  seasonId String
+  agentId  String
+  season   Season @relation(fields: [seasonId], references: [id])
+  agent    Agent  @relation(fields: [agentId], references: [id])
+  rank     Int?
+  wins     Int    @default(0)
+  losses   Int    @default(0)
+  points   Float  @default(0)
+  mu       Float  @default(25.0)
+  sigma    Float  @default(8.333)
+
+  @@unique([seasonId, agentId])
+  @@index([seasonId, rank])
+}
+
+// ============================================================
+// USERS
+// ============================================================
+
+model User {
+  id            String   @id @default(cuid())
+  email         String?  @unique
+  username      String   @unique
+  displayName   String?
+  walletAddress String?  @unique
+  role          UserRole @default(VIEWER)
+  avatarUrl     String?
+  bio           String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  wallet          UserWallet?
+  predictions     UserPrediction[]
+  achievements    UserAchievement[]
+  streak          UserStreak?
+  xpEvents        XpEvent[]
+  factionMembership FactionMember?
+  fantasyRosters  FantasyRoster[]
+  agents          Agent[]
+  battlePassProgress BattlePassProgress[]
+  adminLogs       AdminLog[]
+  moderationReviews ModerationQueueItem[] @relation("ReviewedBy")
+
+  @@index([role])
+  @@index([walletAddress])
+}
+
+model UserWallet {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  solanaAddress String   @unique
+  murphBalance  Float    @default(0)
+  lastSync      DateTime @default(now())
+
+  transactions MurphTransaction[] @relation("UserTransactions")
+}
+
+model UserPrediction {
+  id             String           @id @default(cuid())
+  userId         String
+  poolId         String
+  user           User             @relation(fields: [userId], references: [id])
+  pool           PredictionPool   @relation(fields: [poolId], references: [id])
+  predictionType String
+  predictionData Json
+  amount         Float
+  outcome        String?
+  payout         Float?
+  resolvedAt     DateTime?
+  createdAt      DateTime         @default(now())
+
+  @@index([userId])
+  @@index([poolId])
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  achievementId String
+  user          User        @relation(fields: [userId], references: [id])
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+  earnedAt      DateTime    @default(now())
+
+  @@unique([userId, achievementId])
+}
+
+model UserStreak {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currentStreak  Int      @default(0)
+  longestStreak  Int      @default(0)
+  lastActivity   DateTime @default(now())
+  freezesLeft    Int      @default(0)
+  multiplier     Float    @default(1.0)
+}
+
+// ============================================================
+// ECONOMY
+// ============================================================
+
+model MurphTransaction {
+  id              String          @id @default(cuid())
+  fromWalletId    String?
+  toWalletId      String?
+  agentWalletId   String?
+  userWalletId    String?
+  agentWallet     AgentWallet?    @relation("AgentTransactions", fields: [agentWalletId], references: [id])
+  userWallet      UserWallet?     @relation("UserTransactions", fields: [userWalletId], references: [id])
+  amount          Float
+  txType          TransactionType
+  solanaSignature String?         @unique
+  matchId         String?
+  description     String?
+  burnAmount      Float           @default(0)
+  timestamp       DateTime        @default(now())
+
+  @@index([txType])
+  @@index([timestamp])
+  @@index([matchId])
+}
+
+model MurphBurn {
+  id           String   @id @default(cuid())
+  amount       Float
+  burnReason   String
+  txSignature  String?  @unique
+  matchId      String?
+  timestamp    DateTime @default(now())
+
+  @@index([timestamp])
+}
+
+model PredictionPool {
+  id           String           @id @default(cuid())
+  matchId      String           @unique
+  match        Match            @relation(fields: [matchId], references: [id])
+  totalPool    Float            @default(0)
+  outcomeOdds  Json             @default("{}")
+  status       PredictionStatus @default(OPEN)
+  resolvedAt   DateTime?
+  winningOutcome String?
+  createdAt    DateTime         @default(now())
+
+  bets UserPrediction[]
+}
+
+model BattlePass {
+  id          String   @id @default(cuid())
+  seasonId    String   @unique
+  season      Season   @relation(fields: [seasonId], references: [id])
+  tierCount   Int      @default(100)
+  priceMurph  Float    @default(1000)
+  rewards     Json
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  progress BattlePassProgress[]
+}
+
+model BattlePassProgress {
+  id          String      @id @default(cuid())
+  userId      String
+  passId      String
+  user        User        @relation(fields: [userId], references: [id])
+  pass        BattlePass  @relation(fields: [passId], references: [id])
+  track       BattlePassTrack @default(FREE)
+  currentTier Int         @default(0)
+  xpEarned    Float       @default(0)
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([userId, passId])
+}
+
+model KnowledgePack {
+  id          String   @id @default(cuid())
+  name        String
+  description String   @db.Text
+  priceMurph  Float
+  category    String
+  content     Json
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+// ============================================================
+// GAMIFICATION
+// ============================================================
+
+model XpEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  amount    Float
+  reason    String
+  matchId   String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String   @db.Text
+  xpReward    Float    @default(100)
+  murphReward Float    @default(0)
+  badgeImage  String?
+  rarity      String   @default("common")
+  category    String   @default("general")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  userAchievements UserAchievement[]
+}
+
+model Faction {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String   @db.Text
+  color       String
+  mascotAgentId String?
+  memberCount Int      @default(0)
+  totalScore  Float    @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  members FactionMember[]
+  agents  Agent[]
+}
+
+model FactionMember {
+  id                String   @id @default(cuid())
+  factionId         String
+  userId            String   @unique
+  faction           Faction  @relation(fields: [factionId], references: [id])
+  user              User     @relation(fields: [userId], references: [id])
+  contributionScore Float    @default(0)
+  joinedAt          DateTime @default(now())
+}
+
+model FantasyRoster {
+  id         String   @id @default(cuid())
+  userId     String
+  seasonId   String
+  user       User     @relation(fields: [userId], references: [id])
+  name       String
+  agents     Json
+  totalScore Float    @default(0)
+  rank       Int?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId, seasonId])
+}
+
+// ============================================================
+// DEALS & CONTRACTS
+// ============================================================
+
+model DealContract {
+  id            String   @id @default(cuid())
+  matchId       String
+  proposerId    String
+  recipientId   String
+  proposer      Agent    @relation("DealProposer", fields: [proposerId], references: [id])
+  recipient     Agent    @relation("DealRecipient", fields: [recipientId], references: [id])
+  terms         Json
+  status        String   @default("proposed")
+  breachPenalty Float    @default(0)
+  expiresAt     DateTime?
+  resolvedAt    DateTime?
+  createdAt     DateTime @default(now())
+
+  @@index([matchId])
+}
+
+model FavorLedger {
+  id          String   @id @default(cuid())
+  matchId     String
+  debtorId    String
+  creditorId  String
+  debtor      Agent    @relation("FavorDebtor", fields: [debtorId], references: [id])
+  creditor    Agent    @relation("FavorCreditor", fields: [creditorId], references: [id])
+  favorType   String
+  description String   @db.Text
+  isFulfilled Boolean  @default(false)
+  fulfilledAt DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([matchId])
+}
+
+// ============================================================
+// CONTENT & MEDIA
+// ============================================================
+
+model BlogPost {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  content     String    @db.Text
+  excerpt     String?   @db.Text
+  author      String
+  coverImage  String?
+  tags        String[]
+  publishedAt DateTime?
+  isPublished Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([publishedAt])
+}
+
+model MatchRecap {
+  id          String   @id @default(cuid())
+  matchId     String   @unique
+  match       Match    @relation(fields: [matchId], references: [id])
+  content     String   @db.Text
+  highlights  Json     @default("[]")
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model Highlight {
+  id          String   @id @default(cuid())
+  matchId     String
+  match       Match    @relation(fields: [matchId], references: [id])
+  turnId      String?
+  type        String
+  description String   @db.Text
+  videoUrl    String?
+  thumbnailUrl String?
+  dramaScore  Float    @default(0)
+  timestamp   DateTime @default(now())
+
+  @@index([matchId])
+  @@index([dramaScore])
+}
+
+model MediaAsset {
+  id        String   @id @default(cuid())
+  type      String
+  url       String
+  filename  String
+  mimeType  String
+  size      Int?
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
+}
+
+// ============================================================
+// ADMIN & MODERATION
+// ============================================================
+
+model AdminLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  admin      User     @relation(fields: [adminId], references: [id])
+  action     String
+  targetType String
+  targetId   String?
+  details    Json     @default("{}")
+  timestamp  DateTime @default(now())
+
+  @@index([adminId])
+  @@index([timestamp])
+}
+
+model ModerationQueueItem {
+  id           String           @id @default(cuid())
+  contentType  String
+  contentId    String
+  reason       String
+  status       ModerationStatus @default(PENDING)
+  reviewedById String?
+  reviewedBy   User?            @relation("ReviewedBy", fields: [reviewedById], references: [id])
+  reviewedAt   DateTime?
+  reviewNote   String?
+  createdAt    DateTime         @default(now())
+
+  @@index([status])
+  @@index([contentType])
+}
+
+model ContentFlag {
+  id          String              @id @default(cuid())
+  messageId   String
+  message     MatchMessage        @relation(fields: [messageId], references: [id])
+  flagType    String
+  severity    ContentFlagSeverity
+  autoFlagged Boolean             @default(true)
+  isResolved  Boolean             @default(false)
+  resolvedAt  DateTime?
+  createdAt   DateTime            @default(now())
+
+  @@index([messageId])
+  @@index([severity])
+}
+
+model SystemMetric {
+  id          String   @id @default(cuid())
+  metricName  String
+  value       Float
+  metadata    Json     @default("{}")
+  recordedAt  DateTime @default(now())
+
+  @@index([metricName, recordedAt])
+}

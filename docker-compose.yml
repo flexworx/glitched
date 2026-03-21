@@ -1,0 +1,83 @@
+version: '3.9'
+
+services:
+  glitched-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: glitched-web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3003:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+    env_file:
+      - .env.local
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - glitched-ws
+      - glitched-engine
+    networks:
+      - glitched-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  glitched-ws:
+    build:
+      context: .
+      dockerfile: Dockerfile.ws
+    container_name: glitched-ws
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3004:3001"
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env.local
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    security_opt:
+      - seccomp:unconfined
+    networks:
+      - glitched-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  glitched-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile.engine
+    container_name: glitched-engine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3005:3002"
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env.local
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    security_opt:
+      - seccomp:unconfined
+    networks:
+      - glitched-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+networks:
+  glitched-network:
+    driver: bridge

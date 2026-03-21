@@ -1,0 +1,127 @@
+import type { Config } from 'tailwindcss'
+
+const config: Config = {
+  content: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        'arena-black': '#0a0a0f',
+        'arena-dark': '#111118',
+        'arena-mid': '#1a1a24',
+        'arena-surface': '#22222e',
+        'arena-border': '#2a2a3a',
+        'neon-green': '#39FF14',
+        'neon-green-dim': '#1a7a0a',
+        'electric-blue': '#00D4FF',
+        'electric-blue-dim': '#005f73',
+        'deep-purple': '#7B2FBE',
+        'deep-purple-dim': '#3d1760',
+        'neon-pink': '#FF006E',
+        'neon-yellow': '#FFD60A',
+        'neon-orange': '#FF6B35',
+        'primus-gold': '#FFD700',
+        'cerberus-steel': '#708090',
+        'solarius-orange': '#FF6B35',
+        'aurum-amber': '#FFBF00',
+        'mythion-violet': '#8B5CF6',
+        'arion-cyan': '#06B6D4',
+        'vanguard-teal': '#14B8A6',
+        'oracle-indigo': '#6366F1',
+        'veritas-paragon': '#39FF14',
+        'veritas-reliable': '#00D4FF',
+        'veritas-uncertain': '#FFD60A',
+        'veritas-deceptive': '#FF006E',
+        'status-alive': '#39FF14',
+        'status-ghost': '#7B2FBE',
+        'status-eliminated': '#FF006E',
+        'status-champion': '#FFD700',
+      },
+      fontFamily: {
+        'space-grotesk': ['Space Grotesk', 'sans-serif'],
+        'orbitron': ['Orbitron', 'monospace'],
+        'jetbrains': ['JetBrains Mono', 'monospace'],
+        'inter': ['Inter', 'sans-serif'],
+      },
+      animation: {
+        'glitch': 'glitch 0.3s ease-in-out infinite',
+        'glitch-slow': 'glitch 1.5s ease-in-out infinite',
+        'pulse-neon': 'pulse-neon 2s ease-in-out infinite',
+        'float': 'float 3s ease-in-out infinite',
+        'scan-line': 'scan-line 4s linear infinite',
+        'neon-border': 'neon-border 2s ease-in-out infinite',
+        'slide-up': 'slide-up 0.3s ease-out',
+        'fade-in': 'fade-in 0.5s ease-out',
+        'scale-in': 'scale-in 0.2s ease-out',
+        'shake': 'shake 0.5s ease-in-out',
+        'spin-slow': 'spin 8s linear infinite',
+      },
+      keyframes: {
+        glitch: {
+          '0%, 100%': { transform: 'translate(0)', filter: 'none' },
+          '20%': { transform: 'translate(-2px, 2px)', filter: 'hue-rotate(90deg)' },
+          '40%': { transform: 'translate(2px, -2px)', filter: 'hue-rotate(180deg)' },
+          '60%': { transform: 'translate(-1px, 1px)', filter: 'hue-rotate(270deg)' },
+          '80%': { transform: 'translate(1px, -1px)', filter: 'hue-rotate(360deg)' },
+        },
+        'pulse-neon': {
+          '0%, 100%': { boxShadow: '0 0 5px #39FF14, 0 0 10px #39FF14, 0 0 20px #39FF14' },
+          '50%': { boxShadow: '0 0 10px #39FF14, 0 0 20px #39FF14, 0 0 40px #39FF14, 0 0 80px #39FF14' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        'scan-line': {
+          '0%': { transform: 'translateY(-100%)' },
+          '100%': { transform: 'translateY(100vh)' },
+        },
+        'neon-border': {
+          '0%, 100%': { borderColor: '#39FF14' },
+          '33%': { borderColor: '#00D4FF' },
+          '66%': { borderColor: '#7B2FBE' },
+        },
+        'slide-up': {
+          '0%': { transform: 'translateY(20px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        'scale-in': {
+          '0%': { transform: 'scale(0.9)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        shake: {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '25%': { transform: 'translateX(-5px)' },
+          '75%': { transform: 'translateX(5px)' },
+        },
+      },
+      boxShadow: {
+        'neon-green': '0 0 10px #39FF14, 0 0 20px #39FF14',
+        'neon-blue': '0 0 10px #00D4FF, 0 0 20px #00D4FF',
+        'neon-purple': '0 0 10px #7B2FBE, 0 0 20px #7B2FBE',
+        'neon-pink': '0 0 10px #FF006E, 0 0 20px #FF006E',
+        'neon-gold': '0 0 10px #FFD700, 0 0 20px #FFD700',
+        'inner-glow': 'inset 0 0 20px rgba(57, 255, 20, 0.1)',
+        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.3)',
+        'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.7), 0 4px 6px -4px rgba(0, 0, 0, 0.5)',
+      },
+      backgroundImage: {
+        'grid-pattern': 'linear-gradient(rgba(57, 255, 20, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(57, 255, 20, 0.05) 1px, transparent 1px)',
+        'arena-gradient': 'radial-gradient(ellipse at center, #1a1a24 0%, #0a0a0f 70%)',
+        'hero-gradient': 'linear-gradient(135deg, #0a0a0f 0%, #111118 50%, #0a0a0f 100%)',
+        'card-gradient': 'linear-gradient(135deg, #1a1a24 0%, #111118 100%)',
+        'neon-gradient': 'linear-gradient(90deg, #39FF14, #00D4FF, #7B2FBE)',
+      },
+    },
+  },
+  plugins: [],
+}
+
+export default config
