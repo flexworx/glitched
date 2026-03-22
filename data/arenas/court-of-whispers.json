@@ -1,0 +1,45 @@
+{
+  "id": "court-of-whispers",
+  "name": "Court of Whispers",
+  "description": "An opulent palace where every wall has ears and alliances shift like shadows.",
+  "gridSize": 8,
+  "theme": "political",
+  "background": "#0a0008",
+  "tiles": [
+    {
+      "type": "fortress",
+      "positions": [
+        [
+          4,
+          4
+        ]
+      ]
+    },
+    {
+      "type": "resource",
+      "positions": [
+        [
+          1,
+          1
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          1,
+          6
+        ],
+        [
+          6,
+          1
+        ]
+      ]
+    }
+  ],
+  "specialRules": [
+    "All negotiations are public",
+    "Betrayals deal +50% damage",
+    "Small grid forces constant interaction"
+  ]
+}

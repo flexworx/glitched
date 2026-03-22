@@ -1,0 +1,53 @@
+{
+  "id": "savanna",
+  "name": "The Savanna",
+  "description": "Open grasslands with watering holes, acacia trees, and predator zones.",
+  "gridSize": 15,
+  "theme": "nature",
+  "background": "#1a1200",
+  "tiles": [
+    {
+      "type": "resource",
+      "positions": [
+        [
+          7,
+          7
+        ],
+        [
+          3,
+          12
+        ],
+        [
+          12,
+          3
+        ]
+      ]
+    },
+    {
+      "type": "hazard",
+      "positions": [
+        [
+          0,
+          0
+        ],
+        [
+          14,
+          14
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          0,
+          7
+        ]
+      ]
+    }
+  ],
+  "specialRules": [
+    "Watering holes force encounters",
+    "Open terrain reduces stealth",
+    "Large grid rewards mobility"
+  ]
+}

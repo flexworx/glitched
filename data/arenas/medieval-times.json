@@ -1,0 +1,62 @@
+{
+  "id": "medieval-times",
+  "name": "Medieval Times",
+  "description": "A stone fortress arena with towers, dungeons, and secret passages.",
+  "gridSize": 10,
+  "theme": "medieval",
+  "background": "#1a0a00",
+  "tiles": [
+    {
+      "type": "fortress",
+      "positions": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          9
+        ],
+        [
+          9,
+          0
+        ],
+        [
+          9,
+          9
+        ]
+      ]
+    },
+    {
+      "type": "hazard",
+      "positions": [
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          5
+        ]
+      ]
+    },
+    {
+      "type": "resource",
+      "positions": [
+        [
+          2,
+          7
+        ],
+        [
+          7,
+          2
+        ]
+      ]
+    }
+  ],
+  "specialRules": [
+    "Towers grant +10 defense",
+    "Dungeon tiles hide agent position",
+    "Secret passages allow teleportation"
+  ]
+}

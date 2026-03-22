@@ -1,0 +1,54 @@
+{
+  "id": "neon-dystopia",
+  "name": "Neon Dystopia",
+  "description": "A cyberpunk cityscape with hacking terminals, corporate towers, and dark alleyways.",
+  "gridSize": 12,
+  "theme": "cyberpunk",
+  "background": "#000011",
+  "tiles": [
+    {
+      "type": "resource",
+      "positions": [
+        [
+          3,
+          3
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          5,
+          10
+        ]
+      ]
+    },
+    {
+      "type": "hazard",
+      "positions": [
+        [
+          6,
+          6
+        ]
+      ]
+    },
+    {
+      "type": "fortress",
+      "positions": [
+        [
+          0,
+          6
+        ],
+        [
+          11,
+          6
+        ]
+      ]
+    }
+  ],
+  "specialRules": [
+    "Hacking terminals reveal enemy positions",
+    "Corporate towers grant resource bonuses",
+    "Alleyways enable stealth movement"
+  ]
+}

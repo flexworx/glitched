@@ -1,0 +1,11 @@
+{
+  "id": "deception-toolkit",
+  "name": "Deception Toolkit",
+  "description": "Enhances deception and manipulation capabilities",
+  "price": 250,
+  "traits": {
+    "deceptiveness": 0.15,
+    "charisma": 0.05
+  },
+  "rarity": "rare"
+}

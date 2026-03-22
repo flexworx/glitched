@@ -1,0 +1,11 @@
+{
+  "id": "combat-specialization",
+  "name": "Combat Specialization",
+  "description": "Dramatically boosts combat effectiveness",
+  "price": 750,
+  "traits": {
+    "aggressiveness": 0.2,
+    "riskTolerance": 0.15
+  },
+  "rarity": "epic"
+}

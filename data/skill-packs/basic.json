@@ -1,0 +1,10 @@
+{
+  "id": "basic",
+  "name": "Basic Pack",
+  "description": "Starter enhancements for new BYOA agents",
+  "price": 0,
+  "traits": {
+    "adaptability": 0.05
+  },
+  "rarity": "common"
+}

@@ -1,76 +1,70 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AdminLayout } from '@/components/layout/AdminLayout';
+import { useAdmin } from '@/hooks/useAdmin';
 
 export default function AdminSystemPage() {
-  const [metrics, setMetrics] = useState(Array.from({ length: 20 }, (_, i) => ({
-    t: i,
-    cpu: Math.floor(Math.random() * 30) + 20,
-    mem: Math.floor(Math.random() * 20) + 40,
-    rps: Math.floor(Math.random() * 100) + 200,
-  })));
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMetrics(prev => [...prev.slice(-19), {
-        t: prev[prev.length - 1].t + 1,
-        cpu: Math.floor(Math.random() * 30) + 20,
-        mem: Math.floor(Math.random() * 20) + 40,
-        rps: Math.floor(Math.random() * 100) + 200,
-      }]);
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
+  const { stats } = useAdmin();
 
   const services = [
-    { name: 'Next.js Web', status: 'healthy', uptime: '99.97%', port: 3000 },
-    { name: 'WebSocket Server', status: 'healthy', uptime: '99.95%', port: 3001 },
-    { name: 'Game Engine', status: 'healthy', uptime: '99.98%', port: 3002 },
-    { name: 'PostgreSQL', status: 'healthy', uptime: '100%', port: 5432 },
-    { name: 'Claude API', status: 'healthy', uptime: '99.9%', port: 443 },
-    { name: 'ElevenLabs API', status: 'healthy', uptime: '99.8%', port: 443 },
+    { name:'Next.js Web', port:3000, status:'healthy', uptime:'99.9%', latency:'12ms' },
+    { name:'WebSocket Server', port:3001, status:'healthy', uptime:'99.7%', latency:'4ms' },
+    { name:'Game Engine', port:3002, status:'healthy', uptime:'99.8%', latency:'8ms' },
+    { name:'PostgreSQL', port:5432, status:'healthy', uptime:'100%', latency:'2ms' },
+    { name:'Anthropic Claude API', port:443, status:'healthy', uptime:'99.5%', latency:'340ms' },
+    { name:'Solana RPC', port:443, status:'healthy', uptime:'99.2%', latency:'180ms' },
   ];
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="font-orbitron text-xl text-neon-green uppercase tracking-widest">System Health</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <AdminLayout>
+      <div className="mb-6">
+        <h1 className="text-2xl font-black font-space-grotesk text-white">System Health</h1>
+        <p className="text-white/40 text-sm mt-1">Real-time infrastructure monitoring</p>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {[
-          { label: 'CPU Usage', key: 'cpu', color: '#39FF14', suffix: '%' },
-          { label: 'Memory Usage', key: 'mem', color: '#00D4FF', suffix: '%' },
-          { label: 'Requests/sec', key: 'rps', color: '#FFBF00', suffix: '' },
-        ].map(({ label, key, color, suffix }) => (
-          <div key={key} className="bg-arena-surface border border-arena-border p-4">
-            <h3 className="font-orbitron text-xs uppercase tracking-wider mb-2" style={{ color }}>{label}</h3>
-            <div className="font-orbitron text-2xl mb-2" style={{ color }}>
-              {metrics[metrics.length - 1][key as 'cpu' | 'mem' | 'rps']}{suffix}
-            </div>
-            <ResponsiveContainer width="100%" height={60}>
-              <LineChart data={metrics}>
-                <Line type="monotone" dataKey={key} stroke={color} strokeWidth={1.5} dot={false}/>
-              </LineChart>
-            </ResponsiveContainer>
+          { label:'CPU Usage', value: stats ? `${stats.cpuUsage}%` : '—', color: stats && stats.cpuUsage > 80 ? '#ff4444' : '#00ff88' },
+          { label:'Memory', value: stats ? `${stats.memoryUsage}%` : '—', color: stats && stats.memoryUsage > 85 ? '#ff4444' : '#00ff88' },
+          { label:'WS Connections', value: stats?.wsConnections?.toString() || '—', color:'#0ea5e9' },
+          { label:'System Status', value: stats?.systemHealth || 'Unknown', color: stats?.systemHealth === 'healthy' ? '#00ff88' : '#ff4444' },
+        ].map(stat => (
+          <div key={stat.label} className="bg-[#0d0d1a] border border-white/10 rounded-xl p-4">
+            <p className="text-xs text-white/40 mb-1">{stat.label}</p>
+            <p className="text-xl font-bold font-space-grotesk capitalize" style={{ color: stat.color }}>{stat.value}</p>
           </div>
         ))}
       </div>
-      <div className="bg-arena-surface border border-arena-border p-4">
-        <h2 className="font-orbitron text-sm text-neon-green uppercase tracking-wider mb-3">Services</h2>
-        <div className="space-y-2">
-          {services.map((svc) => (
-            <div key={svc.name} className="flex items-center justify-between py-2 border-b border-arena-border last:border-0">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-neon-green"/>
-                <span className="font-orbitron text-sm text-white">{svc.name}</span>
-              </div>
-              <div className="flex items-center gap-6 text-xs font-jetbrains">
-                <span className="text-gray-500">:{svc.port}</span>
-                <span className="text-neon-green">{svc.uptime}</span>
-                <span className="text-gray-400 uppercase">{svc.status}</span>
-              </div>
-            </div>
-          ))}
+
+      <div className="bg-[#0d0d1a] border border-white/10 rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-white/10">
+          <h3 className="font-bold text-white font-space-grotesk">Services</h3>
         </div>
+        <table className="w-full text-sm">
+          <thead><tr className="border-b border-white/10">
+            <th className="px-4 py-3 text-left text-xs text-white/40 uppercase">Service</th>
+            <th className="px-4 py-3 text-left text-xs text-white/40 uppercase">Port</th>
+            <th className="px-4 py-3 text-left text-xs text-white/40 uppercase">Status</th>
+            <th className="px-4 py-3 text-left text-xs text-white/40 uppercase">Uptime</th>
+            <th className="px-4 py-3 text-left text-xs text-white/40 uppercase">Latency</th>
+          </tr></thead>
+          <tbody>
+            {services.map(svc => (
+              <tr key={svc.name} className="border-b border-white/5 hover:bg-white/3 transition-colors">
+                <td className="px-4 py-3 font-medium text-white">{svc.name}</td>
+                <td className="px-4 py-3 text-white/50 font-mono">{svc.port}</td>
+                <td className="px-4 py-3">
+                  <span className={['px-2 py-0.5 text-xs rounded-full flex items-center gap-1 w-fit',
+                    svc.status === 'healthy' ? 'bg-[#00ff88]/10 text-[#00ff88]' : 'bg-red-500/10 text-red-400'].join(' ')}>
+                    <span className="w-1 h-1 rounded-full bg-current animate-pulse" />{svc.status}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-white/50 font-mono">{svc.uptime}</td>
+                <td className="px-4 py-3 text-white/50 font-mono">{svc.latency}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-    </div>
+    </AdminLayout>
   );
 }

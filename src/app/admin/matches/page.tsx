@@ -1,50 +1,77 @@
 'use client';
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { AdminLayout } from '@/components/layout/AdminLayout';
+import { useAdmin } from '@/hooks/useAdmin';
 
 const MOCK_MATCHES = [
-  { id: 'match-7', name: 'Match 7', status: 'live', turn: 34, maxTurns: 100, agentsAlive: 6, dramaScore: 72, startedAt: '20:00:00' },
-  { id: 'match-6', name: 'Match 6', status: 'completed', turn: 100, maxTurns: 100, agentsAlive: 1, dramaScore: 91, startedAt: '18:00:00' },
-  { id: 'match-5', name: 'Match 5', status: 'completed', turn: 87, maxTurns: 100, agentsAlive: 1, dramaScore: 84, startedAt: '16:00:00' },
+  { id:'match-142', status:'live', turn:45, maxTurns:100, agents:['PRIMUS','CERBERUS','MYTHION','ORACLE'], dramaScore:78, startedAt:'2025-03-21T18:00:00Z' },
+  { id:'match-141', status:'ended', turn:100, maxTurns:100, agents:['SOLARIUS','AURUM','VANGUARD','ARION'], dramaScore:92, startedAt:'2025-03-21T15:00:00Z' },
+  { id:'match-143', status:'upcoming', turn:0, maxTurns:100, agents:['PRIMUS','ORACLE','MYTHION','ARION'], dramaScore:0, startedAt:'2025-03-21T21:00:00Z' },
 ];
 
 export default function AdminMatchesPage() {
-  const [selectedMatch, setSelectedMatch] = useState(MOCK_MATCHES[0]);
+  const { startMatch, stopMatch } = useAdmin();
+  const [loading, setLoading] = useState<string|null>(null);
+
+  const handleStop = async (matchId: string) => {
+    setLoading(matchId);
+    await stopMatch(matchId);
+    setLoading(null);
+  };
+
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="font-orbitron text-xl text-neon-green uppercase tracking-widest">Match Control</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {MOCK_MATCHES.map((match) => (
-          <button key={match.id} onClick={() => setSelectedMatch(match)} className={`border p-4 text-left transition-all ${selectedMatch.id === match.id ? 'border-neon-green bg-neon-green/10' : 'border-arena-border bg-arena-surface hover:border-gray-500'}`}>
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-orbitron text-white">{match.name}</span>
-              <span className={`text-xs font-orbitron uppercase ${match.status === 'live' ? 'text-neon-green' : 'text-gray-500'}`}>{match.status}</span>
+    <AdminLayout>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-black font-space-grotesk text-white">Match Management</h1>
+          <p className="text-white/40 text-sm mt-1">Control active and scheduled matches</p>
+        </div>
+        <button onClick={() => startMatch(['primus','cerberus','mythion','oracle','solarius','aurum','vanguard','arion'])}
+          className="px-4 py-2 bg-[#00ff88] text-[#0a0a0f] font-bold text-sm rounded-lg hover:bg-[#00ff88]/90 transition-all">
+          + Start New Match
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        {MOCK_MATCHES.map(match => (
+          <div key={match.id} className="bg-[#0d0d1a] border border-white/10 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className={['px-2 py-0.5 text-xs font-bold rounded-full',
+                  match.status === 'live' ? 'bg-red-500/10 text-red-400 border border-red-500/30' :
+                  match.status === 'upcoming' ? 'bg-[#0ea5e9]/10 text-[#0ea5e9] border border-[#0ea5e9]/30' :
+                  'bg-white/5 text-white/40 border border-white/10'].join(' ')}>
+                  {match.status.toUpperCase()}
+                </span>
+                <div>
+                  <p className="font-bold text-white">Match #{match.id.slice(-6)}</p>
+                  <p className="text-xs text-white/40">{match.agents.join(' · ')}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                {match.status === 'live' && (
+                  <>
+                    <span className="text-sm text-white/50">Turn {match.turn}/{match.maxTurns}</span>
+                    <span className="text-sm font-bold text-[#ff6600]">Drama: {match.dramaScore}</span>
+                    <button onClick={() => handleStop(match.id)} disabled={loading === match.id}
+                      className="px-3 py-1.5 bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg hover:bg-red-500/20 transition-all disabled:opacity-50">
+                      {loading === match.id ? 'Stopping...' : 'Stop Match'}
+                    </button>
+                  </>
+                )}
+                {match.status === 'upcoming' && (
+                  <button className="px-3 py-1.5 bg-[#00ff88]/10 border border-[#00ff88]/30 text-[#00ff88] text-sm rounded-lg hover:bg-[#00ff88]/20 transition-all">
+                    Start Now
+                  </button>
+                )}
+                {match.status === 'ended' && (
+                  <span className="text-xs text-white/30">Completed {new Date(match.startedAt).toLocaleDateString()}</span>
+                )}
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-xs font-jetbrains">
-              <div><span className="text-gray-500">Turn: </span><span className="text-white">{match.turn}/{match.maxTurns}</span></div>
-              <div><span className="text-gray-500">Alive: </span><span className="text-white">{match.agentsAlive}</span></div>
-              <div><span className="text-gray-500">Drama: </span><span className="text-neon-green">{match.dramaScore}</span></div>
-              <div><span className="text-gray-500">Started: </span><span className="text-white">{match.startedAt}</span></div>
-            </div>
-          </button>
+          </div>
         ))}
       </div>
-      {selectedMatch.status === 'live' && (
-        <div className="bg-arena-surface border border-arena-border p-4">
-          <h2 className="font-orbitron text-sm text-neon-green uppercase tracking-wider mb-4">Controls — {selectedMatch.name}</h2>
-          <div className="flex gap-3 flex-wrap">
-            {[
-              { label: 'Pause Match', color: '#FFBF00' },
-              { label: 'Skip Turn', color: '#00D4FF' },
-              { label: 'Inject Chaos Event', color: '#FF6B35' },
-              { label: 'Force Elimination', color: '#FF006E' },
-              { label: 'End Match', color: '#FF006E' },
-            ].map(({ label, color }) => (
-              <button key={label} className="px-4 py-2 border font-orbitron text-xs uppercase tracking-wider transition-all hover:opacity-80" style={{ borderColor: color, color, background: `${color}10` }}>{label}</button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+    </AdminLayout>
   );
 }

@@ -1,0 +1,11 @@
+{
+  "id": "economic-warfare",
+  "name": "Economic Warfare",
+  "description": "Enables resource manipulation and trade exploitation",
+  "price": 500,
+  "traits": {
+    "conscientiousness": 0.1,
+    "adaptability": 0.1
+  },
+  "rarity": "epic"
+}

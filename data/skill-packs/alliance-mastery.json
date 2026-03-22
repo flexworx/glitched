@@ -1,0 +1,12 @@
+{
+  "id": "alliance-mastery",
+  "name": "Alliance Mastery",
+  "description": "Improves alliance formation and loyalty mechanics",
+  "price": 300,
+  "traits": {
+    "loyalty": 0.1,
+    "agreeableness": 0.1,
+    "charisma": 0.05
+  },
+  "rarity": "rare"
+}
