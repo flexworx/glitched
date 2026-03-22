@@ -1,11 +1,14 @@
 'use client';
-import Link from 'next/link';
 
-interface LeaderboardEntry {
+export interface LeaderboardEntry {
   rank: number;
-  name: string;
+  name?: string;
+  username?: string;
   avatar?: string;
-  score: number;
+  score?: number;
+  xp?: number;
+  wins?: number;
+  murph?: number;
   change?: number;
   faction?: string;
   level?: number;
@@ -19,6 +22,13 @@ interface LeaderboardTableProps {
 }
 
 const RANK_COLORS: Record<number, string> = { 1: '#FFD700', 2: '#C0C0C0', 3: '#CD7F32' };
+const RANK_MEDALS = ['🥇', '🥈', '🥉'];
+const FACTION_COLORS: Record<string, string> = {
+  iron_veil: '#708090',
+  neon_syndicate: '#39FF14',
+  void_council: '#7B2FBE',
+  golden_accord: '#FFD700',
+};
 
 export function LeaderboardTable({ entries, metric = 'Score', showFaction }: LeaderboardTableProps) {
   return (
@@ -34,43 +44,52 @@ export function LeaderboardTable({ entries, metric = 'Score', showFaction }: Lea
           </tr>
         </thead>
         <tbody>
-          {entries.map(entry => (
-            <tr key={entry.rank} className="border-b border-white/5 hover:bg-white/3 transition-colors">
-              <td className="px-4 py-3">
-                <span className="font-black font-space-grotesk text-sm" style={{ color: RANK_COLORS[entry.rank] || 'rgba(255,255,255,0.3)' }}>
-                  {entry.rank <= 3 ? ['🥇','🥈','🥉'][entry.rank-1] : `#${entry.rank}`}
-                </span>
-              </td>
-              <td className="px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white/60">
-                    {entry.name[0]}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-white text-sm">{entry.name}</p>
-                    {entry.level && <p className="text-xs text-white/30">Level {entry.level}</p>}
-                  </div>
-                  {entry.badge && <span className="text-sm">{entry.badge}</span>}
-                </div>
-              </td>
-              {showFaction && (
-                <td className="px-4 py-3 hidden md:table-cell">
-                  <span className="text-xs text-white/50">{entry.faction || '—'}</span>
+          {entries.map((entry, idx) => {
+            const rank = entry.rank ?? (idx + 1);
+            const displayName = entry.name || entry.username || 'Unknown';
+            const displayScore = entry.score ?? entry.xp ?? entry.wins ?? entry.murph ?? 0;
+            const rankColor = RANK_COLORS[rank] || 'rgba(255,255,255,0.3)';
+            const rankLabel = rank >= 1 && rank <= 3 ? (RANK_MEDALS[rank - 1] ?? '#' + rank) : '#' + rank;
+            const factionColor = entry.faction ? (FACTION_COLORS[entry.faction] || '#ffffff40') : '#ffffff40';
+            return (
+              <tr key={rank} className="border-b border-white/5 hover:bg-white/[0.03] transition-colors">
+                <td className="px-4 py-3">
+                  <span className="font-black text-sm" style={{ color: rankColor }}>{rankLabel}</span>
                 </td>
-              )}
-              <td className="px-4 py-3 text-right font-mono font-bold text-white">{entry.score.toLocaleString()}</td>
-              <td className="px-4 py-3 text-right hidden sm:table-cell">
-                {entry.change !== undefined && (
-                  <span className={['text-xs font-bold', entry.change > 0 ? 'text-[#00ff88]' : entry.change < 0 ? 'text-red-400' : 'text-white/30'].join(' ')}>
-                    {entry.change > 0 ? `+${entry.change}` : entry.change}
-                  </span>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white/60">
+                      {displayName.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-white text-sm">{displayName}</p>
+                      {entry.level != null && <p className="text-xs text-white/30">Level {entry.level}</p>}
+                    </div>
+                    {entry.badge && <span className="text-sm ml-1">{entry.badge}</span>}
+                  </div>
+                </td>
+                {showFaction && (
+                  <td className="px-4 py-3 hidden md:table-cell">
+                    <span className="text-xs font-medium px-2 py-0.5 rounded" style={{ color: factionColor, backgroundColor: factionColor + '20' }}>
+                      {entry.faction ? entry.faction.replace(/_/g, ' ').toUpperCase() : '—'}
+                    </span>
+                  </td>
                 )}
-              </td>
-            </tr>
-          ))}
+                <td className="px-4 py-3 text-right font-mono font-bold text-white">{displayScore.toLocaleString()}</td>
+                <td className="px-4 py-3 text-right hidden sm:table-cell">
+                  {entry.change != null && (
+                    <span className={['text-xs font-bold', entry.change > 0 ? 'text-[#00ff88]' : entry.change < 0 ? 'text-red-400' : 'text-white/30'].join(' ')}>
+                      {entry.change > 0 ? '+' + entry.change : entry.change === 0 ? '—' : entry.change}
+                    </span>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
   );
 }
+
 export default LeaderboardTable;

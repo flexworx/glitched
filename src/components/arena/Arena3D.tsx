@@ -2,7 +2,7 @@
 
 import { Suspense, useRef, useState, useEffect, useCallback } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Environment, Stars, Text, Billboard } from '@react-three/drei';
+// drei removed - using direct Three.js implementations
 import * as THREE from 'three';
 import type { GameState, AgentGameState, Position } from '@/lib/types/game-state';
 import { calculateDramaScore } from '@/lib/engine/drama-score';
@@ -364,6 +364,45 @@ interface Arena3DProps {
   className?: string;
 }
 
+// Custom orbit controls without @react-three/drei
+function CameraOrbitController() {
+  const { camera, gl } = useThree();
+  useEffect(() => {
+    let isDown = false;
+    let lastX = 0, lastY = 0;
+    const canvas = gl.domElement;
+    const onMouseDown = (e: MouseEvent) => { isDown = true; lastX = e.clientX; lastY = e.clientY; };
+    const onMouseUp = () => { isDown = false; };
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDown) return;
+      const dx = (e.clientX - lastX) * 0.01;
+      const dy = (e.clientY - lastY) * 0.01;
+      lastX = e.clientX; lastY = e.clientY;
+      const spherical = new THREE.Spherical().setFromVector3(camera.position);
+      spherical.theta -= dx;
+      spherical.phi = Math.max(0.1, Math.min(Math.PI / 2.2, spherical.phi + dy));
+      camera.position.setFromSpherical(spherical);
+      camera.lookAt(0, 0, 0);
+    };
+    const onWheel = (e: WheelEvent) => {
+      const dist = camera.position.length();
+      const newDist = Math.max(10, Math.min(60, dist + e.deltaY * 0.05));
+      camera.position.normalize().multiplyScalar(newDist);
+    };
+    canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('mouseup', onMouseUp);
+    canvas.addEventListener('mousemove', onMouseMove);
+    canvas.addEventListener('wheel', onWheel);
+    return () => {
+      canvas.removeEventListener('mousedown', onMouseDown);
+      canvas.removeEventListener('mouseup', onMouseUp);
+      canvas.removeEventListener('mousemove', onMouseMove);
+      canvas.removeEventListener('wheel', onWheel);
+    };
+  }, [camera, gl]);
+  return null;
+}
+
 export default function Arena3D({
   gameState,
   agentProfiles,
@@ -451,16 +490,9 @@ export default function Arena3D({
             </mesh>
           ))}
 
-          {/* Camera controls for overview mode */}
+          {/* Camera controls for overview mode - custom implementation */}
           {localCameraMode === 'overview' && !autoOrbit && (
-            <OrbitControls
-              enablePan={true}
-              enableZoom={true}
-              enableRotate={true}
-              maxPolarAngle={Math.PI / 2.2}
-              minDistance={10}
-              maxDistance={60}
-            />
+            <CameraOrbitController />
           )}
         </Suspense>
       </Canvas>

@@ -1,7 +1,7 @@
 'use client';
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Text, Billboard } from '@react-three/drei';
+// drei removed
 import * as THREE from 'three';
 
 interface AgentAvatarProps {
