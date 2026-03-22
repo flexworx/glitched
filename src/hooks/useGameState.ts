@@ -13,7 +13,7 @@ export interface LiveGameState {
 export function useGameState(matchId?: string) {
   const [gameState, setGameState] = useState<LiveGameState | null>(null);
   const [loading, setLoading] = useState(false);
-  const { on, connected } = useWebSocket({ matchId });
+  const { on, connected } = useWebSocket(matchId || "");
 
   useEffect(() => {
     if (!matchId) return;

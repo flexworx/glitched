@@ -83,7 +83,32 @@ export default function ArenaMatchPage({ params }: { params: { matchId: string }
         {/* 3D Arena - main area */}
         <div className="flex-1 relative">
           <div className="absolute inset-0">
-            <Arena3D matchId={params.matchId} agents={match.agents} />
+            <Arena3D 
+              gameState={{
+                matchId: params.matchId,
+                status: 'RUNNING',
+                gameMode: 'STANDARD_ELIMINATION',
+                currentPhase: 'COMPETITION',
+                currentTurn: match.turn || 1,
+                maxTurns: 100,
+                dramaScore: currentScore,
+                board: { tiles: [], width: 20, height: 20, turn: match.turn || 1, phase: 'COMPETITION', activeHazards: [], allianceMap: {} },
+                agents: Object.fromEntries((match.agents || []).map((a: any) => [a.id, {
+                  agentId: a.id, position: a.position || { x: 5, y: 5 },
+                  hp: a.hp || 100, maxHp: 100, credits: 500, shields: 0,
+                  statusEffects: [], actionsUsed: 0, maxActions: 3,
+                  isEliminated: a.status === 'eliminated', isGhost: false,
+                  emotionalState: { primary: 'focused', intensity: 0.7, triggers: [] },
+                  visibleTiles: [],
+                }])),
+                eventLog: [],
+              }}
+              agentProfiles={Object.fromEntries((match.agents || []).map((a: any) => [a.id, {
+                name: a.name,
+                signatureColor: a.color || '#00ff88',
+                veritasTier: 'RELIABLE' as const,
+              }]))}
+            />
           </div>
         </div>
 

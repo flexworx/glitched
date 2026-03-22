@@ -43,7 +43,6 @@ export default function AgentStatusPanel({ agents, selectedAgentId, onSelectAgen
             style={{
               borderColor: `${agent.color}30`,
               backgroundColor: isSelected ? `${agent.color}10` : 'transparent',
-              ringColor: agent.color,
             }}
           >
             <div className="flex items-center justify-between mb-1">

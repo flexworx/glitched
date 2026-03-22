@@ -10,7 +10,7 @@ export type WalletType = 'phantom' | 'solflare' | 'backpack' | 'other';
 
 export async function detectWallet(): Promise<WalletType | null> {
   if (typeof window === 'undefined') return null;
-  const win = window as unknown as Record<string, unknown>;
+  const win = window as unknown as Record<string, any>;
   if (win.phantom?.solana) return 'phantom';
   if (win.solflare) return 'solflare';
   if (win.backpack) return 'backpack';
@@ -19,12 +19,15 @@ export async function detectWallet(): Promise<WalletType | null> {
 
 export async function connectWallet(type: WalletType): Promise<string | null> {
   if (typeof window === 'undefined') return null;
-  const win = window as unknown as Record<string, { connect?: () => Promise<{ publicKey: { toBase58: () => string } }> }>;
+  const win = window as unknown as Record<string, {
+    solana?: { connect?: () => Promise<{ publicKey: { toBase58: () => string } }> };
+    connect?: () => Promise<{ publicKey: { toBase58: () => string } }>;
+  }>;
 
   try {
     if (type === 'phantom' && win.phantom?.solana) {
-      const resp = await win.phantom.solana.connect?.();
-      return resp?.publicKey?.toBase58() || null;
+      const resp = await win.phantom?.solana?.connect?.();
+      return resp?.publicKey?.toBase58() ?? null;
     }
     return null;
   } catch {

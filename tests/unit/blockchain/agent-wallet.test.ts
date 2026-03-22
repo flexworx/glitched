@@ -9,8 +9,8 @@ describe('Agent Wallet', () => {
 
   it('should format MURPH amounts correctly', () => {
     const formatMurph = (amount: number) => {
-      if (amount >= 1_000_000) return \`\${(amount / 1_000_000).toFixed(1)}M\`;
-      if (amount >= 1_000) return \`\${(amount / 1_000).toFixed(1)}K\`;
+      if (amount >= 1_000_000) return `\${(amount / 1_000_000).toFixed(1)}M`;
+      if (amount >= 1_000) return `\${(amount / 1_000).toFixed(1)}K`;
       return amount.toLocaleString();
     };
     expect(formatMurph(1_500_000)).toBe('1.5M');

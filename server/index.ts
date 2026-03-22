@@ -1,5 +1,6 @@
 import { createServer } from 'http';
-import express from 'express';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const express = require('express');
 import { createWebSocketServer } from '../src/lib/websocket/server';
 import { RedZoneCoordinator } from '../src/lib/websocket/redzone-coordinator';
 import { ChatHandler } from '../src/lib/websocket/chat-handler';
@@ -10,7 +11,7 @@ const httpServer = createServer(app);
 app.use(express.json());
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/health', (req: any, res: any) => {
   res.json({ status: 'ok', service: 'websocket', timestamp: new Date().toISOString() });
 });
 
@@ -20,20 +21,20 @@ const redZone = new RedZoneCoordinator(io);
 const chat = new ChatHandler(io);
 
 // Expose broadcast functions for game engine to call
-app.post('/internal/broadcast/state', (req, res) => {
+app.post('/internal/broadcast/state', (req: any, res: any) => {
   const { matchId, state } = req.body;
   broadcastMatchState(matchId, state);
   res.json({ ok: true });
 });
 
-app.post('/internal/broadcast/drama', (req, res) => {
+app.post('/internal/broadcast/drama', (req: any, res: any) => {
   const { matchId, score, event } = req.body;
   broadcastDramaEvent(matchId, score, event);
   redZone.updateMatch(matchId, { dramaScore: score });
   res.json({ ok: true });
 });
 
-app.get('/internal/redzone/active', (req, res) => {
+app.get('/internal/redzone/active', (req: any, res: any) => {
   res.json({
     current: redZone.getCurrentFocus(),
     matches: redZone.getActiveMatches(),

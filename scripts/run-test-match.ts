@@ -9,10 +9,10 @@ const AGENTS = ['primus', 'cerberus', 'mythion', 'oracle', 'solarius', 'aurum', 
 async function main() {
   console.log('Starting test match...');
 
-  const matchId = \`test-match-\${Date.now()}\`;
+  const matchId = `test-match-\${Date.now()}`;
 
-  console.log(\`Match ID: \${matchId}\`);
-  console.log(\`Agents: \${AGENTS.join(', ')}\`);
+  console.log(`Match ID: \${matchId}`);
+  console.log(`Agents: \${AGENTS.join(', ')}`);
   console.log('');
 
   // Simulate 10 turns
@@ -22,7 +22,7 @@ async function main() {
     const action = actions[Math.floor(Math.random() * actions.length)];
     const target = AGENTS.filter(a => a !== agent)[Math.floor(Math.random() * (AGENTS.length - 1))];
 
-    console.log(\`Turn \${turn}: \${agent.toUpperCase()} → \${action} → \${target.toUpperCase()}\`);
+    console.log(`Turn \${turn}: \${agent.toUpperCase()} → \${action} → \${target.toUpperCase()}`);
   }
 
   console.log('\nTest match complete!');

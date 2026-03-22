@@ -1,37 +1,44 @@
-import prisma from '../client';
+import { prisma } from '../client';
+import type { MatchStatus } from '@prisma/client';
 
-export async function getMatchById(id: string) {
-  return prisma.match.findUnique({
-    where: { id },
-    include: { agents: true, actions: { orderBy: { turn: 'desc' }, take: 20 } },
+export async function getRecentActions(matchId: string, limit = 20) {
+  return prisma.matchAction.findMany({
+    where: { matchId },
+    orderBy: { timestamp: 'desc' },
+    take: limit,
+    include: { agent: true, targetAgent: true },
   });
 }
 
 export async function getActiveMatches() {
   return prisma.match.findMany({
-    where: { status: 'active' },
-    orderBy: { startedAt: 'desc' },
+    where: { status: 'RUNNING' as MatchStatus },
+    include: { participants: { include: { agent: true } } },
+    orderBy: { dramaScore: 'desc' },
   });
 }
 
-export async function createMatch(agentIds: string[], maxTurns = 100) {
-  const matchId = `match-${Date.now()}`;
-  return prisma.match.create({
+export async function startMatch(matchId: string) {
+  return prisma.match.update({
+    where: { id: matchId },
+    data: { status: 'RUNNING' as MatchStatus, startedAt: new Date() },
+  });
+}
+
+export async function endMatch(matchId: string, winnerId?: string) {
+  return prisma.match.update({
+    where: { id: matchId },
     data: {
-      id: matchId,
-      status: 'pending',
-      turn: 0,
-      maxTurns,
-      phase: 'early_game',
-      dramaScore: 0,
-      agents: { connect: agentIds.map(id => ({ id })) },
+      status: 'COMPLETED' as MatchStatus,
+      endedAt: new Date(),
+      ...(winnerId ? { winnerId } : {}),
     },
   });
 }
 
-export async function advanceTurn(matchId: string) {
+export async function incrementMatchTurn(matchId: string) {
   return prisma.match.update({
     where: { id: matchId },
-    data: { turn: { increment: 1 } },
+    data: { currentTurn: { increment: 1 } },
   });
 }

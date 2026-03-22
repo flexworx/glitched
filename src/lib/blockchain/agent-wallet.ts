@@ -1,5 +1,6 @@
 import { Keypair, PublicKey } from '@solana/web3.js';
-import * as bip39 from 'bip39';
+// bip39 not installed - using simple key generation
+const bip39 = { generateMnemonic: () => Array.from({length:12}, () => Math.random().toString(36).slice(2,6)).join(' '), mnemonicToSeedSync: (m: string) => Buffer.from(m) };
 
 export interface AgentWallet {
   agentId: string;

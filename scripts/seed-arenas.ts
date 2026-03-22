@@ -15,7 +15,7 @@ async function main() {
 
     const data = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/arenas', file), 'utf-8'));
 
-    console.log(\`  ✓ \${data.name}\`);
+    console.log(`  ✓ \${data.name}`);
   }
 
   console.log('Done!');

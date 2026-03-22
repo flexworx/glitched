@@ -38,7 +38,7 @@ export default function LeaderboardsPage() {
               <div className="text-3xl mb-2">{['1st', '2nd', '3rd'][entry.rank - 1]}</div>
               <div className="font-orbitron text-white">{entry.username}</div>
               <div className="text-xs text-gray-400 mt-1">Level {entry.level}</div>
-              <div className="font-orbitron text-neon-green mt-2">{entry.xp.toLocaleString()} XP</div>
+              <div className="font-orbitron text-neon-green mt-2">{(entry.xp ?? 0).toLocaleString()} XP</div>
             </motion.div>
           ))}
         </div>

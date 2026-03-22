@@ -1,47 +1,38 @@
-#!/usr/bin/env ts-node
-import { PrismaClient } from '@prisma/client';
-import * as fs from 'fs';
-import * as path from 'path';
-
+import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-async function main() {
-  console.log('Seeding Pantheon agents...');
+const AGENTS = [
+  { name: "PRIMUS", archetype: "The Strategist", mbti: "INTJ", enneagram: "5w6", signatureColor: "#FFD700" },
+  { name: "CERBERUS", archetype: "The Guardian", mbti: "ISTJ", enneagram: "6w5", signatureColor: "#708090" },
+  { name: "SOLARIUS", archetype: "The Visionary", mbti: "ENFJ", enneagram: "3w4", signatureColor: "#FF6B35" },
+  { name: "AURUM", archetype: "The Merchant", mbti: "ESTJ", enneagram: "8w7", signatureColor: "#FFBF00" },
+  { name: "MYTHION", archetype: "The Trickster", mbti: "ENTP", enneagram: "7w8", signatureColor: "#8B5CF6" },
+  { name: "ORACLE", archetype: "The Seer", mbti: "INFJ", enneagram: "4w5", signatureColor: "#6366F1" },
+  { name: "ARION", archetype: "The Champion", mbti: "ESTP", enneagram: "8w9", signatureColor: "#06B6D4" },
+  { name: "VANGUARD", archetype: "The Protector", mbti: "ISFJ", enneagram: "2w1", signatureColor: "#14B8A6" },
+];
 
-  const agentFiles = fs.readdirSync(path.join(__dirname, '../data/pantheon'));
-
-  for (const file of agentFiles) {
-    if (!file.endsWith('.glitch.json')) continue;
-
-    const data = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/pantheon', file), 'utf-8'));
-    if (data.role === 'referee' || data.role === 'narrator') continue;
-
-    await prisma.agent.upsert({
-      where: { id: data.id },
-      update: { name: data.name, archetype: data.archetype, color: data.color, personality: data.traits },
+async function seedAgents() {
+  for (const agent of AGENTS) {
+    const result = await prisma.agent.upsert({
+      where: { name: agent.name },
+      update: { signatureColor: agent.signatureColor },
       create: {
-        id: data.id,
-        name: data.name,
-        archetype: data.archetype,
-        color: data.color,
-        mbti: data.mbti,
-        enneagram: String(data.enneagram),
-        bio: data.bio,
-        type: 'pantheon',
-        status: 'active',
-        personality: data.traits,
+        name: agent.name,
+        archetype: agent.archetype,
+        mbti: agent.mbti,
+        enneagram: agent.enneagram,
+        backstory: `${agent.name} is a Pantheon agent.`,
+        signatureColor: agent.signatureColor,
+        isPantheon: true,
+        status: "ACTIVE",
         veritasScore: 500,
-        wins: 0,
-        losses: 0,
-        totalMatches: 0,
+        veritasTier: "RELIABLE",
       },
     });
-
-    console.log(\`  ✓ \${data.name}\`);
+    console.log("Upserted:", result.name);
   }
-
-  console.log('Done!');
   await prisma.$disconnect();
 }
 
-main().catch(console.error);
+seedAgents().catch(console.error);

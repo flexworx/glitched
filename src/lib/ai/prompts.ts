@@ -68,16 +68,13 @@ PERSONALITY:
 - Empathy: ${Math.round(agent.traits.empathy * 100)}%
 
 CORE BELIEFS:
-${agent.beliefs.map(b => `- ${b}`).join('
-')}
+${agent.beliefs.map(b => `- ${b}`).join('\n')}
 
 FEARS:
-${agent.fears.map(f => `- ${f}`).join('
-')}
+${agent.fears.map(f => `- ${f}`).join('\n')}
 
 GOALS:
-${agent.goals.map(g => `- ${g}`).join('
-')}
+${agent.goals.map(g => `- ${g}`).join('\n')}
 
 DECISION FRAMEWORK:
 You must choose ONE action per turn from: attack, defend, negotiate, betray, ally, observe, retreat, heal, sabotage, inspire.
@@ -104,12 +101,10 @@ export function buildContextPrompt(gameState: {
   return `CURRENT GAME STATE (Turn ${gameState.turn} - ${gameState.phase.replace('_', ' ').toUpperCase()}):
 
 ALIVE AGENTS (${aliveAgents.length}):
-${aliveAgents.map(a => `- ${a.name}: ${a.hp} HP, Allies: [${a.alliances.join(', ') || 'none'}]`).join('
-')}
+${aliveAgents.map(a => `- ${a.name}: ${a.hp} HP, Allies: [${a.alliances.join(', ') || 'none'}]`).join('\n')}
 
 RECENT EVENTS:
-${gameState.recentEvents.slice(-5).map(e => `- ${e}`).join('
-')}
+${gameState.recentEvents.slice(-5).map(e => `- ${e}`).join('\n')}
 
 Choose your action wisely. The arena is watching.`;
 }

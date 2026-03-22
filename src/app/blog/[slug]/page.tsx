@@ -47,9 +47,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
         <h1 className="text-4xl font-black font-space-grotesk mt-2 mb-3">{post.title}</h1>
         <p className="text-white/40 text-sm mb-10">{post.date}</p>
         <div className="prose prose-invert max-w-none">
-          {post.content.split('
-
-').map((para, i) => (
+          {post.content.split('\n\n').map((para, i) => (
             <p key={i} className="text-white/70 leading-relaxed mb-4"
               dangerouslySetInnerHTML={{ __html: para.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>') }} />
           ))}

@@ -9,6 +9,16 @@ import type { VERITASTier } from '@/lib/types/agent';
 // Dynamic import to avoid SSR issues with Three.js
 const Arena3D = dynamic(() => import('@/components/arena/Arena3D'), { ssr: false });
 const RedZoneDashboard = dynamic(() => import('@/components/arena/RedZoneDashboard'), { ssr: false });
+const GlitchArenaWorld = dynamic(() => import('@/components/arena/GlitchArenaWorld'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex flex-col items-center justify-center w-full h-full bg-arena-black" style={{fontFamily:"'Courier New',monospace",color:'#c9a84c'}}>
+      <div style={{fontSize:'32px',marginBottom:'16px'}}>⚔️</div>
+      <div style={{fontSize:'14px',fontWeight:900,letterSpacing:'4px',marginBottom:'8px'}}>GLITCH ARENA</div>
+      <div style={{fontSize:'10px',color:'#3a3020',letterSpacing:'2px'}}>LOADING 3D WORLD...</div>
+    </div>
+  ),
+});
 
 // Mock game state for demo
 function createMockGameState(matchId: string, agentCount: number = 6): GameState {
@@ -72,10 +82,10 @@ const AGENT_PROFILES: Record<string, { name: string; signatureColor: string; ver
   oracle: { name: 'ORACLE', signatureColor: '#6366F1', veritasTier: 'RELIABLE' },
 };
 
-type ViewMode = 'single' | 'redzoneA' | 'redzoneB' | 'redzoneC';
+type ViewMode = 'world' | 'single' | 'redzoneA' | 'redzoneB' | 'redzoneC';
 
 export default function ArenaViewerPage() {
-  const [viewMode, setViewMode] = useState<ViewMode>('single');
+  const [viewMode, setViewMode] = useState<ViewMode>('world');
   const [gameStates, setGameStates] = useState<GameState[]>([
     createMockGameState('match-1', 8),
     createMockGameState('match-2', 6),
@@ -117,6 +127,7 @@ export default function ArenaViewerPage() {
         {/* View mode selector */}
         <div className="flex gap-1">
           {[
+            { id: 'world', label: '🌍 World' },
             { id: 'single', label: 'Single' },
             { id: 'redzoneA', label: 'RedZone 2x1' },
             { id: 'redzoneB', label: 'RedZone 2x2' },
@@ -152,8 +163,10 @@ export default function ArenaViewerPage() {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 min-h-0">
-        {viewMode === 'single' ? (
+      <div className="flex-1 min-h-0" style={{position:'relative'}}>
+        {viewMode === 'world' ? (
+          <div style={{position:'absolute',inset:0}}><GlitchArenaWorld /></div>
+        ) : viewMode === 'single' ? (
           <Arena3D
             gameState={primaryState}
             agentProfiles={AGENT_PROFILES}

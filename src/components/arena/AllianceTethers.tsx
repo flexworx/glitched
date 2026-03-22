@@ -21,7 +21,7 @@ interface AllianceTethersProps {
 }
 
 function TetherLine({ start, end, strength, status }: { start: THREE.Vector3; end: THREE.Vector3; strength: number; status: string }) {
-  const lineRef = useRef<THREE.Line>(null);
+  const lineRef = useRef<THREE.Line<THREE.BufferGeometry, THREE.Material>>(null);
   const t = useRef(0);
 
   useFrame((_, delta) => {
@@ -37,11 +37,9 @@ function TetherLine({ start, end, strength, status }: { start: THREE.Vector3; en
   const geometry = new THREE.BufferGeometry().setFromPoints(points);
   const color = status === 'betrayed' ? '#ff4444' : status === 'broken' ? '#666' : '#00ff88';
 
-  return (
-    <line ref={lineRef as React.RefObject<THREE.Line>} geometry={geometry}>
-      <lineBasicMaterial color={color} transparent opacity={0.4} linewidth={strength * 3} />
-    </line>
-  );
+  const material = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.4 });
+  const line = new THREE.Line(geometry, material);
+  return <primitive object={line} />;
 }
 
 export default function AllianceTethers({ alliances, agentPositions }: AllianceTethersProps) {

@@ -29,7 +29,7 @@ Respond with JSON: { "title": "...", "content": "...", "sentiment": "ambition|fe
 
   try {
     const text = response.content[0].type === 'text' ? response.content[0].text : '{}';
-    const parsed = JSON.parse(text.match(/\{.*\}/s)?.[0] || '{}');
+    const parsed = JSON.parse(text.match(/\{.*\}/)?.[0] || '{}');
     return { title: parsed.title || 'Unnamed Dream', content: parsed.content || '', sentiment: parsed.sentiment || 'neutral', frequency: 1 };
   } catch {
     return { title: 'Fragmented Vision', content: 'The arena echoes in silence.', sentiment: 'fear', frequency: 1 };

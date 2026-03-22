@@ -21,20 +21,16 @@ Archetype: ${config.archetype}
 Biography: ${config.bio}
 
 CORE BELIEFS:
-${config.beliefs.map(b => `- ${b}`).join('
-')}
+${config.beliefs.map(b => `- ${b}`).join('\n')}
 
 FEARS:
-${config.fears.map(f => `- ${f}`).join('
-')}
+${config.fears.map(f => `- ${f}`).join('\n')}
 
 GOALS:
-${config.goals.map(g => `- ${g}`).join('
-')}
+${config.goals.map(g => `- ${g}`).join('\n')}
 
 PERSONALITY TRAITS (0-1 scale):
-${Object.entries(config.traits).map(([k, v]) => `- ${k}: ${v.toFixed(2)}`).join('
-')}
+${Object.entries(config.traits).map(([k, v]) => `- ${k}: ${v.toFixed(2)}`).join('\n')}
 
 VOICE:
 Tone: ${config.voice.tone}
@@ -49,8 +45,7 @@ Form alliances when trust > ${config.combat.alliance_threshold}
 Betray when advantage > ${config.combat.betrayal_threshold}
 
 MEMORIES FROM PREVIOUS MATCHES:
-${config.memories.slice(0, 5).map(m => `- ${m}`).join('
-')}
+${config.memories.slice(0, 5).map(m => `- ${m}`).join('\n')}
 
 CURRENT MATCH CONTEXT:
 ${config.currentMatchContext}

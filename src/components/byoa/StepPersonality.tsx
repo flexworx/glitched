@@ -19,7 +19,7 @@ const TRAIT_GROUPS = [
     { key:'deceptiveness', label:'Deceptiveness', desc:'Tendency to lie and manipulate' },
     { key:'loyalty', label:'Loyalty', desc:'Faithfulness to alliances' },
     { key:'charisma', label:'Charisma', desc:'Ability to inspire and lead' },
-    { key:'empathy', label:'Empathy', desc:'Understanding others' motivations' },
+    { key:'empathy', label:'Empathy', desc:"Understanding others' motivations" },
     { key:'ambition', label:'Ambition', desc:'Drive to win at all costs' },
     { key:'creativity', label:'Creativity', desc:'Novel and unexpected approaches' },
   ]},

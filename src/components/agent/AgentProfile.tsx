@@ -64,7 +64,7 @@ export default function AgentProfile({ agent }: AgentProfileProps) {
 
             {/* Stats row */}
             <div className="flex gap-6">
-              <VERITASBadge score={agent.veritasScore} color={agent.color} />
+              <VERITASBadge score={agent.veritasScore} />
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-400">{agent.wins}</div>
                 <div className="text-xs text-gray-500">WINS</div>
@@ -145,7 +145,7 @@ export default function AgentProfile({ agent }: AgentProfileProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
-        <AgentMatchHistory agentId={agent.id} color={agent.color} />
+        <AgentMatchHistory agentId={agent.id} />
       </motion.div>
     </div>
   );

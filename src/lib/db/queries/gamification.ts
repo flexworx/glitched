@@ -1,32 +1,47 @@
-import prisma from '../client';
+import { prisma } from '../client';
 
-export async function getLeaderboard(metric: 'xp' | 'veritas' | 'wins', limit = 50) {
-  if (metric === 'xp') {
-    return prisma.user.findMany({ orderBy: { xp: 'desc' }, take: limit, select: { id: true, username: true, xp: true, level: true, faction: true } });
-  }
-  return [];
-}
-
-export async function checkAndAwardAchievement(userId: string, achievementId: string) {
-  const existing = await prisma.userAchievement.findUnique({
-    where: { userId_achievementId: { userId, achievementId } },
-  });
-  if (existing) return null;
-
-  return prisma.userAchievement.create({
-    data: { userId, achievementId },
+export async function getLeaderboard(limit = 20) {
+  return prisma.xpEvent.groupBy({
+    by: ['userId'],
+    _sum: { amount: true },
+    orderBy: { _sum: { amount: 'desc' } },
+    take: limit,
   });
 }
 
-export async function updateStreak(userId: string) {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) return null;
+export async function getUserStreak(userId: string) {
+  return prisma.userStreak.findUnique({ where: { userId } });
+}
 
-  const newStreak = user.streak + 1;
-  const newLongest = Math.max(newStreak, user.longestStreak);
+export async function updateUserStreak(userId: string, data: {
+  currentStreak?: number;
+  longestStreak?: number;
+  lastActivity?: Date;
+}) {
+  return prisma.userStreak.upsert({
+    where: { userId },
+    update: {
+      ...(data.currentStreak !== undefined ? { currentStreak: data.currentStreak } : {}),
+      ...(data.longestStreak !== undefined ? { longestStreak: data.longestStreak } : {}),
+      ...(data.lastActivity ? { lastActivity: data.lastActivity } : {}),
+    },
+    create: {
+      userId,
+      currentStreak: data.currentStreak || 0,
+      longestStreak: data.longestStreak || 0,
+      lastActivity: data.lastActivity || new Date(),
+    },
+  });
+}
 
-  return prisma.user.update({
-    where: { id: userId },
-    data: { streak: newStreak, longestStreak: newLongest, lastCheckin: new Date() },
+export async function addXpEvent(userId: string, amount: number, reason: string) {
+  return prisma.xpEvent.create({ data: { userId, amount, reason } });
+}
+
+export async function getUserAchievements(userId: string) {
+  return prisma.userAchievement.findMany({
+    where: { userId },
+    include: { achievement: true },
+    orderBy: { earnedAt: 'desc' },
   });
 }

@@ -1,69 +1,76 @@
 import express from 'express';
-import cron from 'node-cron';
-import { GameStateManager } from '../src/lib/engine/game-state-manager';
-import { ContextAssembler } from '../src/lib/engine/context-assembly';
-import { ActionValidator } from '../src/lib/engine/action-validator';
-import { DramaScoreCalculator } from '../src/lib/engine/drama-score';
-import { ARBITER } from '../src/lib/engine/arbiter';
-import { SHOWRUNNER } from '../src/lib/engine/showrunner';
-import { ClaudeClient } from '../src/lib/engine/claude-client';
+import { calculateDramaScore } from '../src/lib/engine/drama-score';
+import { assembleContext } from '../src/lib/engine/context-assembly';
+import { validateAction } from '../src/lib/engine/action-validator';
+import { callClaude } from '../src/lib/ai/claude-client';
 
 const app = express();
 app.use(express.json());
 
-const gameManager = new GameStateManager();
-const contextAssembler = new ContextAssembler();
-const actionValidator = new ActionValidator();
-const dramaCalc = new DramaScoreCalculator();
-const arbiter = new ARBITER();
-const showrunner = new SHOWRUNNER();
-const claude = new ClaudeClient();
+const PORT = process.env.ENGINE_PORT || 3002;
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/health', (_req: any, res: any) => {
   res.json({ status: 'ok', service: 'game-engine', timestamp: new Date().toISOString() });
 });
 
-// Start a new match
-app.post('/matches/start', async (req, res) => {
+// Process agent turn
+app.post('/api/engine/turn', async (req: any, res: any) => {
   try {
-    const { matchId, agentIds, seasonId, episodeNumber } = req.body;
-    console.log(`[Engine] Starting match ${matchId} with agents: ${agentIds.join(', ')}`);
-    res.json({ matchId, status: 'started', agentIds });
-  } catch (error) {
-    console.error('[Engine] Error starting match:', error);
-    res.status(500).json({ error: 'Failed to start match' });
+    const { matchId, agentId, gameState } = req.body;
+    if (!matchId || !agentId || !gameState) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    const context = assembleContext(gameState, agentId);
+    const drama = calculateDramaScore(gameState);
+    res.json({ success: true, context, drama, matchId, agentId });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
   }
 });
 
-// Process next turn
-app.post('/matches/:matchId/turn', async (req, res) => {
+// Validate action
+app.post('/api/engine/validate', async (req: any, res: any) => {
   try {
-    const { matchId } = req.params;
-    console.log(`[Engine] Processing turn for match ${matchId}`);
-    res.json({ matchId, turn: 1, status: 'processed' });
-  } catch (error) {
-    console.error('[Engine] Error processing turn:', error);
-    res.status(500).json({ error: 'Failed to process turn' });
+    const { action, gameState, agentId } = req.body;
+    const result = validateAction(action, gameState, agentId);
+    res.json({ valid: result.valid, reason: result.reason });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
   }
 });
 
-// Cron: Process active matches every 30 seconds
-cron.schedule('*/30 * * * * *', async () => {
-  console.log('[Engine] Cron: Processing active matches...');
+// Cron: start hourly match
+app.post('/api/cron/start-match', async (_req: any, res: any) => {
+  try {
+    const matchId = `match-${Date.now()}`;
+    console.log(`[CRON] Starting match: ${matchId}`);
+    res.json({ success: true, matchId, startedAt: new Date().toISOString() });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Cron: Daily season stats update at midnight
-cron.schedule('0 0 0 * * *', async () => {
-  console.log('[Engine] Cron: Updating season stats...');
+// Cron: daily season update
+app.post('/api/cron/season-update', async (_req: any, res: any) => {
+  try {
+    console.log('[CRON] Running daily season update');
+    res.json({ success: true, updatedAt: new Date().toISOString() });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Cron: Hourly prediction market settlement check
-cron.schedule('0 0 * * * *', async () => {
-  console.log('[Engine] Cron: Checking prediction market settlements...');
+// Cron: weekly burn report
+app.post('/api/cron/burn-report', async (_req: any, res: any) => {
+  try {
+    console.log('[CRON] Generating weekly burn report');
+    res.json({ success: true, reportedAt: new Date().toISOString() });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-const PORT = parseInt(process.env.ENGINE_PORT || '3002', 10);
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`[Game Engine] Listening on port ${PORT}`);
+app.listen(PORT, () => {
+  console.log(`[GAME ENGINE] Running on port ${PORT}`);
 });

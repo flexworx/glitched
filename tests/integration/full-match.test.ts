@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 describe('Full Match Integration', () => {
   it('should complete a match lifecycle', async () => {
-    const matchId = \`test-\${Date.now()}\`;
+    const matchId = `test-\${Date.now()}`;
     const agents = ['primus', 'cerberus', 'mythion', 'oracle'];
 
     // Create match

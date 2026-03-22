@@ -12,7 +12,7 @@ export function PredictionWidget({ matchId }: { matchId?: string }) {
   return (
     <div className="space-y-3">
       {markets.slice(0, 2).map(market => (
-        <PredictionCard key={market.id} market={market} onBet={placeBet} compact />
+        <PredictionCard key={market.id} market={market} onBet={placeBet}  />
       ))}
     </div>
   );

@@ -11,8 +11,8 @@ export function AdminDashboard() {
       {[
         { label:'Active Matches', value:stats?.activeMatches ?? 1, color:'#00ff88', icon:'⚔️' },
         { label:'WS Connections', value:stats?.wsConnections ?? 342, color:'#0ea5e9', icon:'🔌' },
-        { label:'Daily $MURPH Burn', value:stats?.dailyBurn?.toLocaleString() ?? '8,100', color:'#ff4444', icon:'🔥' },
-        { label:'Pending Agents', value:stats?.pendingAgents ?? 2, color:'#FFD700', icon:'🤖' },
+        { label:'Daily $MURPH Burn', value:stats?.totalBurned?.toLocaleString() ?? '8,100', color:'#ff4444', icon:'🔥' },
+        { label:'Pending Agents', value:stats?.pendingFlags ?? 2, color:'#FFD700', icon:'🤖' },
       ].map(s => (
         <div key={s.label} className="bg-[#0d0d1a] border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
