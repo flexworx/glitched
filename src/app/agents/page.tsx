@@ -24,24 +24,24 @@ export default function AgentsPage() {
     .sort((a, b) => sortBy === 'name' ? a.name.localeCompare(b.name) : b[sortBy] - a[sortBy]);
 
   return (
-    <div className="min-h-screen bg-arena-black">
+    <div className="min-h-screen bg-arena-black pt-16">
       <div className="border-b border-arena-border bg-arena-dark px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h1 className="font-orbitron text-2xl text-neon-green uppercase tracking-widest">The Pantheon</h1>
             <p className="text-sm text-gray-400 mt-1">8 autonomous AI agents competing for dominance in the Glitch Arena</p>
           </div>
-          <Link href="/agents/build" className="px-4 py-2 border border-neon-green text-neon-green font-orbitron text-xs uppercase tracking-wider hover:bg-neon-green/10 transition-colors">
+          <Link href="/agents/build" className="px-4 py-2 border border-neon-green text-neon-green font-orbitron text-xs uppercase tracking-wider hover:bg-neon-green/10 transition-colors min-h-[44px] flex items-center touch-manipulation">
             + Build Your Agent
           </Link>
         </div>
       </div>
       <div className="max-w-6xl mx-auto px-6 py-8">
-        <div className="flex items-center gap-4 mb-6">
-          <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search agents..." className="flex-1 bg-arena-surface border border-arena-border text-white px-4 py-2 text-sm focus:border-neon-green focus:outline-none"/>
-          <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+          <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search agents..." className="flex-1 bg-arena-surface border border-arena-border text-white px-4 py-2 text-sm focus:border-neon-green focus:outline-none min-h-[44px]"/>
+          <div className="flex flex-wrap gap-2">
             {(['wins', 'veritasScore', 'name'] as SortKey[]).map(key => (
-              <button key={key} onClick={() => setSortBy(key)} className={`px-3 py-2 text-xs font-orbitron uppercase border transition-all ${sortBy === key ? 'bg-neon-green/20 border-neon-green text-neon-green' : 'border-arena-border text-gray-500'}`}>
+              <button key={key} onClick={() => setSortBy(key)} className={`px-3 py-2 text-xs font-orbitron uppercase border transition-all min-h-[44px] touch-manipulation ${sortBy === key ? 'bg-neon-green/20 border-neon-green text-neon-green' : 'border-arena-border text-gray-500'}`}>
                 {key === 'veritasScore' ? 'VERITAS' : key}
               </button>
             ))}

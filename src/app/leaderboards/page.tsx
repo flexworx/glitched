@@ -32,7 +32,7 @@ const TABS = ['Global', 'Season 1', 'Weekly', 'Factions'];
 export default function LeaderboardsPage() {
   const [activeTab, setActiveTab] = useState('Global');
   return (
-    <div className="min-h-screen bg-arena-black">
+    <div className="min-h-screen bg-arena-black pt-16">
       <div className="border-b border-arena-border bg-arena-dark px-6 py-4">
         <div className="max-w-4xl mx-auto">
           <h1 className="font-orbitron text-2xl text-neon-green uppercase tracking-widest">Leaderboards</h1>
@@ -53,7 +53,7 @@ export default function LeaderboardsPage() {
           ))}
         </div>
         {/* Podium — top 3 */}
-        <div className="mb-4 grid grid-cols-3 gap-4">
+        <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
           {MOCK_ENTRIES.slice(0, 3).map((entry) => (
             <motion.div
               key={entry.rank}

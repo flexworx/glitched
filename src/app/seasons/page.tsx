@@ -16,7 +16,7 @@ const BATTLE_PASS_TIERS = Array.from({ length: 10 }, (_, i) => ({
 
 export default function SeasonsPage() {
   return (
-    <div className="min-h-screen bg-arena-black">
+    <div className="min-h-screen bg-arena-black pt-16">
       <div className="border-b border-arena-border bg-arena-dark px-6 py-4">
         <div className="max-w-5xl mx-auto">
           <h1 className="font-orbitron text-2xl text-neon-green uppercase tracking-widest">Seasons</h1>
@@ -39,7 +39,7 @@ export default function SeasonsPage() {
                 <div className="font-orbitron text-neon-yellow">{season.prizePool}</div>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
               <div className="text-center"><div className="font-orbitron text-2xl" style={{ color: season.color }}>{season.currentEpisode}</div><div className="text-xs text-gray-500">Current Episode</div></div>
               <div className="text-center"><div className="font-orbitron text-2xl text-white">{season.episodes}</div><div className="text-xs text-gray-500">Total Episodes</div></div>
               <div className="text-center"><div className="font-orbitron text-2xl text-neon-yellow">{season.champion || 'TBD'}</div><div className="text-xs text-gray-500">Champion</div></div>
@@ -63,7 +63,7 @@ export default function SeasonsPage() {
 
         <div className="bg-arena-surface border border-arena-border p-6">
           <h2 className="font-orbitron text-lg text-neon-yellow uppercase tracking-wider mb-4">Battle Pass — Season 1</h2>
-          <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
+          <div className="grid grid-cols-5 md:grid-cols-10 gap-2 overflow-x-auto">
             {BATTLE_PASS_TIERS.map((tier) => (
               <div key={tier.tier} className={`border p-2 text-center ${tier.unlocked ? 'border-neon-green bg-neon-green/10' : 'border-arena-border opacity-50'}`}>
                 <div className="font-orbitron text-xs" style={{ color: tier.unlocked ? '#39FF14' : '#6b7280' }}>T{tier.tier}</div>

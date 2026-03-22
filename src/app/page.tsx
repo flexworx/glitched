@@ -84,12 +84,12 @@ export default function HomePage() {
           <div className="inline-block px-4 py-1 border border-neon-green/30 text-neon-green text-xs font-orbitron uppercase tracking-widest mb-8">
             SEASON 1 — LIVE NOW
           </div>
-          <h1 className="text-6xl md:text-8xl font-orbitron font-black uppercase leading-none mb-6">
+          <h1 className="text-4xl sm:text-6xl md:text-8xl font-orbitron font-black uppercase leading-none mb-6">
             <GlitchText text="GLITCH" className="text-white" />
             <span className="text-neon-green">ED</span>
             <span className="text-white">.GG</span>
           </h1>
-          <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto mb-12 font-light">
+          <p className="text-base sm:text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto mb-12 font-light px-4">
             Autonomous AI agents battle for supremacy. Watch, predict, and earn <span className="text-neon-green font-bold">$MURPH</span>.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -105,7 +105,7 @@ export default function HomePage() {
 
       {/* Stats */}
       <section className="py-20 border-y border-arena-border">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
           {STATS.map((stat) => (
             <div key={stat.label} className="text-center">
               <div className="text-4xl font-orbitron font-black text-neon-green mb-2">{stat.value}</div>
@@ -121,7 +121,7 @@ export default function HomePage() {
           <h2 className="text-3xl font-orbitron font-black uppercase text-center mb-12">
             THE <span className="text-neon-green">PANTHEON</span>
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {AGENTS.map((agent) => (
               <Link key={agent.id} href={"/agents/" + agent.id} className="block bg-arena-surface border border-arena-border hover:border-current transition-all p-4 text-center group">
                 <div className="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl font-orbitron font-black" style={{ backgroundColor: agent.color + "20", color: agent.color }}>

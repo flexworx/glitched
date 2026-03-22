@@ -39,7 +39,7 @@ export default function AdminSystemPage() {
         <div className="px-4 py-3 border-b border-white/10">
           <h3 className="font-bold text-white font-space-grotesk">Services</h3>
         </div>
-        <table className="w-full text-sm">
+        <div className="table-scroll"><table className="w-full text-sm">
           <thead><tr className="border-b border-white/10">
             <th className="px-4 py-3 text-left text-xs text-white/40 uppercase">Service</th>
             <th className="px-4 py-3 text-left text-xs text-white/40 uppercase">Port</th>
@@ -63,7 +63,7 @@ export default function AdminSystemPage() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
     </AdminLayout>
   );

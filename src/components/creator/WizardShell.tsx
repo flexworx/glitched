@@ -134,11 +134,11 @@ export function WizardShell() {
   const back = useCallback(() => dispatch({ type: 'SET_STEP', step: state.step - 1 }), [state.step]);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-screen bg-[#0a0a0f] text-white pb-safe-mobile">
       {/* Header */}
       <div className="border-b border-white/10 bg-[#0a0a0f]/95 backdrop-blur sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between gap-3 mb-4">
             <div>
               <h1 className="text-xl font-black font-space-grotesk text-white">
                 Agent Creator Console
@@ -167,7 +167,7 @@ export function WizardShell() {
                     onClick={() => isClickable && goTo(s.id)}
                     disabled={!isClickable && !isCurrent}
                     className={[
-                      'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all',
+                      'flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold transition-all min-h-[44px] touch-manipulation',
                       isCurrent
                         ? 'bg-[#39FF14]/20 text-[#39FF14] border border-[#39FF14]/50'
                         : isCompleted

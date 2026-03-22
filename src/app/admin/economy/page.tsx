@@ -42,7 +42,7 @@ export default function AdminEconomyPage() {
                 <span className="text-white/60">{item.label}</span>
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-[#ff4444] font-bold">{item.value}</span>
-                  <button className="px-2 py-0.5 text-xs bg-white/5 border border-white/10 text-white/40 rounded hover:text-white transition-colors">Edit</button>
+                  <button className="px-3 py-2 text-xs min-h-[44px] touch-manipulation bg-white/5 border border-white/10 text-white/40 rounded hover:text-white transition-colors">Edit</button>
                 </div>
               </div>
             ))}

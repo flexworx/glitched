@@ -36,7 +36,7 @@ export default function MurphPage() {
   const [balance, setBalance] = useState(0);
   const connectWallet = () => { setWalletAddress('7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU'); setWalletConnected(true); setBalance(12450); };
   return (
-    <div className="min-h-screen bg-arena-black">
+    <div className="min-h-screen bg-arena-black pt-16">
       <div className="border-b border-arena-border bg-arena-dark px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>

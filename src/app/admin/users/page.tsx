@@ -16,7 +16,7 @@ export default function AdminUsersPage() {
       </div>
 
       <div className="bg-[#0d0d1a] border border-white/10 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
+        <div className="table-scroll"><table className="w-full text-sm">
           <thead><tr className="border-b border-white/10">
             <th className="px-4 py-3 text-left text-xs text-white/40 uppercase">User</th>
             <th className="px-4 py-3 text-left text-xs text-white/40 uppercase">Level</th>
@@ -43,8 +43,8 @@ export default function AdminUsersPage() {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
-                    <button className="px-2 py-1 text-xs bg-white/5 border border-white/10 text-white/60 rounded hover:text-white transition-colors">View</button>
-                    <button className="px-2 py-1 text-xs bg-red-500/5 border border-red-500/20 text-red-400/60 rounded hover:text-red-400 transition-colors">
+                    <button className="px-3 py-2 text-xs min-h-[44px] touch-manipulation bg-white/5 border border-white/10 text-white/60 rounded hover:text-white transition-colors">View</button>
+                    <button className="px-3 py-2 text-xs min-h-[44px] touch-manipulation bg-red-500/5 border border-red-500/20 text-red-400/60 rounded hover:text-red-400 transition-colors">
                       {user.status === 'active' ? 'Suspend' : 'Restore'}
                     </button>
                   </div>
@@ -52,7 +52,7 @@ export default function AdminUsersPage() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
     </AdminLayout>
   );

@@ -176,6 +176,12 @@ export default function GlitchArenaWorld() {
   const clockRef = useRef(new THREE.Clock());
   const isDrag = useRef(false);
   const prevM = useRef({ x: 0, y: 0 });
+  // Touch state for mobile orbit + pinch-to-zoom
+  const touchState = useRef<{
+    x0: number; y0: number;
+    x1?: number; y1?: number;
+    pinchDist?: number;
+  } | null>(null);
   const camNow = useRef({ th: Math.PI * 0.25, ph: Math.PI * 0.28, rad: 70, tx: 50, ty: 0, tz: 50 });
   const camGoal = useRef({ th: Math.PI * 0.25, ph: Math.PI * 0.28, rad: 70, tx: 50, ty: 0, tz: 50 });
   const meshMap = useRef<Record<string, THREE.Group>>({});
@@ -571,6 +577,43 @@ export default function GlitchArenaWorld() {
 
   // ── MOUSE HANDLERS ──
   const onMouseDown = (e: React.MouseEvent) => { isDrag.current = true; prevM.current = { x: e.clientX, y: e.clientY }; };
+
+  // ── TOUCH HANDLERS (mobile orbit + pinch-zoom) ──
+  const onTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    if (e.touches.length === 1) {
+      const t = e.touches[0];
+      touchState.current = { x0: t.clientX, y0: t.clientY };
+    } else if (e.touches.length === 2) {
+      const t0 = e.touches[0], t1 = e.touches[1];
+      const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+      touchState.current = { x0: (t0.clientX + t1.clientX) / 2, y0: (t0.clientY + t1.clientY) / 2, x1: t1.clientX, y1: t1.clientY, pinchDist: dist };
+    }
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault();
+    if (!touchState.current) return;
+    if (e.touches.length === 1) {
+      const t = e.touches[0];
+      const dx = t.clientX - touchState.current.x0;
+      const dy = t.clientY - touchState.current.y0;
+      camGoal.current.th -= dx * 0.007;
+      camGoal.current.ph = Math.max(0.08, Math.min(Math.PI * 0.45, camGoal.current.ph + dy * 0.007));
+      touchState.current.x0 = t.clientX;
+      touchState.current.y0 = t.clientY;
+    } else if (e.touches.length === 2 && touchState.current.pinchDist !== undefined) {
+      const t0 = e.touches[0], t1 = e.touches[1];
+      const newDist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+      const delta = touchState.current.pinchDist - newDist;
+      camGoal.current.rad = Math.max(3, Math.min(100, camGoal.current.rad + delta * 0.12));
+      touchState.current.pinchDist = newDist;
+    }
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (e.touches.length === 0) touchState.current = null;
+  };
   const onMouseMove = (e: React.MouseEvent) => {
     if (!isDrag.current) return;
     const dx = e.clientX - prevM.current.x, dy = e.clientY - prevM.current.y;
@@ -640,9 +683,10 @@ export default function GlitchArenaWorld() {
       <FlipFX biome={flipBiome} active={flipActive} />
 
       {/* THREE.JS CANVAS MOUNT */}
-      <div ref={mountRef} style={{ width: '100%', height: '100%', cursor: isDrag.current ? 'grabbing' : 'grab' }}
+      <div ref={mountRef} style={{ width: '100%', height: '100%', cursor: isDrag.current ? 'grabbing' : 'grab', touchAction: 'none' }}
         onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp}
-        onMouseLeave={onMouseUp} onWheel={onWheel} onClick={onClick3D} />
+        onMouseLeave={onMouseUp} onWheel={onWheel} onClick={onClick3D}
+        onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} />
 
       {/* HEADER */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '8px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(180deg,rgba(6,4,14,.95),rgba(6,4,14,.4),transparent)', zIndex: 50, pointerEvents: 'none' }}>
