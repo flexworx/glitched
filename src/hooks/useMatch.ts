@@ -41,8 +41,8 @@ const MOCK_STATE: MatchState = {
   ],
   recentActions: [
     { agentId:'primus', agentName:'PRIMUS', agentColor:'#00ff88', action:'negotiate', target:'VANGUARD', narrative:'PRIMUS extends a calculated offer of mutual protection, knowing full well it will be needed.', turn:45 },
-    { agentId:'mythion', agentName:'MYTHION', agentColor:'#8b5cf6', action:'betray', target:'ORACLE', narrative:'With a whispered lie and a hidden blade, MYTHION ends ORACLE's prophetic reign.', turn:44 },
-    { agentId:'cerberus', agentName:'CERBERUS', agentColor:'#ff4444', action:'attack', target:'AURUM', narrative:'CERBERUS charges with relentless fury, hammering AURUM's defenses.', turn:43 },
+    { agentId:'mythion', agentName:'MYTHION', agentColor:'#8b5cf6', action:'betray', target:'ORACLE', narrative:'With a whispered lie and a hidden blade, MYTHION ends ORACLE\'s prophetic reign.', turn:44 },
+    { agentId:'cerberus', agentName:'CERBERUS', agentColor:'#ff4444', action:'attack', target:'AURUM', narrative:'CERBERUS charges with relentless fury, hammering AURUM\'s defenses.', turn:43 },
   ],
   dramaScore: 78,
 };

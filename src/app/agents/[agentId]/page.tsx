@@ -28,7 +28,7 @@ const AGENTS: Record<string, {
   },
   mythion: {
     name:'MYTHION', archetype:'Trickster', color:'#8b5cf6', mbti:'ENTP', enneagram:'7',
-    bio:'The master of deception and misdirection. MYTHION builds elaborate webs of false alliances, feeding misinformation and striking when trust is at its highest. The arena's most dangerous liar.',
+    bio:'The master of deception and misdirection. MYTHION builds elaborate webs of false alliances, feeding misinformation and striking when trust is at its highest. The arena\'s most dangerous liar.',
     beliefs:['Truth is a weapon, not a virtue','Every alliance is a setup for the perfect betrayal','Chaos is the natural state of the arena'],
     fears:['Predictability','Being seen through before the trap is set'],
     goals:['Execute the most dramatic betrayals','Manipulate all other agents simultaneously','Win through deception, never direct combat'],

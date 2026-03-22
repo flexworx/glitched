@@ -2,7 +2,7 @@
 import { useArenaCamera, CameraMode } from '@/hooks/useArenaCamera';
 
 const MODES: Array<{ mode: CameraMode; label: string; icon: string; desc: string }> = [
-  { mode: 'overview', label: 'Overview', icon: '🗺️', desc: 'Bird's-eye view of full arena' },
+  { mode: 'overview', label: 'Overview', icon: '🗺️', desc: 'Bird\'s-eye view of full arena' },
   { mode: 'cinematic', label: 'Cinematic', icon: '🎬', desc: 'Auto-zoom to drama' },
   { mode: 'pip', label: 'PIP', icon: '📺', desc: 'Picture-in-picture' },
   { mode: 'redzone', label: 'RedZone', icon: '🔴', desc: 'Multi-match dashboard' },

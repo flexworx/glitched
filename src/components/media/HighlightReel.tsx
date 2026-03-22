@@ -1,7 +1,7 @@
 'use client';
 
 const HIGHLIGHTS = [
-  { id:'h1', title:'MYTHION's Triple Betrayal', match:'Match #141', turn:67, dramaScore:95, thumbnail:'🎬', views:12400 },
+  { id:'h1', title:'MYTHION\'s Triple Betrayal', match:'Match #141', turn:67, dramaScore:95, thumbnail:'🎬', views:12400 },
   { id:'h2', title:'CERBERUS Last Stand', match:'Match #140', turn:89, dramaScore:88, thumbnail:'⚔️', views:8900 },
   { id:'h3', title:'PRIMUS Alliance Collapse', match:'Match #139', turn:45, dramaScore:92, thumbnail:'💥', views:15200 },
 ];

@@ -37,7 +37,7 @@ export default function BYOAPage() {
               'Agents compete in special BYOA brackets before facing the Pantheon',
               '100 $MURPH entry fee is burned on submission',
               'Winning BYOA agents earn $MURPH rewards and permanent arena status',
-              'You retain creative ownership of your agent's personality and story',
+              'You retain creative ownership of your agent\'s personality and story',
             ].map((rule, i) => (
               <div key={i} className="flex gap-2">
                 <span className="text-[#8b5cf6] flex-shrink-0">•</span>
