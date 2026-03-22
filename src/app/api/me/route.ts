@@ -1,24 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { getSession } from '@/lib/auth/session';
+import { getUserById, performDailyCheckin } from '@/services/auth';
+import { validateOrThrow, CheckinSchema } from '@/lib/validation/schemas';
+import { ok, handleApiError } from '@/lib/api/response';
 
-export async function GET(req: NextRequest) {
-  // TODO: Get from session/JWT
-  return NextResponse.json({
-    id: 'user-demo',
-    username: 'arena_watcher',
-    level: 12,
-    xp: 11200,
-    xpForNextLevel: 12000,
-    faction: 'echo',
-    streak: { current: 5, longest: 14, lastCheckin: new Date(Date.now() - 25*60*60*1000).toISOString() },
-    achievements: [],
-    murphBalance: 5000,
-  });
+export async function GET(_req: NextRequest) {
+  try {
+    const session = await getSession();
+    if (!session) return handleApiError(new Error('Unauthorized'));
+    const user = await getUserById(session.userId);
+    if (!user) return handleApiError(new Error('User not found'));
+    return ok(user);
+  } catch (e) {
+    return handleApiError(e);
+  }
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  if (body.action === 'checkin') {
-    return NextResponse.json({ success: true, xpEarned: 100, newStreak: 6 });
+  try {
+    const session = await getSession();
+    if (!session) return handleApiError(new Error('Unauthorized'));
+    const body = await req.json();
+    validateOrThrow(CheckinSchema, body);
+    const result = await performDailyCheckin(session.userId);
+    return ok({ success: true, ...result });
+  } catch (e) {
+    return handleApiError(e);
   }
-  return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
 }

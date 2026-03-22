@@ -1,25 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { getSession } from '@/lib/auth/session';
+import { createByoaAgent } from '@/services/agents';
+import { validateOrThrow, CreateByoaAgentSchema } from '@/lib/validation/schemas';
+import { created, handleApiError } from '@/lib/api/response';
+import { apiLimiter, getClientIp } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const { name, archetype, personality, beliefs, backstory } = body;
-  
-  if (!name || !archetype || !personality || !backstory) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  const ip = getClientIp(request);
+  const rl = apiLimiter.check(ip);
+  if (!rl.success) {
+    return new Response(JSON.stringify({ error: 'Too many requests' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json', 'Retry-After': String(rl.retryAfter ?? 60) },
+    });
   }
-  
-  // TODO: Save to DB, deduct 1000 $MURPH burn, notify admin
-  const agent = {
-    id: `byoa-${Date.now()}`,
-    name,
-    archetype,
-    personality,
-    beliefs,
-    backstory,
-    status: 'pending_review',
-    submittedAt: new Date().toISOString(),
-    burnAmount: 1000,
-  };
-  
-  return NextResponse.json(agent, { status: 201 });
+
+  try {
+    const session = await getSession();
+    if (!session) return handleApiError(new Error('Unauthorized'));
+    const body = await request.json();
+    const input = validateOrThrow(CreateByoaAgentSchema, body);
+    const agent = await createByoaAgent({ ...input, creatorId: session.userId });
+    return created({ agent, message: 'Agent created successfully' });
+  } catch (e) {
+    return handleApiError(e);
+  }
 }

@@ -1,11 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { getAgentMemories } from '@/services/agents';
+import { ok, handleApiError } from '@/lib/api/response';
 
 export async function GET(req: NextRequest, { params }: { params: { agentId: string } }) {
-  return NextResponse.json({
-    agentId: params.agentId,
-    memories: [
-      { id:'m1', turn:67, matchId:'match-141', event:'Witnessed MYTHION betray ORACLE', impact:-15, type:'betrayal', createdAt:'2025-03-21T16:00:00Z' },
-    ],
-    total: 1,
-  });
+  try {
+    const { searchParams } = new URL(req.url);
+    const limit = parseInt(searchParams.get('limit') ?? '10', 10);
+    const memories = await getAgentMemories(params.agentId, limit);
+    return ok({ agentId: params.agentId, memories, total: memories.length });
+  } catch (e) {
+    return handleApiError(e);
+  }
 }

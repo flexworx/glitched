@@ -1,9 +1,9 @@
 'use client';
-import { usePrediction } from '@/hooks/usePrediction';
+import { usePredictions as usePrediction } from '@/hooks/usePrediction';
 import { PredictionCard } from '@/components/economy/PredictionCard';
 
 export default function PredictionsPage() {
-  const { markets, loading, placeBet } = usePrediction();
+  const { pools, loading, placeBet } = usePrediction();
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -20,8 +20,8 @@ export default function PredictionsPage() {
           </div>
         ) : (
           <div className="grid md:grid-cols-2 gap-5">
-            {markets.map(market => (
-              <PredictionCard key={market.id} market={market} onBet={placeBet} />
+            {pools.map((market: any) => (
+              <PredictionCard key={market.id} market={market} onBet={(matchId, predictionType, predictionData, amount) => placeBet(matchId, predictionType, predictionData, amount)} />
             ))}
           </div>
         )}

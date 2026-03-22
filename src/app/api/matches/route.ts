@@ -1,19 +1,32 @@
-import { NextRequest, NextResponse } from 'next/server';
-
-const MATCHES = [
-  { id:'match-142', status:'active', turn:45, maxTurns:100, dramaScore:78, agents:['primus','cerberus','mythion','oracle','solarius','aurum','vanguard','arion'], startedAt:'2025-03-21T18:00:00Z' },
-  { id:'match-141', status:'ended', turn:100, maxTurns:100, dramaScore:92, agents:['primus','cerberus','mythion','oracle','solarius','aurum','vanguard','arion'], startedAt:'2025-03-21T15:00:00Z', endedAt:'2025-03-21T17:30:00Z', winnerId:'primus' },
-];
+import { NextRequest } from 'next/server';
+import { getSession } from '@/lib/auth/session';
+import { listMatches, createMatch } from '@/services/matches';
+import { validateOrThrow, CreateMatchSchema } from '@/lib/validation/schemas';
+import { ok, created, handleApiError } from '@/lib/api/response';
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const status = searchParams.get('status');
-  const matches = status ? MATCHES.filter(m => m.status === status) : MATCHES;
-  return NextResponse.json({ matches, total: matches.length });
+  try {
+    const { searchParams } = new URL(req.url);
+    const status = searchParams.get('status') ?? undefined;
+    const seasonId = searchParams.get('seasonId') ?? undefined;
+    const limit = parseInt(searchParams.get('limit') ?? '20', 10);
+    const offset = parseInt(searchParams.get('offset') ?? '0', 10);
+    const result = await listMatches({ status, seasonId, limit, offset });
+    return ok(result);
+  } catch (e) {
+    return handleApiError(e);
+  }
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const matchId = 'match-' + Date.now();
-  return NextResponse.json({ success: true, matchId, message: 'Match created' }, { status: 201 });
+  try {
+    const session = await getSession();
+    if (!session || session.role !== 'admin') return handleApiError(new Error('Forbidden'));
+    const body = await req.json();
+    const input = validateOrThrow(CreateMatchSchema, body);
+    const match = await createMatch(input);
+    return created({ match });
+  } catch (e) {
+    return handleApiError(e);
+  }
 }

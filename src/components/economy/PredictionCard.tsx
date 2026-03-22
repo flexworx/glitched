@@ -1,10 +1,10 @@
 'use client';
 import { useState } from 'react';
-import { PredictionMarket } from '@/hooks/usePrediction';
+// any removed from '@/hooks/usePrediction';
 
 interface PredictionCardProps {
-  market: PredictionMarket;
-  onBet?: (marketId: string, optionId: string, amount: number) => Promise<unknown>;
+  market: any;
+  onBet?: (matchId: string, predictionType: string, predictionData: Record<string, unknown>, amount: number) => Promise<unknown>;
 }
 
 export function PredictionCard({ market, onBet }: PredictionCardProps) {
@@ -15,7 +15,7 @@ export function PredictionCard({ market, onBet }: PredictionCardProps) {
   const handleBet = async () => {
     if (!selected || !onBet) return;
     setPlacing(true);
-    await onBet(market.id, selected, amount);
+    await onBet(market.matchId ?? market.id, "WINNER", { agentId: selected }, amount);
     setPlacing(false);
     setSelected(null);
   };
@@ -34,7 +34,7 @@ export function PredictionCard({ market, onBet }: PredictionCardProps) {
       </div>
 
       <div className="space-y-2 mb-4">
-        {market.options.map(opt => {
+        {market.options.map((opt: any) => {
           const pct = market.totalPool > 0 ? (opt.totalBet / market.totalPool) * 100 : 0;
           return (
             <button key={opt.id} onClick={() => market.status === 'open' && setSelected(opt.id)}

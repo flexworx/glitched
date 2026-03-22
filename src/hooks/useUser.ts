@@ -1,32 +1,42 @@
 'use client';
+/**
+ * RADF v3 — useUser hook
+ * Fetches authenticated user profile from /api/me.
+ */
 import { useState, useEffect, useCallback } from 'react';
 
 export interface UserProfile {
   id: string;
   username: string;
-  level: number;
-  xp: number;
-  xpForNextLevel: number;
-  faction: string;
-  streak: { current: number; longest: number; lastCheckin: string };
-  achievements: string[];
-  murphBalance: number;
+  displayName?: string;
+  avatarUrl?: string;
+  role: string;
+  walletAddress?: string;
+  createdAt: string;
+  wallet?: { murphBalance: number; solanaAddress: string };
+  streak?: { currentStreak: number; longestStreak: number; lastActivity: string; multiplier: number };
+  xpEvents?: Array<{ amount: number; createdAt: string }>;
 }
 
 export function useUser() {
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchUser = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await fetch('/api/me');
-      if (res.ok) setUser(await res.json());
+      if (res.status === 401) { setUser(null); return; }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setUser(await res.json());
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load user');
     } finally {
       setLoading(false);
     }
   }, []);
-
-  useEffect(() => { fetchUser(); }, [fetchUser]);
 
   const checkin = useCallback(async () => {
     const res = await fetch('/api/me', {
@@ -34,14 +44,13 @@ export function useUser() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'checkin' }),
     });
-    const data = await res.json();
-    if (data.success) {
-      setUser(prev => prev ? { ...prev, xp: prev.xp + data.xpEarned, streak: { ...prev.streak, current: data.newStreak } } : prev);
-    }
-    return data;
-  }, []);
+    if (!res.ok) throw new Error('Check-in failed');
+    const result = await res.json();
+    await fetchUser(); // Refresh user data
+    return result;
+  }, [fetchUser]);
 
-  const canCheckin = user ? new Date(user.streak.lastCheckin).toDateString() !== new Date().toDateString() : false;
+  useEffect(() => { fetchUser(); }, [fetchUser]);
 
-  return { user, loading, refetch: fetchUser, checkin, canCheckin };
+  return { user, loading, error, refetch: fetchUser, checkin };
 }

@@ -21,15 +21,15 @@ export default function AdminMatchDetailPage({ params }: { params: { matchId: st
             <h3 className="font-bold text-white font-space-grotesk mb-4">Match Status</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-white/40">Status</span><span className="text-white capitalize">{match.status}</span></div>
-              <div className="flex justify-between"><span className="text-white/40">Turn</span><span className="text-white">{match.turn}/{match.maxTurns}</span></div>
+              <div className="flex justify-between"><span className="text-white/40">Turn</span><span className="text-white">{match.currentTurn}/{match.maxTurns}</span></div>
               <div className="flex justify-between"><span className="text-white/40">Drama Score</span><span className="text-[#ff6600]">{match.dramaScore}</span></div>
-              <div className="flex justify-between"><span className="text-white/40">Phase</span><span className="text-white capitalize">{match.phase.replace('_',' ')}</span></div>
+              <div className="flex justify-between"><span className="text-white/40">Phase</span><span className="text-white capitalize">{match.currentPhase.replace('_',' ')}</span></div>
             </div>
           </div>
           <div className="bg-[#0d0d1a] border border-white/10 rounded-xl p-5">
             <h3 className="font-bold text-white font-space-grotesk mb-4">Agents</h3>
             <div className="space-y-2">
-              {match.agents.map(agent => (
+              {match.participants.map((agent: any) => (
                 <div key={agent.id} className="flex items-center justify-between text-sm">
                   <span className="font-bold" style={{ color: agent.color }}>{agent.name}</span>
                   <span className={agent.status === 'alive' ? 'text-[#00ff88]' : 'text-white/30'}>{agent.status === 'alive' ? `${agent.hp} HP` : 'ELIMINATED'}</span>

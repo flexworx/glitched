@@ -1,8 +1,8 @@
 'use client';
-import { usePrediction } from '@/hooks/usePrediction';
+import { usePredictions as usePrediction } from '@/hooks/usePrediction';
 
 export default function DashboardPredictionsPage() {
-  const { markets, loading } = usePrediction();
+  const { pools, loading } = usePrediction();
   const userBets = [
     { marketId:'pm-1', question:'Who will win Match #142?', bet:'PRIMUS', amount:500, odds:2.1, status:'open', potentialPayout:1050 },
     { marketId:'pm-2', question:'Will there be a betrayal in the next 10 turns?', bet:'Yes', amount:200, odds:1.6, status:'settled', payout:320, won:true },

@@ -27,7 +27,6 @@ export default function ArenaMatchPage({ params }: { params: { matchId: string }
       <div className="w-10 h-10 rounded-full border-2 border-[#00ff88]/20 border-t-[#00ff88] animate-spin" />
     </div>
   );
-
   if (!match) return (
     <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center text-white">
       <div className="text-center">
@@ -39,7 +38,8 @@ export default function ArenaMatchPage({ params }: { params: { matchId: string }
   );
 
   const dramaColor = getDramaColor(currentScore);
-  const aliveAgents = match.agents.filter(a => a.status === 'alive');
+  const participants = match.participants ?? [];
+  const aliveCount = participants.filter(p => !p.isEliminated).length;
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col">
@@ -50,7 +50,7 @@ export default function ArenaMatchPage({ params }: { params: { matchId: string }
             <Link href="/arena" className="text-white/40 hover:text-white transition-colors text-sm">← Arena</Link>
             <div className="w-px h-4 bg-white/10" />
             <div className="flex items-center gap-2">
-              {match.status === 'active' && (
+              {match.status === 'RUNNING' && (
                 <span className="flex items-center gap-1 px-2 py-0.5 bg-red-500/10 border border-red-500/30 rounded-full text-xs text-red-400 font-bold">
                   <span className="w-1 h-1 rounded-full bg-red-500 animate-pulse" />LIVE
                 </span>
@@ -58,14 +58,13 @@ export default function ArenaMatchPage({ params }: { params: { matchId: string }
               <span className="text-sm font-bold text-white">Match #{params.matchId.slice(-6)}</span>
             </div>
           </div>
-
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="text-xs text-white/40">Turn</span>
-              <span className="text-sm font-bold font-mono text-white">{match.turn}/{match.maxTurns}</span>
+              <span className="text-sm font-bold font-mono text-white">{match.currentTurn}/{match.maxTurns}</span>
             </div>
             <div className="w-24">
-              <ProgressBar value={match.turn} max={match.maxTurns} size="sm" />
+              <ProgressBar value={match.currentTurn} max={match.maxTurns} size="sm" />
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-xs text-white/40">Drama</span>
@@ -73,39 +72,39 @@ export default function ArenaMatchPage({ params }: { params: { matchId: string }
               <span className="text-xs font-bold uppercase" style={{ color: dramaColor }}>{getDramaLevel(currentScore)}</span>
             </div>
           </div>
-
           <CameraControls />
         </div>
       </div>
 
       {/* Main layout */}
       <div className="flex flex-1 pt-28">
-        {/* 3D Arena - main area */}
+        {/* 3D Arena */}
         <div className="flex-1 relative">
           <div className="absolute inset-0">
-            <Arena3D 
+            <Arena3D
               gameState={{
                 matchId: params.matchId,
-                status: 'RUNNING',
-                gameMode: 'STANDARD_ELIMINATION',
-                currentPhase: 'COMPETITION',
-                currentTurn: match.turn || 1,
-                maxTurns: 100,
+                status: 'RUNNING' as any,
+                gameMode: 'STANDARD_ELIMINATION' as any,
+                currentPhase: (match.currentPhase as any) ?? 'COMPETITION',
+                currentTurn: match.currentTurn ?? 1,
+                maxTurns: match.maxTurns ?? 100,
                 dramaScore: currentScore,
-                board: { tiles: [], width: 20, height: 20, turn: match.turn || 1, phase: 'COMPETITION', activeHazards: [], allianceMap: {} },
-                agents: Object.fromEntries((match.agents || []).map((a: any) => [a.id, {
-                  agentId: a.id, position: a.position || { x: 5, y: 5 },
-                  hp: a.hp || 100, maxHp: 100, credits: 500, shields: 0,
+                board: { tiles: [], width: 20, height: 20, turn: match.currentTurn ?? 1, phase: (match.currentPhase as any) ?? 'COMPETITION', activeHazards: [], allianceMap: {} },
+                agents: Object.fromEntries(participants.map((p) => [p.agentId, {
+                  agentId: p.agentId,
+                  position: { x: 5, y: 5 },
+                  hp: 100, maxHp: 100, credits: 500, shields: 0,
                   statusEffects: [], actionsUsed: 0, maxActions: 3,
-                  isEliminated: a.status === 'eliminated', isGhost: false,
+                  isEliminated: p.isEliminated, isGhost: false,
                   emotionalState: { primary: 'focused', intensity: 0.7, triggers: [] },
                   visibleTiles: [],
                 }])),
                 eventLog: [],
               }}
-              agentProfiles={Object.fromEntries((match.agents || []).map((a: any) => [a.id, {
-                name: a.name,
-                signatureColor: a.color || '#00ff88',
+              agentProfiles={Object.fromEntries(participants.map((p) => [p.agentId, {
+                name: p.agent.name,
+                signatureColor: p.agent.signatureColor ?? '#00ff88',
                 veritasTier: 'RELIABLE' as const,
               }]))}
             />
@@ -114,36 +113,30 @@ export default function ArenaMatchPage({ params }: { params: { matchId: string }
 
         {/* Right sidebar */}
         <div className="w-80 flex-shrink-0 border-l border-white/5 bg-[#0a0a0f] flex flex-col overflow-hidden">
-          {/* Agent status */}
           <div className="p-4 border-b border-white/5">
-            <p className="text-xs text-white/40 uppercase tracking-wider mb-3">Agents ({aliveAgents.length}/{match.agents.length} alive)</p>
+            <p className="text-xs text-white/40 uppercase tracking-wider mb-3">
+              Agents ({aliveCount}/{participants.length} alive)
+            </p>
             <div className="space-y-2">
-              {match.agents.map(agent => (
-                <div key={agent.id} className={['flex items-center gap-2 p-2 rounded-lg', agent.status === 'eliminated' ? 'opacity-30' : ''].join(' ')}>
+              {participants.map((p) => (
+                <div key={p.agentId} className={['flex items-center gap-2 p-2 rounded-lg', p.isEliminated ? 'opacity-30' : ''].join(' ')}>
                   <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                    style={{ background: agent.color + '20', color: agent.color, border: `1px solid ${agent.color}40` }}>
-                    {agent.name[0]}
+                    style={{ background: (p.agent.signatureColor ?? '#00ff88') + '20', color: p.agent.signatureColor ?? '#00ff88', border: `1px solid ${p.agent.signatureColor ?? '#00ff88'}40` }}>
+                    {p.agent.name[0]}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-center mb-0.5">
-                      <span className="text-xs font-bold text-white truncate">{agent.name}</span>
-                      <span className="text-xs font-mono text-white/40">{agent.hp}</span>
-                    </div>
-                    <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full transition-all"
-                        style={{ width: `${(agent.hp/agent.maxHp)*100}%`, background: agent.hp > 60 ? '#00ff88' : agent.hp > 30 ? '#ffcc00' : '#ff4444' }} />
-                    </div>
+                    <span className="text-xs font-bold text-white truncate block">{p.agent.name}</span>
+                    <span className="text-xs text-white/40">{p.agent.archetype}</span>
                   </div>
+                  {p.isEliminated && <span className="text-xs text-red-400/60">OUT</span>}
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Drama feed */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             <DramaFeed matchId={params.matchId} maxEvents={6} />
-            <AllianceMap alliances={match.alliances} agents={match.agents.map(a => ({ id: a.id, name: a.name, color: a.color }))} />
-            <ActionLog actions={match.recentActions} maxItems={10} />
+            <AllianceMap alliances={[]} agents={participants.map(p => ({ id: p.agentId, name: p.agent.name, color: p.agent.signatureColor ?? '#00ff88' }))} />
+            <ActionLog actions={[]} maxItems={10} />
           </div>
         </div>
       </div>

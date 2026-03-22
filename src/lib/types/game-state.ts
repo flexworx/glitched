@@ -38,6 +38,10 @@ export interface AgentGameState {
   isGhost: boolean;
   emotionalState: EmotionalState;
   visibleTiles: Position[];
+  // RADF v3 extended fields
+  alliances?: string[];
+  trustMap?: Record<string, number>;
+  inventory?: string[];
 }
 
 export interface StatusEffect {
@@ -100,6 +104,7 @@ export interface GameState {
   alliances?: Alliance[];
   activeCombatPositions?: Position[];
   lastDramaticEvent?: DramaticEvent;
+  seed?: number;
 }
 
 export interface GameEvent {
@@ -109,6 +114,7 @@ export interface GameEvent {
   position?: Position;
   dramaContribution: number;
   timestamp: Date;
+  metadata?: Record<string, unknown>;
 }
 
 export interface AgentAction {
@@ -116,6 +122,7 @@ export interface AgentAction {
   targetId?: string;
   targetPosition?: Position;
   data?: Record<string, unknown>;
+  payload?: Record<string, unknown>;
 }
 
 export type ActionType =

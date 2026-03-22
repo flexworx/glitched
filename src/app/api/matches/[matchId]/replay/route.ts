@@ -1,10 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { getMatchReplay } from '@/services/matches';
+import { ok, handleApiError } from '@/lib/api/response';
 
-export async function GET(req: NextRequest, { params }: { params: { matchId: string } }) {
-  return NextResponse.json({
-    matchId: params.matchId,
-    turns: [],
-    totalTurns: 100,
-    message: 'Replay data — full turn history',
-  });
+export async function GET(_req: NextRequest, { params }: { params: { matchId: string } }) {
+  try {
+    const actions = await getMatchReplay(params.matchId);
+    return ok({ matchId: params.matchId, actions, total: actions.length });
+  } catch (e) {
+    return handleApiError(e);
+  }
 }

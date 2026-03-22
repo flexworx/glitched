@@ -1,12 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { getSession } from '@/lib/auth/session';
+import { getUserPredictions } from '@/services/predictions';
+import { ok, handleApiError } from '@/lib/api/response';
 
-export async function GET() {
-  return NextResponse.json({
-    bets: [
-      { id:'b1', marketId:'pm-1', question:'Who will win Match #142?', optionLabel:'PRIMUS', amount:500, odds:2.1, status:'open', potentialPayout:1050 },
-    ],
-    total: 1,
-    totalWon: 320,
-    totalLost: 200,
-  });
+export async function GET(_req: NextRequest) {
+  try {
+    const session = await getSession();
+    if (!session) return handleApiError(new Error('Unauthorized'));
+    const predictions = await getUserPredictions(session.userId);
+    return ok({ predictions, total: predictions.length });
+  } catch (e) {
+    return handleApiError(e);
+  }
 }

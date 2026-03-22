@@ -1,10 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { getSeasons } from '@/services/economy';
+import { ok, handleApiError } from '@/lib/api/response';
 
-const SEASONS = [
-  { id:'2', name:'Season 2: Emergence', status:'active', startDate:'2025-03-01', endDate:'2025-04-30', episodes:12, completedEpisodes:7, battlePassPrice:500, totalMatches:48, murphBurned:1200000 },
-  { id:'1', name:'Season 1: Genesis', status:'ended', startDate:'2025-01-01', endDate:'2025-02-28', episodes:10, completedEpisodes:10, battlePassPrice:300, totalMatches:40, murphBurned:980000 },
-];
-
-export async function GET() {
-  return NextResponse.json({ seasons: SEASONS, currentSeason: SEASONS[0] });
+export async function GET(_req: NextRequest) {
+  try {
+    const seasons = await getSeasons();
+    return ok({ seasons, total: seasons.length });
+  } catch (e) {
+    return handleApiError(e);
+  }
 }

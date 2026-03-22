@@ -1,12 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { getSession } from '@/lib/auth/session';
+import { getEconomyStats } from '@/services/admin';
+import { ok, handleApiError } from '@/lib/api/response';
 
-export async function GET() {
-  return NextResponse.json({
-    totalSupply: 1_000_000_000,
-    circulating: 987_550_000,
-    totalBurned: 12_450_000,
-    dailyBurn: 8100,
-    predictionVolume24h: 245000,
-    activeMarkets: 3,
-  });
+export async function GET(_req: NextRequest) {
+  try {
+    const session = await getSession();
+    if (!session || session.role !== 'admin') return handleApiError(new Error('Forbidden'));
+    const stats = await getEconomyStats();
+    return ok(stats);
+  } catch (e) {
+    return handleApiError(e);
+  }
 }

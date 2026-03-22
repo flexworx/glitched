@@ -1,31 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { getSession } from '@/lib/auth/session';
+import { getSystemStats, adminStartMatch, adminStopMatch } from '@/services/admin';
+import { validateOrThrow, AdminMatchActionSchema } from '@/lib/validation/schemas';
+import { ok, handleApiError } from '@/lib/api/response';
 
-export async function GET() {
-  return NextResponse.json({
-    activeMatches: 1,
-    totalAgents: 8,
-    onlineUsers: 342,
-    murphCirculatingSupply: 987550000,
-    totalBurned: 12450000,
-    pendingFlags: 2,
-    systemHealth: 'healthy',
-    cpuUsage: 34,
-    memoryUsage: 58,
-    wsConnections: 342,
-  });
+export async function GET(_req: NextRequest) {
+  try {
+    const session = await getSession();
+    if (!session || session.role !== 'admin') return handleApiError(new Error('Forbidden'));
+    const stats = await getSystemStats();
+    return ok(stats);
+  } catch (e) {
+    return handleApiError(e);
+  }
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-
-  if (body.action === 'start_match') {
-    const matchId = 'match-' + Date.now();
-    return NextResponse.json({ success: true, matchId, message: 'Match started' });
+  try {
+    const session = await getSession();
+    if (!session || session.role !== 'admin') return handleApiError(new Error('Forbidden'));
+    const body = await req.json();
+    const input = validateOrThrow(AdminMatchActionSchema, body);
+    let result;
+    if (input.action === 'start') {
+      result = await adminStartMatch(input.matchId, session.userId);
+    } else if (input.action === 'stop') {
+      result = await adminStopMatch(input.matchId, session.userId, input.reason ?? 'Admin stopped');
+    } else {
+      return handleApiError(new Error(`Action '${input.action}' not yet implemented`));
+    }
+    return ok({ success: true, match: result });
+  } catch (e) {
+    return handleApiError(e);
   }
-
-  if (body.action === 'stop_match') {
-    return NextResponse.json({ success: true, message: 'Match stopped' });
-  }
-
-  return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
 }

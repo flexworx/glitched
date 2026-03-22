@@ -1,16 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { getSession } from '@/lib/auth/session';
+import { getUserWalletBalance } from '@/services/economy';
+import { ok, handleApiError } from '@/lib/api/response';
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const address = searchParams.get('address');
-
-  if (!address) return NextResponse.json({ error: 'Address required' }, { status: 400 });
-
-  // In production: fetch from Solana RPC
-  return NextResponse.json({
-    address,
-    solBalance: 2.45,
-    murphBalance: 15000,
-    murphUsdValue: 0.0028 * 15000,
-  });
+export async function GET(_req: NextRequest) {
+  try {
+    const session = await getSession();
+    if (!session) return handleApiError(new Error('Unauthorized'));
+    const wallet = await getUserWalletBalance(session.userId);
+    if (!wallet) return handleApiError(new Error('Wallet not found'));
+    return ok(wallet);
+  } catch (e) {
+    return handleApiError(e);
+  }
 }
