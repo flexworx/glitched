@@ -4,6 +4,12 @@ import dynamic from 'next/dynamic';
 import type { GameState } from '@/lib/types/game-state';
 import type { VERITASTier } from '@/lib/types/agent';
 
+// Seeded RNG — ensures server/client render identical HTML (no hydration mismatch)
+function seededRng(seed: number) {
+  let s = seed;
+  return () => { s = (s * 1664525 + 1013904223) & 0xffffffff; return (s >>> 0) / 0xffffffff; };
+}
+
 const RedZoneDashboard = dynamic(() => import('@/components/arena/RedZoneDashboard'), { ssr: false });
 
 function createMockGameState(matchId: string, agentCount: number = 6): GameState {
@@ -13,7 +19,7 @@ function createMockGameState(matchId: string, agentCount: number = 6): GameState
     const angle = (i / agentCount) * Math.PI * 2;
     agents[id] = {
       agentId: id, position: { x: Math.round(10 + 6 * Math.cos(angle)), y: Math.round(10 + 6 * Math.sin(angle)) },
-      hp: Math.floor(Math.random() * 60) + 40, maxHp: 100, credits: 500, shields: 0,
+      hp: Math.round(rng() * 60) + 40, maxHp: 100, credits: 500, shields: 0,
       statusEffects: [], actionsUsed: 0, maxActions: 3, isEliminated: false, isGhost: false,
       emotionalState: { primary: 'focused', intensity: 0.7, triggers: [] }, visibleTiles: [],
     };
@@ -24,8 +30,8 @@ function createMockGameState(matchId: string, agentCount: number = 6): GameState
   })));
   return {
     matchId, status: 'RUNNING', gameMode: 'STANDARD_ELIMINATION', currentPhase: 'COMPETITION',
-    currentTurn: Math.floor(Math.random() * 30) + 10, maxTurns: 100,
-    dramaScore: Math.random() * 80 + 10,
+    currentTurn: Math.round(rng() * 20) + 5, maxTurns: 100,
+    dramaScore: Math.round(rng() * 60) + 10,
     board: { tiles, width: 20, height: 20, turn: 15, phase: 'COMPETITION', activeHazards: [], allianceMap: {} },
     agents, eventLog: [],
   };

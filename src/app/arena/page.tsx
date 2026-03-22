@@ -1,39 +1,49 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import type { GameState } from '@/lib/types/game-state';
 import type { VERITASTier } from '@/lib/types/agent';
 
-// Dynamic import to avoid SSR issues with Three.js
+// Dynamic imports — ssr:false prevents hydration mismatches from Three.js
 const Arena3D = dynamic(() => import('@/components/arena/Arena3D'), { ssr: false });
 const RedZoneDashboard = dynamic(() => import('@/components/arena/RedZoneDashboard'), { ssr: false });
 const GlitchArenaWorld = dynamic(() => import('@/components/arena/GlitchArenaWorld'), {
   ssr: false,
   loading: () => (
-    <div className="flex flex-col items-center justify-center w-full h-full bg-arena-black" style={{fontFamily:"'Courier New',monospace",color:'#c9a84c'}}>
-      <div style={{fontSize:'32px',marginBottom:'16px'}}>⚔️</div>
-      <div style={{fontSize:'14px',fontWeight:900,letterSpacing:'4px',marginBottom:'8px'}}>GLITCH ARENA</div>
-      <div style={{fontSize:'10px',color:'#3a3020',letterSpacing:'2px'}}>LOADING 3D WORLD...</div>
+    <div className="flex flex-col items-center justify-center w-full h-full bg-arena-black"
+      style={{ fontFamily: "'Courier New',monospace", color: '#c9a84c' }}>
+      <div style={{ fontSize: '32px', marginBottom: '16px' }}>⚔️</div>
+      <div style={{ fontSize: '14px', fontWeight: 900, letterSpacing: '4px', marginBottom: '8px' }}>GLITCH ARENA</div>
+      <div style={{ fontSize: '10px', color: '#3a3020', letterSpacing: '2px' }}>LOADING 3D WORLD...</div>
     </div>
   ),
 });
 
-// Mock game state for demo
-function createMockGameState(matchId: string, agentCount: number = 6): GameState {
+// Seeded pseudo-random number generator — produces identical output on server AND client.
+// This is the ONLY correct way to use random values in SSR-rendered React components.
+function createSeededRng(seed: number) {
+  let s = seed;
+  return () => {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    return (s >>> 0) / 0xffffffff;
+  };
+}
+
+function createMockGameState(matchId: string, agentCount: number, seed: number): GameState {
+  const rng = createSeededRng(seed);
   const agents: Record<string, import('@/lib/types/game-state').AgentGameState> = {};
   const agentIds = ['primus', 'cerberus', 'solarius', 'aurum', 'mythion', 'arion', 'vanguard', 'oracle'].slice(0, agentCount);
-  
+
   agentIds.forEach((id, i) => {
     const angle = (i / agentCount) * Math.PI * 2;
     const radius = 6;
     agents[id] = {
       agentId: id,
       position: { x: Math.round(10 + radius * Math.cos(angle)), y: Math.round(10 + radius * Math.sin(angle)) },
-      hp: Math.floor(Math.random() * 60) + 40,
+      hp: Math.round(rng() * 60) + 40,
       maxHp: 100,
-      credits: Math.floor(Math.random() * 1000) + 200,
+      credits: Math.round(rng() * 1000) + 200,
       shields: 0,
       statusEffects: [],
       actionsUsed: 0,
@@ -46,15 +56,18 @@ function createMockGameState(matchId: string, agentCount: number = 6): GameState
   });
 
   const tiles = Array.from({ length: 20 }, (_, y) =>
-    Array.from({ length: 20 }, (_, x) => ({
-      position: { x, y },
-      terrain: Math.random() < 0.1 ? (Math.random() < 0.5 ? 'mountains' : 'forest') : 'plains' as import('@/lib/types/game-state').TerrainType,
-      isVisible: true,
-      hasResource: Math.random() < 0.08,
-      resourceType: 'credits',
-      resourceAmount: 100,
-      hasHazard: Math.random() < 0.03,
-    }))
+    Array.from({ length: 20 }, (_, x) => {
+      const r = rng();
+      return {
+        position: { x, y },
+        terrain: (r < 0.1 ? (rng() < 0.5 ? 'mountains' : 'forest') : 'plains') as import('@/lib/types/game-state').TerrainType,
+        isVisible: true,
+        hasResource: rng() < 0.08,
+        resourceType: 'credits',
+        resourceAmount: 100,
+        hasHazard: rng() < 0.03,
+      };
+    })
   );
 
   return {
@@ -62,41 +75,45 @@ function createMockGameState(matchId: string, agentCount: number = 6): GameState
     status: 'RUNNING',
     gameMode: 'STANDARD_ELIMINATION',
     currentPhase: 'COMPETITION',
-    currentTurn: Math.floor(Math.random() * 30) + 10,
+    currentTurn: Math.round(rng() * 20) + 5,
     maxTurns: 100,
-    dramaScore: Math.random() * 80 + 10,
+    dramaScore: Math.round(rng() * 60) + 10,
     board: { tiles, width: 20, height: 20, turn: 15, phase: 'COMPETITION', activeHazards: [], allianceMap: {} },
     agents,
     eventLog: [],
   };
 }
 
+// Fixed seeds — server and client will always produce identical HTML for these initial states
+const INITIAL_STATES: GameState[] = [
+  createMockGameState('match-1', 8, 42),
+  createMockGameState('match-2', 6, 137),
+  createMockGameState('match-3', 4, 99),
+  createMockGameState('match-4', 6, 256),
+];
+
 const AGENT_PROFILES: Record<string, { name: string; signatureColor: string; veritasTier: VERITASTier }> = {
-  primus: { name: 'PRIMUS', signatureColor: '#FFD700', veritasTier: 'RELIABLE' },
+  primus:   { name: 'PRIMUS',   signatureColor: '#FFD700', veritasTier: 'RELIABLE' },
   cerberus: { name: 'CERBERUS', signatureColor: '#708090', veritasTier: 'PARAGON' },
   solarius: { name: 'SOLARIUS', signatureColor: '#FF6B35', veritasTier: 'RELIABLE' },
-  aurum: { name: 'AURUM', signatureColor: '#FFBF00', veritasTier: 'UNCERTAIN' },
-  mythion: { name: 'MYTHION', signatureColor: '#8B5CF6', veritasTier: 'DECEPTIVE' },
-  arion: { name: 'ARION', signatureColor: '#06B6D4', veritasTier: 'RELIABLE' },
+  aurum:    { name: 'AURUM',    signatureColor: '#FFBF00', veritasTier: 'UNCERTAIN' },
+  mythion:  { name: 'MYTHION',  signatureColor: '#8B5CF6', veritasTier: 'DECEPTIVE' },
+  arion:    { name: 'ARION',    signatureColor: '#06B6D4', veritasTier: 'RELIABLE' },
   vanguard: { name: 'VANGUARD', signatureColor: '#14B8A6', veritasTier: 'PARAGON' },
-  oracle: { name: 'ORACLE', signatureColor: '#6366F1', veritasTier: 'RELIABLE' },
+  oracle:   { name: 'ORACLE',   signatureColor: '#6366F1', veritasTier: 'RELIABLE' },
 };
 
-type ViewMode = 'world' | 'single' | 'redzoneA' | 'redzoneB' | 'redzoneC';
+type ViewMode = 'world' | 'single' | 'redzoneA' | 'redzoneB';
 
 export default function ArenaViewerPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('world');
-  const [gameStates, setGameStates] = useState<GameState[]>([
-    createMockGameState('match-1', 8),
-    createMockGameState('match-2', 6),
-    createMockGameState('match-3', 4),
-    createMockGameState('match-4', 6),
-  ]);
+  // Use deterministic initial states — no Math.random() in useState initializer
+  const [gameStates, setGameStates] = useState<GameState[]>(INITIAL_STATES);
   const [selectedAgent, setSelectedAgent] = useState<string | undefined>();
   const [showPIP, setShowPIP] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Simulate drama score changes
+  // Drama score simulation — only runs client-side after hydration completes
   useEffect(() => {
     intervalRef.current = setInterval(() => {
       setGameStates(prev => prev.map(gs => ({
@@ -126,15 +143,15 @@ export default function ArenaViewerPage() {
 
         {/* View mode selector */}
         <div className="flex gap-1">
-          {[
-            { id: 'world', label: '🌍 World' },
-            { id: 'single', label: 'Single' },
+          {([
+            { id: 'world',    label: '🌍 World' },
+            { id: 'single',   label: 'Single' },
             { id: 'redzoneA', label: 'RedZone 2x1' },
             { id: 'redzoneB', label: 'RedZone 2x2' },
-          ].map(({ id, label }) => (
+          ] as const).map(({ id, label }) => (
             <button
               key={id}
-              onClick={() => setViewMode(id as ViewMode)}
+              onClick={() => setViewMode(id)}
               className={`px-3 py-1.5 text-xs font-orbitron uppercase border transition-all ${
                 viewMode === id
                   ? 'bg-neon-green/20 border-neon-green text-neon-green'
@@ -163,9 +180,11 @@ export default function ArenaViewerPage() {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 min-h-0" style={{position:'relative'}}>
+      <div className="flex-1 min-h-0" style={{ position: 'relative' }}>
         {viewMode === 'world' ? (
-          <div style={{position:'absolute',inset:0}}><GlitchArenaWorld /></div>
+          <div style={{ position: 'absolute', inset: 0 }}>
+            <GlitchArenaWorld />
+          </div>
         ) : viewMode === 'single' ? (
           <Arena3D
             gameState={primaryState}
@@ -191,12 +210,16 @@ export default function ArenaViewerPage() {
         )}
       </div>
 
-      {/* Bottom agent status bar */}
+      {/* Bottom agent status bar
+          suppressHydrationWarning on the HP bar width div:
+          The width% is computed from seeded-RNG hp values so server==client,
+          but suppressHydrationWarning is a safety net for any floating-point drift. */}
       <div className="flex items-center gap-2 px-4 py-2 bg-arena-dark border-t border-arena-border overflow-x-auto">
         {Object.entries(primaryState.agents).map(([agentId, agentState]) => {
           const profile = AGENT_PROFILES[agentId];
           if (!profile) return null;
-          const hpPct = (agentState.hp / agentState.maxHp) * 100;
+          const hpPct = Math.round((agentState.hp / agentState.maxHp) * 100);
+          const hpColor = hpPct > 50 ? '#39FF14' : hpPct > 25 ? '#FFD60A' : '#FF006E';
           return (
             <button
               key={agentId}
@@ -213,14 +236,14 @@ export default function ArenaViewerPage() {
               </span>
               <div className="w-16 h-1 bg-arena-border rounded-full overflow-hidden">
                 <div
+                  suppressHydrationWarning
                   className="h-full rounded-full transition-all"
-                  style={{
-                    width: `${hpPct}%`,
-                    background: hpPct > 50 ? '#39FF14' : hpPct > 25 ? '#FFD60A' : '#FF006E',
-                  }}
+                  style={{ width: `${hpPct}%`, background: hpColor }}
                 />
               </div>
-              <span className="text-xs font-jetbrains text-gray-400">{agentState.hp}</span>
+              <span suppressHydrationWarning className="text-xs font-jetbrains text-gray-400">
+                {agentState.hp}
+              </span>
             </button>
           );
         })}
