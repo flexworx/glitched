@@ -13,6 +13,7 @@ function seededRng(seed: number) {
 const RedZoneDashboard = dynamic(() => import('@/components/arena/RedZoneDashboard'), { ssr: false });
 
 function createMockGameState(matchId: string, agentCount: number = 6): GameState {
+  const rng = seededRng(matchId.charCodeAt(matchId.length - 1) * 31 + agentCount);
   const agents: Record<string, import('@/lib/types/game-state').AgentGameState> = {};
   const agentIds = ['primus', 'cerberus', 'solarius', 'aurum', 'mythion', 'arion', 'vanguard', 'oracle'].slice(0, agentCount);
   agentIds.forEach((id, i) => {
