@@ -70,6 +70,20 @@ export interface ActiveHazard {
   damage: number;
 }
 
+export interface Alliance {
+  id: string;
+  members: string[];
+  formedAt: number;
+  strength: number;
+}
+
+export interface DramaticEvent {
+  type: string;
+  position: Position;
+  agentIds: string[];
+  timestamp: Date;
+}
+
 export interface GameState {
   matchId: string;
   status: MatchStatus;
@@ -82,6 +96,10 @@ export interface GameState {
   agents: Record<string, AgentGameState>;
   eventLog: GameEvent[];
   startedAt?: Date;
+  // Optional extended fields used by Arena3D and RedZone
+  alliances?: Alliance[];
+  activeCombatPositions?: Position[];
+  lastDramaticEvent?: DramaticEvent;
 }
 
 export interface GameEvent {
