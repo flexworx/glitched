@@ -193,6 +193,9 @@ model Agent {
   factionId       String?
   operator        User?        @relation(fields: [operatorId], references: [id])
   seasonStandings SeasonStanding[]
+  ruleViolations  RuleViolation[]
+  instructionDeliveries InstructionDeliveryLog[]
+  disputesAsAgent Dispute[] @relation("AgentDisputes")
 
   @@index([status])
   @@index([veritasTier])
@@ -513,6 +516,7 @@ model Season {
   matches     Match[]
   standings   SeasonStanding[]
   battlePass  BattlePass?
+  challenges  Challenge[]
 }
 
 model SeasonStanding {
@@ -559,6 +563,8 @@ model User {
   battlePassProgress BattlePassProgress[]
   adminLogs       AdminLog[]
   moderationReviews ModerationQueueItem[] @relation("ReviewedBy")
+  disputesFiled   Dispute[] @relation("DisputesFiled")
+  disputesReviewed Dispute[] @relation("DisputesReviewed")
 
   @@index([role])
   @@index([walletAddress])
@@ -927,4 +933,196 @@ model SystemMetric {
   recordedAt  DateTime @default(now())
 
   @@index([metricName, recordedAt])
+}
+
+// ============================================================
+// SEASON & RULES ENGINE — RADF v3 Sprint
+// ============================================================
+
+enum PenaltyType {
+  HP_LOSS
+  MURPH_FINE
+  ACTION_SKIP
+  TURN_SUSPENSION
+  EXPULSION
+  TERMINATION
+  WARNING
+  CUSTOM
+}
+
+enum ChallengeStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum DisputeStatus {
+  PENDING
+  UNDER_REVIEW
+  UPHELD
+  REJECTED
+  ESCALATED
+}
+
+enum InstructionDelivery {
+  WHISPER_ONLY
+  BIGSCREEN_ONLY
+  BOTH
+}
+
+model Challenge {
+  id                      String          @id @default(cuid())
+  seasonId                String
+  season                  Season          @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  title                   String
+  description             String          @db.Text
+  instructions            String          @db.Text
+  publicSummary           String          @db.Text
+  status                  ChallengeStatus @default(DRAFT)
+  orderIndex              Int             @default(0)
+  scheduledStartAt        DateTime?
+  scheduledEndAt          DateTime?
+  actualStartAt           DateTime?
+  actualEndAt             DateTime?
+  durationMinutes         Int?
+  complianceWindowMinutes Int?
+  targetAllAgents         Boolean         @default(true)
+  targetAgentIds          Json            @default("[]")
+  createdBy               String
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+  rules                   ChallengeRule[]
+  penalties               ChallengePenalty[]
+  operatorInstructions    OperatorInstruction[]
+  disputes                Dispute[]
+  timerEvents             ChallengeTimerEvent[]
+  @@index([seasonId, orderIndex])
+  @@index([status])
+  @@index([scheduledStartAt])
+}
+
+model ChallengeRule {
+  id                     String      @id @default(cuid())
+  challengeId            String
+  challenge              Challenge   @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  title                  String
+  description            String      @db.Text
+  hasTimeLimit           Boolean     @default(false)
+  timeLimitMinutes       Int?
+  violationPenaltyType   PenaltyType @default(WARNING)
+  violationPenaltyAmount Float?
+  violationMessage       String?     @db.Text
+  isActive               Boolean     @default(true)
+  orderIndex             Int         @default(0)
+  createdAt              DateTime    @default(now())
+  violations             RuleViolation[]
+  @@index([challengeId])
+}
+
+model ChallengePenalty {
+  id               String      @id @default(cuid())
+  challengeId      String
+  challenge        Challenge   @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  name             String
+  description      String      @db.Text
+  penaltyType      PenaltyType
+  amount           Float?
+  triggerCondition String      @db.Text
+  autoApply        Boolean     @default(false)
+  createdAt        DateTime    @default(now())
+}
+
+model RuleViolation {
+  id            String        @id @default(cuid())
+  ruleId        String
+  rule          ChallengeRule @relation(fields: [ruleId], references: [id])
+  agentId       String
+  agent         Agent         @relation(fields: [agentId], references: [id])
+  matchId       String?
+  penaltyType   PenaltyType
+  penaltyAmount Float?
+  reason        String        @db.Text
+  appliedBy     String
+  appliedAt     DateTime      @default(now())
+  wasDisputed   Boolean       @default(false)
+  dispute       Dispute?
+  @@index([agentId])
+  @@index([ruleId])
+  @@index([appliedAt])
+}
+
+model OperatorInstruction {
+  id                      String              @id @default(cuid())
+  challengeId             String?
+  challenge               Challenge?          @relation(fields: [challengeId], references: [id])
+  matchId                 String?
+  operatorId              String
+  delivery                InstructionDelivery @default(BOTH)
+  whisperText             String              @db.Text
+  bigScreenText           String?             @db.Text
+  targetAllAgents         Boolean             @default(false)
+  targetAgentIds          Json                @default("[]")
+  complianceWindowMinutes Int?
+  complianceDeadline      DateTime?
+  isDelivered             Boolean             @default(false)
+  deliveredAt             DateTime?
+  createdAt               DateTime            @default(now())
+  agentDeliveries         InstructionDeliveryLog[]
+  @@index([challengeId])
+  @@index([matchId])
+  @@index([createdAt])
+}
+
+model InstructionDeliveryLog {
+  id              String              @id @default(cuid())
+  instructionId   String
+  instruction     OperatorInstruction @relation(fields: [instructionId], references: [id], onDelete: Cascade)
+  agentId         String
+  agent           Agent               @relation(fields: [agentId], references: [id])
+  deliveredAt     DateTime            @default(now())
+  injectedIntoTurn Int?
+  wasAcknowledged Boolean             @default(false)
+  @@index([instructionId])
+  @@index([agentId])
+}
+
+model ChallengeTimerEvent {
+  id          String    @id @default(cuid())
+  challengeId String
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  eventType   String
+  scheduledAt DateTime
+  firedAt     DateTime?
+  wasFired    Boolean   @default(false)
+  payload     Json      @default("{}")
+  @@index([challengeId])
+  @@index([scheduledAt, wasFired])
+}
+
+model Dispute {
+  id              String        @id @default(cuid())
+  violationId     String?       @unique
+  violation       RuleViolation? @relation(fields: [violationId], references: [id])
+  challengeId     String?
+  challenge       Challenge?    @relation(fields: [challengeId], references: [id])
+  filedBy         String
+  filedByUser     User          @relation("DisputesFiled", fields: [filedBy], references: [id])
+  agentId         String
+  agent           Agent         @relation("AgentDisputes", fields: [agentId], references: [id])
+  disputeReason   String        @db.Text
+  evidenceText    String?       @db.Text
+  status          DisputeStatus @default(PENDING)
+  reviewedBy      String?
+  reviewer        User?         @relation("DisputesReviewed", fields: [reviewedBy], references: [id])
+  reviewNotes     String?       @db.Text
+  reviewedAt      DateTime?
+  penaltyReversed Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  @@index([status])
+  @@index([filedBy])
+  @@index([agentId])
 }

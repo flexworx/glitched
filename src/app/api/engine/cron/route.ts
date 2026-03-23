@@ -5,6 +5,7 @@
  * Advances turns, settles predictions, and broadcasts via WebSocket.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { processChallengeTick } from '@/lib/engine/challenge-timer';
 import { prisma } from '@/lib/db/client';
 import { MatchStatus, PredictionStatus } from '@prisma/client';
 
