@@ -50,7 +50,7 @@ function computePersonalityCostFromAdjustments(
   for (const key of Object.keys(baseTraits)) {
     adjusted[key] = (baseTraits[key] ?? 50) + (adjustments[key] ?? 0);
   }
-  return calculateTotalPersonalityCost(baseTraits, adjusted);
+  return calculateTotalPersonalityCost(adjusted);
 }
 
 /** Pick skills by tier. */
@@ -175,44 +175,37 @@ describe('Soul Forge Flow Integration', () => {
   // 2. Budget calculation flow
   // ---------------------------------------------------------------------------
   describe('Budget calculation flow', () => {
-    it('should correctly compute trait costs for adjustments over and under 50', () => {
+    it('should correctly compute trait costs relative to 50 baseline', () => {
       // Cost per point over 50 is 3 $MURPH
-      expect(calculateTraitCost(50, 70)).toBe(60);   // 20 * 3 = 60
-      expect(calculateTraitCost(50, 100)).toBe(150);  // 50 * 3 = 150
+      expect(calculateTraitCost(70)).toBe(60);   // 20 * 3 = 60
+      expect(calculateTraitCost(100)).toBe(150);  // 50 * 3 = 150
 
-      // Refund per point under 50 is 1 $MURPH (returned as negative cost conceptually)
-      // But calculateTraitCost returns the absolute refund inverted:
-      // diff = currentValue - baseValue = 30 - 50 = -20
-      // return diff * REFUND_PER_POINT_UNDER_50 * -1 = -20 * 1 * -1 = 20
-      expect(calculateTraitCost(50, 30)).toBe(20);
+      // Refund per point under 50 is 1 $MURPH (returned as negative)
+      expect(calculateTraitCost(30)).toBe(-20);  // -(50-30) * 1 = -20
 
-      // At base, no cost (function returns -0 due to 0 * -1, which is equivalent to 0)
-      expect(Math.abs(calculateTraitCost(50, 50))).toBe(0);
+      // At 50, no cost
+      expect(calculateTraitCost(50)).toBe(0);
     });
 
     it('should compute total personality cost respecting the 650 cap', () => {
       const baseTraits = uniformTraits(50);
 
       // All traits at 50 → zero cost
-      const zeroCost = calculateTotalPersonalityCost(baseTraits, baseTraits);
+      const zeroCost = calculateTotalPersonalityCost(baseTraits);
       expect(zeroCost).toBe(0);
 
       // Some traits adjusted
       const adjusted = { ...baseTraits, O: 70, C: 80 };
-      const cost = calculateTotalPersonalityCost(baseTraits, adjusted);
+      const cost = calculateTotalPersonalityCost(adjusted);
       // O: +20 * 3 = 60, C: +30 * 3 = 90
       expect(cost).toBe(150);
 
-      // With refunds: lowering some traits
+      // With refunds: lowering some traits offsets cost
       const withRefunds = { ...baseTraits, O: 70, N: 30 };
-      const costWithRefund = calculateTotalPersonalityCost(baseTraits, withRefunds);
-      // O: +20 * 3 = 60, N: -20 * 1 = 20 (refund as positive)
-      // calculateTraitCost: diff > 0 → diff * COST_PER_POINT_OVER_50
-      //                     diff <= 0 → diff * REFUND_PER_POINT_UNDER_50 * -1
-      // So under 50 gives positive cost too: (-20) * 1 * -1 = 20
-      // Both increasing and decreasing from base costs money.
-      // Under 50 costs 1 per point, over 50 costs 3 per point.
-      expect(costWithRefund).toBe(80); // 60 + 20
+      const costWithRefund = calculateTotalPersonalityCost(withRefunds);
+      // O: +20 * 3 = 60, N: -(50-30) * 1 = -20 (refund)
+      // Net: 60 - 20 = 40
+      expect(costWithRefund).toBe(40);
     });
 
     it('should correctly calculate budget with 1000 $MURPH starting amount', () => {
@@ -223,8 +216,9 @@ describe('Soul Forge Flow Integration', () => {
         C: 80,        // +30 over → 90 cost
         EMPATHY: 35,  // -15 under → 15 cost
       };
-      const personalityCost = calculateTotalPersonalityCost(baseTraits, adjusted);
-      expect(personalityCost).toBe(165); // 60 + 90 + 15
+      const personalityCost = calculateTotalPersonalityCost(adjusted);
+      // O: +20*3=60, C: +30*3=90, EMPATHY: -(50-35)*1=-15, net = 135
+      expect(personalityCost).toBe(135);
 
       // Pick 3 skills from different tiers
       const skills = [
@@ -234,7 +228,7 @@ describe('Soul Forge Flow Integration', () => {
       ];
       const budget = calculateBudget(personalityCost, skills);
 
-      expect(budget.personalityCost).toBe(165);
+      expect(budget.personalityCost).toBe(135);
       expect(budget.skillsCost).toBe(skills.reduce((s, sk) => s + sk.cost, 0));
       expect(budget.totalSpent).toBe(budget.personalityCost + budget.skillsCost);
       expect(budget.remaining).toBe(ECONOMY.TOTAL_BUDGET - budget.totalSpent);
@@ -248,7 +242,7 @@ describe('Soul Forge Flow Integration', () => {
       for (const code of ALL_TRAIT_CODES) {
         maxed[code] = 100; // +50 * 3 = 150 per trait, 31 traits = 4650
       }
-      const rawCost = calculateTotalPersonalityCost(baseTraits, maxed);
+      const rawCost = calculateTotalPersonalityCost(maxed);
       expect(rawCost).toBeGreaterThan(ECONOMY.PERSONALITY_BUDGET);
 
       // When building budget, cap applies
@@ -320,7 +314,7 @@ describe('Soul Forge Flow Integration', () => {
       for (const key of Object.keys(aiTraits)) {
         adjustedTraits[key] = aiTraits[key] + (adjustments[key] ?? 0);
       }
-      const personalityCost = calculateTotalPersonalityCost(baseTraits, adjustedTraits);
+      const personalityCost = calculateTotalPersonalityCost(adjustedTraits);
       expect(personalityCost).toBeGreaterThan(0);
 
       // Step 5: Equip 3 skills (using spec skill IDs)
@@ -376,16 +370,14 @@ describe('Soul Forge Flow Integration', () => {
     });
 
     it('should compute zero cost when all traits are at 50', () => {
-      const baseTraits = uniformTraits(50);
       const currentTraits = uniformTraits(50);
-      const cost = calculateTotalPersonalityCost(baseTraits, currentTraits);
+      const cost = calculateTotalPersonalityCost(currentTraits);
       expect(cost).toBe(0);
     });
 
     it('should compute maximum cost when all traits are at 100', () => {
-      const baseTraits = uniformTraits(50);
       const currentTraits = uniformTraits(100);
-      const cost = calculateTotalPersonalityCost(baseTraits, currentTraits);
+      const cost = calculateTotalPersonalityCost(currentTraits);
 
       // Each trait: +50 * 3 = 150, total traits: 31
       const expectedCost = ALL_TRAIT_CODES.length * 50 * ECONOMY.COST_PER_POINT_OVER_50;
@@ -407,9 +399,8 @@ describe('Soul Forge Flow Integration', () => {
     });
 
     it('should detect budget overflow with personality at cap plus 3 legendary skills', () => {
-      const baseTraits = uniformTraits(50);
       const maxedTraits = uniformTraits(100);
-      const personalityCost = calculateTotalPersonalityCost(baseTraits, maxedTraits);
+      const personalityCost = calculateTotalPersonalityCost(maxedTraits);
 
       // Cap personality cost
       const cappedPersonality = Math.min(personalityCost, ECONOMY.PERSONALITY_BUDGET);
@@ -476,13 +467,11 @@ describe('Soul Forge Flow Integration', () => {
     });
 
     it('should compute cost correctly when lowering traits below 50', () => {
-      const baseTraits = uniformTraits(50);
-      const lowered = uniformTraits(0); // all at 0, -50 from base
+      const lowered = uniformTraits(0); // all at 0, -50 from baseline
 
-      const cost = calculateTotalPersonalityCost(baseTraits, lowered);
-      // Each trait: 50 * 1 (REFUND_PER_POINT_UNDER_50) = 50 per trait
-      const expectedCost = ALL_TRAIT_CODES.length * 50 * ECONOMY.REFUND_PER_POINT_UNDER_50;
-      expect(cost).toBe(expectedCost);
+      const cost = calculateTotalPersonalityCost(lowered);
+      // Each trait: -(50-0)*1 = -50, total = -1550, clamped to 0
+      expect(cost).toBe(0);
     });
 
     it('should handle mixed adjustments with both increases and decreases', () => {

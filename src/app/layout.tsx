@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Space_Grotesk, Orbitron, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
+import { Header } from '@/components/layout/Header';
 import { MobileNav } from '@/components/layout/MobileNav';
 
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk', display: 'swap' });
@@ -47,6 +48,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(57,255,20,0.1) 2px, rgba(57,255,20,0.1) 4px)' }}
           aria-hidden="true"
         />
+        {/* Global header navigation */}
+        <Header />
         {/* Page content — pb-safe adds bottom padding on mobile to clear the MobileNav */}
         <div className="pb-safe-mobile">
           {children}

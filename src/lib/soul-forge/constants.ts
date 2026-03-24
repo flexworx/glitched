@@ -164,23 +164,18 @@ export { FLAWS };
 
 // -- Cost Calculations -------------------------------------------------------
 
-export function calculateTraitCost(baseValue: number, currentValue: number): number {
-  const diff = currentValue - baseValue;
-  if (diff > 0) {
-    return diff * ECONOMY.COST_PER_POINT_OVER_50;
-  }
-  return diff * ECONOMY.REFUND_PER_POINT_UNDER_50 * -1;
+export function calculateTraitCost(value: number): number {
+  if (value > 50) return (value - 50) * ECONOMY.COST_PER_POINT_OVER_50;
+  if (value < 50) return -(50 - value) * ECONOMY.REFUND_PER_POINT_UNDER_50;
+  return 0;
 }
 
 export function calculateTotalPersonalityCost(
-  baseTraits: Record<string, number>,
-  currentTraits: Record<string, number>
+  traits: Record<string, number>
 ): number {
   let total = 0;
-  for (const key of Object.keys(currentTraits)) {
-    const base = baseTraits[key] ?? 50;
-    const current = currentTraits[key] ?? 50;
-    total += calculateTraitCost(base, current);
+  for (const key of Object.keys(traits)) {
+    total += calculateTraitCost(traits[key] ?? 50);
   }
   return Math.max(0, total);
 }

@@ -49,7 +49,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
-      <Header />
 
       {/* ── Mobile: drawer toggle bar ── */}
       <div className="md:hidden fixed top-16 left-0 right-0 z-40 bg-[#0d0d1a] border-b border-white/5 px-4 py-2 flex items-center gap-3">

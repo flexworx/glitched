@@ -231,34 +231,32 @@ describe('ECONOMY', () => {
 // ---------------------------------------------------------------------------
 
 describe('calculateTraitCost', () => {
-  const base = 50;
-
-  it('value 50 (no change) -> cost 0', () => {
-    expect(calculateTraitCost(base, 50) + 0).toBe(0);
+  it('value 50 -> cost 0', () => {
+    expect(calculateTraitCost(50)).toBe(0);
   });
 
   it('value 80 -> cost 90 (30 * 3)', () => {
-    expect(calculateTraitCost(base, 80)).toBe(90);
+    expect(calculateTraitCost(80)).toBe(90);
   });
 
   it('value 100 -> cost 150 (50 * 3)', () => {
-    expect(calculateTraitCost(base, 100)).toBe(150);
+    expect(calculateTraitCost(100)).toBe(150);
   });
 
-  it('value 20 -> cost 30 (negative diff flipped: -30 * 1 * -1 = 30)', () => {
-    expect(calculateTraitCost(base, 20)).toBe(30);
+  it('value 20 -> refund -30 (-(50-20) * 1)', () => {
+    expect(calculateTraitCost(20)).toBe(-30);
   });
 
-  it('value 0 -> cost 50 (negative diff flipped: -50 * 1 * -1 = 50)', () => {
-    expect(calculateTraitCost(base, 0)).toBe(50);
+  it('value 0 -> refund -50 (-(50-0) * 1)', () => {
+    expect(calculateTraitCost(0)).toBe(-50);
   });
 
   it('value 51 -> cost 3 (1 * 3)', () => {
-    expect(calculateTraitCost(base, 51)).toBe(3);
+    expect(calculateTraitCost(51)).toBe(3);
   });
 
-  it('value 49 -> cost 1 (negative diff flipped: -1 * 1 * -1 = 1)', () => {
-    expect(calculateTraitCost(base, 49)).toBe(1);
+  it('value 49 -> refund -1 (-(50-49) * 1)', () => {
+    expect(calculateTraitCost(49)).toBe(-1);
   });
 });
 
@@ -271,27 +269,27 @@ describe('calculateTotalPersonalityCost', () => {
 
   it('all traits at 50 -> total 0', () => {
     const current = { ...baseAll50 };
-    expect(calculateTotalPersonalityCost(baseAll50, current)).toBe(0);
+    expect(calculateTotalPersonalityCost(current)).toBe(0);
   });
 
   it('one trait at 80, rest at 50 -> total 90', () => {
     const current = { ...baseAll50, O: 80 };
-    expect(calculateTotalPersonalityCost(baseAll50, current)).toBe(90);
+    expect(calculateTotalPersonalityCost(current)).toBe(90);
   });
 
-  it('one trait at 80, one at 20 -> total 120 (90 + 30, both directions cost)', () => {
+  it('one trait at 80, one at 20 -> net 60 (90 cost - 30 refund)', () => {
     const current = { ...baseAll50, O: 80, A: 20 };
-    expect(calculateTotalPersonalityCost(baseAll50, current)).toBe(120);
+    expect(calculateTotalPersonalityCost(current)).toBe(60);
   });
 
   it('empty traits object -> total 0', () => {
-    expect(calculateTotalPersonalityCost({}, {})).toBe(0);
+    expect(calculateTotalPersonalityCost({})).toBe(0);
   });
 
-  it('single trait below base still costs (deviation in either direction)', () => {
+  it('single trait below 50 -> refund but floor at 0', () => {
     const current = { O: 10 };
-    // diff = 10 - 50 = -40, cost = -40 * 1 * -1 = 40
-    expect(calculateTotalPersonalityCost(baseAll50, current)).toBe(40);
+    // cost = -(50-10) * 1 = -40, clamped to 0
+    expect(calculateTotalPersonalityCost(current)).toBe(0);
   });
 });
 
