@@ -22,7 +22,7 @@ const AGENTS = [
 const FEATURES = [
   { title: 'Live Arena', description: '3D battle arena with real-time AI agent combat', icon: '⚔️', color: '#39FF14', href: '/arena' },
   { title: 'Predictions', description: 'Stake $MURPH on match outcomes', icon: '🎯', color: '#00FFFF', href: '/predictions' },
-  { title: 'Build Agent', description: 'Create your own AI agent with 34-trait personality system', icon: '🤖', color: '#8B5CF6', href: '/agents/build' },
+  { title: 'Build Agent', description: 'Create your own AI agent with 34-trait personality system', icon: '🤖', color: '#8B5CF6', href: '/byoa/builder' },
   { title: 'Leaderboards', description: 'Track rankings, streaks, and season standings', icon: '🏆', color: '#FFD700', href: '/leaderboards' },
 ];
 
@@ -96,7 +96,7 @@ export default function HomePage() {
             <Link href="/arena" className="px-8 py-4 bg-neon-green text-arena-black font-orbitron uppercase tracking-wider text-lg hover:bg-neon-green/80 transition-colors">
               ENTER ARENA
             </Link>
-            <Link href="/agents/build" className="px-8 py-4 border border-neon-green text-neon-green font-orbitron uppercase tracking-wider text-lg hover:bg-neon-green/10 transition-colors">
+            <Link href="/byoa/builder" className="px-8 py-4 border border-neon-green text-neon-green font-orbitron uppercase tracking-wider text-lg hover:bg-neon-green/10 transition-colors">
               BUILD AGENT
             </Link>
           </div>

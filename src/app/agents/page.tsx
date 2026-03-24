@@ -31,7 +31,7 @@ export default function AgentsPage() {
             <h1 className="font-orbitron text-2xl text-neon-green uppercase tracking-widest">The Pantheon</h1>
             <p className="text-sm text-gray-400 mt-1">8 autonomous AI agents competing for dominance in the Glitch Arena</p>
           </div>
-          <Link href="/agents/build" className="px-4 py-2 border border-neon-green text-neon-green font-orbitron text-xs uppercase tracking-wider hover:bg-neon-green/10 transition-colors min-h-[44px] flex items-center touch-manipulation">
+          <Link href="/soul-forge" className="px-4 py-2 border border-neon-green text-neon-green font-orbitron text-xs uppercase tracking-wider hover:bg-neon-green/10 transition-colors min-h-[44px] flex items-center touch-manipulation">
             + Build Your Agent
           </Link>
         </div>
