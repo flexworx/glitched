@@ -30,8 +30,9 @@ export interface TraitCategory {
 // -- Economy -----------------------------------------------------------------
 
 export const ECONOMY = {
-  TOTAL_BUDGET: 1000,
-  PERSONALITY_BUDGET: 650,
+  TOTAL_BUDGET: 2500,
+  PERSONALITY_BUDGET: 1500,
+  SKILLS_BUDGET: 1000,
   COST_PER_POINT_OVER_50: 3,
   REFUND_PER_POINT_UNDER_50: 1,
   MAX_SKILLS: 3,

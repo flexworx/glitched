@@ -285,12 +285,17 @@ export default function SoulForgePage() {
                   <span className={['text-xs font-mono transition-colors', description.length >= 160 ? 'text-red-400' : 'text-white/30'].join(' ')}>{description.length} / 180</span>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2 justify-center max-w-xl mb-8">
-                {SUGGESTION_CHIPS.map(chip => (
-                  <button key={chip} onClick={() => handleChipClick(chip)} disabled={loading} className="px-3 py-1.5 text-xs text-white/50 bg-white/5 border border-white/10 rounded-full hover:bg-electric-blue/10 hover:border-electric-blue/30 hover:text-electric-blue transition-all truncate max-w-[280px] disabled:opacity-40">
-                    {chip.length > 50 ? chip.slice(0, 50) + '...' : chip}
-                  </button>
-                ))}
+              {/* Example Personalities */}
+              <div className="w-full max-w-xl mb-8">
+                <h3 className="font-orbitron text-xs text-white/50 uppercase tracking-widest text-center mb-2">Need Inspiration? Try One</h3>
+                <p className="text-[10px] text-white/30 text-center mb-4">Click any example below to instantly generate a 34-trait personality DNA. You can customize everything after.</p>
+                <div className="flex flex-col gap-2">
+                  {SUGGESTION_CHIPS.map(chip => (
+                    <button key={chip} onClick={() => handleChipClick(chip)} disabled={loading} className="w-full text-left px-4 py-2.5 text-sm text-white/60 bg-white/[0.03] border border-white/10 rounded-xl hover:bg-electric-blue/10 hover:border-electric-blue/30 hover:text-electric-blue transition-all disabled:opacity-40">
+                      &ldquo;{chip}&rdquo;
+                    </button>
+                  ))}
+                </div>
               </div>
               <button onClick={() => handleForge()} disabled={!description.trim() || loading} className={['px-10 py-4 font-orbitron text-sm uppercase tracking-widest font-bold rounded-xl transition-all bg-neon-green text-arena-black hover:shadow-neon-green disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none'].join(' ')} style={description.trim() && !loading ? { boxShadow: '0 0 20px #39FF14, 0 0 40px #39FF1440' } : undefined}>
                 {loading ? 'Forging...' : 'Forge Soul'}
