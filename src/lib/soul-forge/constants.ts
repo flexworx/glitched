@@ -200,20 +200,46 @@ export function mapSoulForgeToDb(
   };
 
   return {
+    // Big Five
     openness: adjusted('O'),
     conscientiousness: adjusted('C'),
     extraversion: adjusted('E'),
     agreeableness: adjusted('A'),
     neuroticism: adjusted('N'),
-    aggressiveness: adjusted('ASSERTIVENESS'),
-    deceptiveness: 1 - adjusted('HH'), // low Honesty-Humility = high deceptiveness
-    loyalty: adjusted('LOYALTY'),
-    riskTolerance: adjusted('RISK_TOLERANCE'),
-    adaptability: adjusted('ADAPTABILITY'),
-    charisma: adjusted('HE'), // HEXACO Extraversion maps to social charisma
-    patience: 1 - adjusted('URGENCY'), // high Urgency = low patience
-    ambition: adjusted('STRATEGIC'),
+    // Communication
+    directness: adjusted('DIRECTNESS'),
+    formality: adjusted('FORMALITY'),
+    verbosity: adjusted('HE'),
+    humor: adjusted('HUMOR'),
     empathy: adjusted('EMPATHY'),
+    // Strategic
+    riskTolerance: adjusted('RISK_TOLERANCE'),
+    deceptionAptitude: 1 - adjusted('HH'),
+    loyaltyBias: adjusted('LOYALTY'),
+    competitiveness: adjusted('STRATEGIC'),
+    adaptability: adjusted('ADAPTABILITY'),
+    // Emotional
+    emotionality: adjusted('EM'),
+    impulsivity: adjusted('DECISION_SPEED'),
+    resilience: adjusted('RESILIENCE'),
+    jealousy: 1 - adjusted('FORGIVENESS'),
+    pride: adjusted('INDEPENDENCE'),
+    // Social
+    assertiveness: adjusted('ASSERTIVENESS'),
+    persuasiveness: adjusted('COLLABORATIVENESS'),
+    trustingness: adjusted('TRUST'),
+    dominance: adjusted('URGENCY'),
+    cooperativeness: adjusted('A'),
+    // Cognitive
+    analyticalThinking: adjusted('DATA_RELIANCE'),
     creativity: adjusted('CREATIVITY'),
+    patience: 1 - adjusted('URGENCY'),
+    decisionSpeed: adjusted('DECISION_SPEED'),
+    memoryRetention: adjusted('DETAIL'),
+    // Moral
+    moralFlexibility: 1 - adjusted('HH'),
+    vengefulness: 1 - adjusted('FORGIVENESS'),
+    generosity: adjusted('EMPATHY'),
+    urgencyBias: adjusted('URGENCY'),
   };
 }
