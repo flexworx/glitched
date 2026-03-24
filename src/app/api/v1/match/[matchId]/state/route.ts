@@ -1,16 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { SocialGameState } from '@/lib/types/glitch-engine';
-
-/**
- * In-memory match state store.
- * In production this would be backed by Redis or a database;
- * for the testing dashboard we keep state in memory so the
- * decide / advance endpoints can read and write it cheaply.
- */
-const matchStates = new Map<string, SocialGameState>();
-
-/** Expose the map so other route files in the same process can import it. */
-export { matchStates };
+import { matchStates } from '@/lib/engine/social/match-state-store';
 
 /**
  * Seed a default 16-agent match state for a given matchId.

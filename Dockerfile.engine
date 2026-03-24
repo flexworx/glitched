@@ -1,15 +1,17 @@
 FROM node:20-alpine
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci --ignore-scripts
-COPY src/services/game-engine ./src/services/game-engine
+COPY engine ./engine
 COPY src/lib ./src/lib
+COPY src/services ./src/services
 COPY data ./data
 COPY tsconfig.json ./
 COPY prisma ./prisma
-RUN npx prisma generate
+COPY node_modules/.prisma ./node_modules/.prisma
+COPY node_modules/@prisma ./node_modules/@prisma
 EXPOSE 3002
-ENV PORT 3002
-ENV NODE_ENV production
-CMD ["node", "-r", "ts-node/register", "src/services/game-engine/server.ts"]
+ENV PORT=3002
+ENV NODE_ENV=production
+CMD ["node", "-r", "ts-node/register", "engine/index.ts"]

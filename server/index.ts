@@ -1,6 +1,5 @@
 import { createServer } from 'http';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const express = require('express');
+import express from 'express';
 import { createWebSocketServer } from '../src/lib/websocket/server';
 import { RedZoneCoordinator } from '../src/lib/websocket/redzone-coordinator';
 import { ChatHandler } from '../src/lib/websocket/chat-handler';
@@ -11,7 +10,7 @@ const httpServer = createServer(app);
 app.use(express.json());
 
 // Health check
-app.get('/health', (req: any, res: any) => {
+app.get('/health', (_req: any, res: any) => {
   res.json({ status: 'ok', service: 'websocket', timestamp: new Date().toISOString() });
 });
 
@@ -34,7 +33,7 @@ app.post('/internal/broadcast/drama', (req: any, res: any) => {
   res.json({ ok: true });
 });
 
-app.get('/internal/redzone/active', (req: any, res: any) => {
+app.get('/internal/redzone/active', (_req: any, res: any) => {
   res.json({
     current: redZone.getCurrentFocus(),
     matches: redZone.getActiveMatches(),

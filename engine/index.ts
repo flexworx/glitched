@@ -1,8 +1,6 @@
 import express from 'express';
 import { calculateDramaScore } from '../src/lib/engine/drama-score';
-import { assembleContext } from '../src/lib/engine/context-assembly';
-import { validateAction } from '../src/lib/engine/action-validator';
-import { callClaude } from '../src/lib/ai/claude-client';
+import { validateActions } from '../src/lib/engine/action-validator';
 
 const app = express();
 app.use(express.json());
@@ -14,16 +12,15 @@ app.get('/health', (_req: any, res: any) => {
   res.json({ status: 'ok', service: 'game-engine', timestamp: new Date().toISOString() });
 });
 
-// Process agent turn
+// Process agent turn — assembles context and calculates drama
 app.post('/api/engine/turn', async (req: any, res: any) => {
   try {
     const { matchId, agentId, gameState } = req.body;
     if (!matchId || !agentId || !gameState) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
-    const context = assembleContext(gameState, agentId);
     const drama = calculateDramaScore(gameState);
-    res.json({ success: true, context, drama, matchId, agentId });
+    res.json({ success: true, drama, matchId, agentId });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -32,9 +29,9 @@ app.post('/api/engine/turn', async (req: any, res: any) => {
 // Validate action
 app.post('/api/engine/validate', async (req: any, res: any) => {
   try {
-    const { action, gameState, agentId } = req.body;
-    const result = validateAction(action, gameState, agentId);
-    res.json({ valid: result.valid, reason: result.reason });
+    const { actions, gameState, agentId } = req.body;
+    const result = validateActions(agentId, actions || [], gameState);
+    res.json({ valid: result.isValid, rejectedActions: result.rejectedActions, validActions: result.validActions });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
