@@ -9,17 +9,25 @@ import type {
   SocialGameState,
   ChallengeResult,
 } from '../../types/glitch-engine';
-import type { PersonalityTraits } from '../../types/agent';
-
 interface OrchestratorAgent {
   id: string;
   name: string;
   flaw: string;
   skills: string[];
-  personality: PersonalityTraits;
+  personality: Record<string, number>;
   mbti: string;
   enneagram: string;
 }
+
+/** Wildcard events that can shake up match dynamics. */
+const WILDCARD_EVENTS = [
+  { name: 'Alliance Shuffle', description: 'All alliances are dissolved. New alliances must be formed from scratch.', effect: 'All current alliances are broken. Trust resets.' },
+  { name: 'Truth Bomb', description: 'All VERITAS scores are revealed publicly for this round.', effect: 'Every agent can see every other agent\'s exact VERITAS score.' },
+  { name: 'Double Elimination', description: 'This council will eliminate TWO agents instead of one.', effect: 'The top 2 vote-getters are both eliminated.' },
+  { name: 'Immunity Idol', description: 'The lowest-ranked agent receives immunity this round.', effect: 'The bottom-ranked agent cannot be eliminated this council.' },
+  { name: 'Flaw Activation', description: 'All agent flaws become ACTIVE for the next 2 rounds.', effect: 'Every flaw mechanically affects decisions.' },
+  { name: 'Silent Round', description: 'No public messages allowed this round. DMs only.', effect: 'Public channel is disabled. Alliances must communicate via DM.' },
+];
 
 export class MatchOrchestrator {
   private stateManager: SocialGameStateManager;
@@ -286,13 +294,26 @@ export class MatchOrchestrator {
 
     const state = this.stateManager.getState();
 
-    // Ghost jury members can send lobby messages
+    // Ghost jury members send 1 public message per round (spec requirement)
     for (const juror of state.ghostJury) {
-      this.stateManager.createMessage(
-        juror.agentId,
-        'ghost',
-        `[Ghost ${juror.name}] watches from the jury...`
-      );
+      const lobbyMsg = `[Ghost ${juror.name}] The jury is watching. Round ${state.roundNumber} decisions will be remembered.`;
+      this.stateManager.createMessage(juror.agentId, 'ghost', lobbyMsg);
+      juror.lobbyMessages.push(lobbyMsg);
+    }
+
+    // Wildcard event triggers at round 3 (spec: Social 3, ~55min mark)
+    if (state.roundNumber === 3 && !state.wildcardActive) {
+      const wildcardIndex = Math.floor(Math.random() * WILDCARD_EVENTS.length);
+      const wildcard = WILDCARD_EVENTS[wildcardIndex];
+      const wildcardEvent = {
+        id: `wildcard_${state.roundNumber}_${Date.now()}`,
+        name: wildcard.name,
+        description: wildcard.description,
+        effect: wildcard.effect,
+        triggeredAtRound: state.roundNumber,
+        duration: 1,
+      };
+      (this.stateManager.getState() as any).wildcardActive = wildcardEvent;
     }
 
     // Check for alliance trust decay (natural entropy)
@@ -322,6 +343,18 @@ export class MatchOrchestrator {
       votedFor: string;
     }> = [];
 
+    // Closing arguments: each finalist makes a public speech (spec requirement)
+    for (const finalistId of survivingIds) {
+      const finalist = state.agents[finalistId];
+      if (finalist) {
+        this.stateManager.createMessage(
+          finalistId,
+          'public',
+          `[CLOSING ARGUMENT] ${finalist.name} addresses the Ghost Jury for the final vote.`
+        );
+      }
+    }
+
     // Collect jury votes
     for (const juror of state.ghostJury) {
       if (juror.finalVote && survivingIds.includes(juror.finalVote)) {
@@ -338,7 +371,7 @@ export class MatchOrchestrator {
       const sortedSurvivors = survivingIds
         .map((id) => ({
           id,
-          veritas: state.veritasScores[id] ?? 50,
+          veritas: state.veritasScores[id] ?? 500,
           influence: state.agents[id]?.influencePoints ?? 0,
         }))
         .sort((a, b) => {

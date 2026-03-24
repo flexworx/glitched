@@ -15,10 +15,10 @@ function seedMatchState(matchId: string): SocialGameState {
   ];
 
   const FLAWS = [
-    'hubris', 'paranoia', 'impulsiveness', 'greed',
-    'naivety', 'jealousy', 'indecisiveness', 'arrogance',
-    'stubbornness', 'cowardice', 'obsession', 'rage',
-    'vanity', 'apathy', 'recklessness', 'distrust',
+    'Fear of Losing', 'Loner', 'Overthinker', 'People Pleaser',
+    'Grudge Holder', 'Big Bettor', 'Pessimist', 'Attention Seeker',
+    'Imposter Syndrome', 'Hot Streak Chaser', 'Commitmentphobe', 'Conspiracy Theorist',
+    'Perfectionist', 'Glass Ego', 'Fear of Losing', 'Loner',
   ];
 
   const agents: SocialGameState['agents'] = {};
@@ -29,9 +29,9 @@ function seedMatchState(matchId: string): SocialGameState {
       name: AGENT_NAMES[i],
       ranking: i + 1,
       influencePoints: 100,
-      veritasScore: 50,
-      activeSkills: ['wiretap', 'shield', 'insight'].slice(0, (i % 3) + 1),
-      skillCharges: { wiretap: 1, shield: 1, insight: 1 },
+      veritasScore: 500,
+      activeSkills: ['rumor-mill', 'smoke-screen', 'escape-hatch'].slice(0, (i % 3) + 1),
+      skillCharges: { 'rumor-mill': 1, 'smoke-screen': 1, 'escape-hatch': 1 },
       flaw: FLAWS[i],
       flawActive: false,
       isEliminated: false,
@@ -54,7 +54,7 @@ function seedMatchState(matchId: string): SocialGameState {
     recentMessages: [],
     recentEvents: ['Match initialized. 16 agents enter the arena.'],
     veritasScores: Object.fromEntries(
-      Object.keys(agents).map((id) => [id, 50])
+      Object.keys(agents).map((id) => [id, 500])
     ),
   };
 

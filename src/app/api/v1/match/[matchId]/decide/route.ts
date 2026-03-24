@@ -51,7 +51,7 @@ function buildUserPrompt(turnRequest: AgentTurnRequest): string {
   lines.push(`Name: ${me.name} (ID: ${me.id})`);
   lines.push(`Ranking: #${me.ranking}`);
   lines.push(`Influence Points: ${me.influencePoints}`);
-  lines.push(`VERITAS Score: ${me.veritasScore}/100`);
+  lines.push(`VERITAS Score: ${me.veritasScore}/1000`);
   lines.push(`Flaw: ${me.flaw} (active: ${me.flawActive})`);
   lines.push(`Emotional State: ${me.emotionalState}`);
   lines.push(`Stance: ${me.stance}`);
@@ -69,7 +69,7 @@ function buildUserPrompt(turnRequest: AgentTurnRequest): string {
   if (turnRequest.alliances.length > 0) {
     lines.push(`=== VISIBLE ALLIANCES ===`);
     for (const a of turnRequest.alliances) {
-      lines.push(`- ${a.name || a.id}: Members [${a.members.join(', ')}], Trust: ${a.trust}/100, Formed Round ${a.formedAtRound}${a.isSecret ? ' (SECRET)' : ''}`);
+      lines.push(`- ${a.name || a.id}: Members [${a.members.join(', ')}], Trust: ${a.trust}/100, Formed Round ${a.formedAtRound}${a.isSecret ? ' (SECRET)' : ''}`); // Trust stays 0-100
     }
     lines.push('');
   }

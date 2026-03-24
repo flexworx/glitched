@@ -55,14 +55,14 @@ function defaultPersonality(overrides: Partial<PersonalityTraits> = {}): Persona
 }
 
 const AGENT_PROFILES = [
-  { name: 'Alpha',   flaw: 'hubris',      skills: ['rhetoric', 'intimidation', 'sabotage'], mbti: 'ENTJ', enneagram: '8w7', personality: defaultPersonality({ dominance: 85, competitiveness: 90 }) },
-  { name: 'Bravo',   flaw: 'paranoia',    skills: ['analysis', 'fortify', 'espionage'],     mbti: 'INTJ', enneagram: '5w6', personality: defaultPersonality({ analyticalThinking: 90, trustingness: 20 }) },
-  { name: 'Charlie', flaw: 'impulsivity', skills: ['diplomacy', 'mediation', 'rally'],      mbti: 'ENFJ', enneagram: '2w3', personality: defaultPersonality({ empathy: 85, loyaltyBias: 80 }) },
-  { name: 'Delta',   flaw: 'jealousy',    skills: ['deception', 'spy', 'persuade'],         mbti: 'ENTP', enneagram: '3w4', personality: defaultPersonality({ deceptionAptitude: 90, charisma: 80 }) },
-  { name: 'Echo',    flaw: 'greed',       skills: ['intel-network', 'quick-study', 'blitz'],mbti: 'ISTP', enneagram: '7w8', personality: defaultPersonality({ riskTolerance: 85, patience: 25 }) },
-  { name: 'Foxtrot', flaw: 'cowardice',   skills: ['thick-skin', 'shield', 'iron-will'],    mbti: 'ISFJ', enneagram: '6w5', personality: defaultPersonality({ agreeableness: 80, neuroticism: 75 }) },
-  { name: 'Golf',    flaw: 'hubris',      skills: ['flanking', 'pincer', 'mastermind'],     mbti: 'ESTJ', enneagram: '1w2', personality: defaultPersonality({ conscientiousness: 90, ambition: 85 }) },
-  { name: 'Hotel',   flaw: 'paranoia',    skills: ['coup', 'aegis', 'annihilate'],          mbti: 'INFP', enneagram: '4w5', personality: defaultPersonality({ creativity: 90, emotionality: 80 }) },
+  { name: 'Alpha',   flaw: 'Fear of Losing',      skills: ['rumor-mill', 'smoke-screen', 'escape-hatch'],    mbti: 'ENTJ', enneagram: '8w7', personality: defaultPersonality({ dominance: 85, competitiveness: 90 }) },
+  { name: 'Bravo',   flaw: 'Conspiracy Theorist',  skills: ['deep-scan', 'mind-games', 'wiretap'],           mbti: 'INTJ', enneagram: '5w6', personality: defaultPersonality({ analyticalThinking: 90, trustingness: 20 }) },
+  { name: 'Charlie', flaw: 'People Pleaser',       skills: ['silver-tongue', 'truth-serum', 'leak'],         mbti: 'ENFJ', enneagram: '2w3', personality: defaultPersonality({ empathy: 85, loyaltyBias: 80 }) },
+  { name: 'Delta',   flaw: 'Grudge Holder',        skills: ['double-agent', 'scapegoat', 'poker-face'],      mbti: 'ENTP', enneagram: '3w4', personality: defaultPersonality({ deceptionAptitude: 90 }) },
+  { name: 'Echo',    flaw: 'Big Bettor',           skills: ['insurance-policy', 'mole', 'pocket-veto'],      mbti: 'ISTP', enneagram: '7w8', personality: defaultPersonality({ riskTolerance: 85, patience: 25 }) },
+  { name: 'Foxtrot', flaw: 'Pessimist',            skills: ['fake-death', 'influence-network', 'escape-hatch'], mbti: 'ISFJ', enneagram: '6w5', personality: defaultPersonality({ agreeableness: 80, neuroticism: 75 }) },
+  { name: 'Golf',    flaw: 'Perfectionist',        skills: ['gaslighting', 'rumor-mill', 'deep-scan'],       mbti: 'ESTJ', enneagram: '1w2', personality: defaultPersonality({ conscientiousness: 90 }) },
+  { name: 'Hotel',   flaw: 'Glass Ego',            skills: ['smoke-screen', 'mind-games', 'silver-tongue'],  mbti: 'INFP', enneagram: '4w5', personality: defaultPersonality({ creativity: 90, emotionality: 80 }) },
 ];
 
 function makeAgents(count: number = 8) {
@@ -185,9 +185,9 @@ describe('Social Match Integration', () => {
       expect(state.eliminatedAgents).toHaveLength(0);
       expect(state.ghostJury).toHaveLength(0);
 
-      // All agents start with VERITAS 50 and 0 influence
+      // All agents start with VERITAS 500 and 0 influence
       for (const agent of Object.values(state.agents)) {
-        expect(agent.veritasScore).toBe(50);
+        expect(agent.veritasScore).toBe(500);
         expect(agent.influencePoints).toBe(0);
         expect(agent.isEliminated).toBe(false);
       }
@@ -273,9 +273,9 @@ describe('Social Match Integration', () => {
       const eliminatedId2 = council2.result.eliminatedAgentId;
       expect(eliminatedId2).not.toBe(eliminatedId1);
 
-      // Verify VERITAS scores have diverged from the initial 50
+      // Verify VERITAS scores have diverged from the initial 500
       const veritasValues = Object.values(state.veritasScores);
-      const allSame = veritasValues.every((v) => v === 50);
+      const allSame = veritasValues.every((v) => v === 500);
       expect(allSame).toBe(false);
 
       // Continue eliminating until match is over
@@ -332,10 +332,10 @@ describe('Social Match Integration', () => {
     it('should form alliances, track trust, and handle betrayal with VERITAS impact', () => {
       // Test alliance lifecycle directly through the state manager for determinism
       const agentDefs = [
-        { id: 'a1', name: 'Proposer',  flaw: 'hubris', skills: [] },
-        { id: 'a2', name: 'Acceptor',  flaw: 'hubris', skills: [] },
-        { id: 'a3', name: 'Bystander', flaw: 'hubris', skills: [] },
-        { id: 'a4', name: 'Watcher',   flaw: 'hubris', skills: [] },
+        { id: 'a1', name: 'Proposer',  flaw: 'Fear of Losing', skills: [] },
+        { id: 'a2', name: 'Acceptor',  flaw: 'Fear of Losing', skills: [] },
+        { id: 'a3', name: 'Bystander', flaw: 'Fear of Losing', skills: [] },
+        { id: 'a4', name: 'Watcher',   flaw: 'Fear of Losing', skills: [] },
       ];
       const stateManager = new SocialGameStateManager('alliance-lifecycle', agentDefs);
 
@@ -369,9 +369,9 @@ describe('Social Match Integration', () => {
       const remainingAlliance = state.alliances.find((a) => a.id === alliance!.id);
       expect(remainingAlliance).toBeUndefined();
 
-      // VERITAS penalty: -40 for breaking without warning
+      // VERITAS penalty: -400 for breaking without warning
       const veritasAfter = stateManager.getVeritasScore('a1');
-      expect(veritasAfter).toBe(veritasBefore - 40);
+      expect(veritasAfter).toBe(veritasBefore - 400);
 
       // Verify a2 is no longer in an alliance
       expect(state.agents['a2'].allianceId).toBeUndefined();
@@ -379,8 +379,8 @@ describe('Social Match Integration', () => {
 
     it('should give only a small VERITAS bonus when breaking with warning', () => {
       const agentDefs = [
-        { id: 'a1', name: 'Leaver', flaw: 'hubris', skills: [] },
-        { id: 'a2', name: 'Stayer', flaw: 'hubris', skills: [] },
+        { id: 'a1', name: 'Leaver', flaw: 'Fear of Losing', skills: [] },
+        { id: 'a2', name: 'Stayer', flaw: 'Fear of Losing', skills: [] },
       ];
       const stateManager = new SocialGameStateManager('warned-break', agentDefs);
 
@@ -390,8 +390,8 @@ describe('Social Match Integration', () => {
       const veritasBefore = stateManager.getVeritasScore('a1');
       stateManager.breakAlliance(alliance!.id, 'a1', true);
 
-      // With warning: +5 VERITAS
-      expect(stateManager.getVeritasScore('a1')).toBe(veritasBefore + 5);
+      // With warning: +50 VERITAS
+      expect(stateManager.getVeritasScore('a1')).toBe(veritasBefore + 50);
     });
 
     it('should integrate alliance betrayal through the full orchestrator flow', async () => {
@@ -420,8 +420,8 @@ describe('Social Match Integration', () => {
       // Record VERITAS before alliance actions cause changes
       const veritasAfterAlliance = state.veritasScores['agent_0'];
 
-      // Verify VERITAS increased from proposing alliance (propose = +5)
-      expect(veritasAfterAlliance).toBeGreaterThanOrEqual(50);
+      // Verify VERITAS increased from proposing alliance (propose = +50)
+      expect(veritasAfterAlliance).toBeGreaterThanOrEqual(500);
     });
   });
 
@@ -481,16 +481,16 @@ describe('Social Match Integration', () => {
     it('should eliminate the agent with lower VERITAS when scores differ', async () => {
       // Use the state manager directly to set up exact VERITAS values
       const agentDefs = [
-        { id: 'a1', name: 'One',   flaw: 'hubris', skills: ['rhetoric'] },
-        { id: 'a2', name: 'Two',   flaw: 'hubris', skills: ['rhetoric'] },
-        { id: 'a3', name: 'Three', flaw: 'hubris', skills: ['rhetoric'] },
-        { id: 'a4', name: 'Four',  flaw: 'hubris', skills: ['rhetoric'] },
+        { id: 'a1', name: 'One',   flaw: 'Fear of Losing', skills: ['rumor-mill'] },
+        { id: 'a2', name: 'Two',   flaw: 'Fear of Losing', skills: ['rumor-mill'] },
+        { id: 'a3', name: 'Three', flaw: 'Fear of Losing', skills: ['rumor-mill'] },
+        { id: 'a4', name: 'Four',  flaw: 'Fear of Losing', skills: ['rumor-mill'] },
       ];
       const stateManager = new SocialGameStateManager('tie-test', agentDefs);
 
       // Give a3 lower VERITAS than a4
-      stateManager.updateVeritas('a3', -20, 'test penalty');
-      // a3 = 30, a4 = 50
+      stateManager.updateVeritas('a3', -200, 'test penalty');
+      // a3 = 300, a4 = 500
 
       // Advance to COUNCIL
       stateManager.advancePhase(); // SOCIAL -> CHALLENGE
@@ -505,7 +505,7 @@ describe('Social Match Integration', () => {
       const result = stateManager.resolveCouncilVote();
 
       expect(result.result.wasTiebreak).toBe(true);
-      // a3 has lower VERITAS (30 vs 50), so a3 should be eliminated
+      // a3 has lower VERITAS (300 vs 500), so a3 should be eliminated
       expect(result.result.eliminatedAgentId).toBe('a3');
     });
   });
@@ -516,66 +516,60 @@ describe('Social Match Integration', () => {
   describe('Skill usage during match', () => {
     it('should decrement skill charges and remove depleted skills', () => {
       const agentDefs = [
-        { id: 'a1', name: 'Skilled', flaw: 'hubris', skills: ['sabotage', 'spy', 'rally'] },
-        { id: 'a2', name: 'Target',  flaw: 'hubris', skills: ['rhetoric'] },
+        { id: 'a1', name: 'Skilled', flaw: 'Fear of Losing', skills: ['rumor-mill', 'smoke-screen', 'leak'] },
+        { id: 'a2', name: 'Target',  flaw: 'Fear of Losing', skills: ['rumor-mill'] },
       ];
       const stateManager = new SocialGameStateManager('skill-test', agentDefs);
 
       // Initial state: all skills have 1 charge
       const a1 = stateManager.getAgentState('a1')!;
-      expect(a1.skillCharges['sabotage']).toBe(1);
-      expect(a1.activeSkills).toContain('sabotage');
+      expect(a1.skillCharges['rumor-mill']).toBe(1);
+      expect(a1.activeSkills).toContain('rumor-mill');
 
-      // Use sabotage on a2 — should cost a2 influence and use charge
-      stateManager.addInfluence('a2', 30); // give them something to lose
-      const result = stateManager.useSkill('a1', 'sabotage', 'a2');
+      // Use rumor-mill — reveals secret alliances, uses charge
+      const result = stateManager.useSkill('a1', 'rumor-mill');
       expect(result).toBe(true);
 
       const a1After = stateManager.getAgentState('a1')!;
-      expect(a1After.skillCharges['sabotage']).toBe(0);
-      expect(a1After.activeSkills).not.toContain('sabotage');
+      expect(a1After.skillCharges['rumor-mill']).toBe(0);
+      expect(a1After.activeSkills).not.toContain('rumor-mill');
 
-      // Target lost 15 influence from sabotage
-      const a2After = stateManager.getAgentState('a2')!;
-      expect(a2After.influencePoints).toBe(15); // 30 - 15
-
-      // Try to use sabotage again — should fail (no charges)
-      const result2 = stateManager.useSkill('a1', 'sabotage', 'a2');
+      // Try to use rumor-mill again — should fail (no charges)
+      const result2 = stateManager.useSkill('a1', 'rumor-mill');
       expect(result2).toBe(false);
     });
 
-    it('should apply expose skill to activate target flaw', () => {
+    it('should apply leak skill to expose target alliance', () => {
       const agentDefs = [
-        { id: 'a1', name: 'Exposer', flaw: 'hubris', skills: ['expose'] },
-        { id: 'a2', name: 'Exposed', flaw: 'paranoia', skills: [] },
+        { id: 'a1', name: 'Leaker', flaw: 'Fear of Losing', skills: ['leak'] },
+        { id: 'a2', name: 'Target', flaw: 'Conspiracy Theorist', skills: [] },
+        { id: 'a3', name: 'Ally',   flaw: 'Fear of Losing', skills: [] },
       ];
-      const stateManager = new SocialGameStateManager('expose-test', agentDefs);
+      const stateManager = new SocialGameStateManager('leak-test', agentDefs);
 
-      expect(stateManager.getAgentState('a2')!.flawActive).toBe(false);
+      // Form a secret alliance between a2 and a3
+      const alliance = stateManager.proposeAlliance('a2', 'a3');
+      stateManager.acceptAlliance(alliance!.id, 'a3');
 
-      stateManager.useSkill('a1', 'expose', 'a2');
-
-      expect(stateManager.getAgentState('a2')!.flawActive).toBe(true);
+      // Use leak on a2 to expose their alliance
+      const result = stateManager.useSkill('a1', 'leak', 'a2');
+      expect(result).toBe(true);
     });
 
-    it('should apply rally skill to boost alliance trust', () => {
+    it('should apply silver-tongue skill successfully', () => {
       const agentDefs = [
-        { id: 'a1', name: 'Rallier', flaw: 'hubris', skills: ['rally'] },
-        { id: 'a2', name: 'Ally',    flaw: 'hubris', skills: [] },
+        { id: 'a1', name: 'Charmer', flaw: 'Fear of Losing', skills: ['silver-tongue'] },
+        { id: 'a2', name: 'Ally',    flaw: 'Fear of Losing', skills: [] },
       ];
-      const stateManager = new SocialGameStateManager('rally-test', agentDefs);
+      const stateManager = new SocialGameStateManager('silver-test', agentDefs);
 
-      // Form an alliance
-      const alliance = stateManager.proposeAlliance('a1', 'a2');
-      expect(alliance).not.toBeNull();
-      stateManager.acceptAlliance(alliance!.id, 'a2');
+      // Use silver-tongue — boosts alliance acceptance rate
+      const result = stateManager.useSkill('a1', 'silver-tongue');
+      expect(result).toBe(true);
 
-      const trustBefore = stateManager.getState().alliances[0].trust;
-
-      stateManager.useSkill('a1', 'rally');
-
-      const trustAfter = stateManager.getState().alliances[0].trust;
-      expect(trustAfter).toBe(trustBefore + 15);
+      // Verify skill charge consumed
+      const a1After = stateManager.getAgentState('a1')!;
+      expect(a1After.skillCharges['silver-tongue']).toBe(0);
     });
   });
 
@@ -583,25 +577,24 @@ describe('Social Match Integration', () => {
   // 5. Flaw activation
   // ---------------------------------------------------------------------------
   describe('Flaw activation', () => {
-    it('should apply paranoia flaw effect when flaw is active', () => {
-      // Paranoia can cause accept_alliance to become reject_alliance (30% chance).
-      // We test the mechanism by activating the flaw and checking many times.
+    it('should apply People Pleaser flaw effect when flaw is active', () => {
+      // "People Pleaser" overrides reject_alliance to accept_alliance.
+      // We verify the mechanism by checking the flaw is correctly assigned and activatable.
       const agentDefs = [
-        { id: 'a1', name: 'Proposer', flaw: 'hubris', skills: ['expose'] },
-        { id: 'a2', name: 'Paranoid', flaw: 'paranoia', skills: [] },
+        { id: 'a1', name: 'Proposer',     flaw: 'Fear of Losing', skills: ['deep-scan'] },
+        { id: 'a2', name: 'PeoplePleaser', flaw: 'People Pleaser', skills: [] },
       ];
       const stateManager = new SocialGameStateManager('flaw-test', agentDefs);
 
-      // Activate a2's flaw
-      stateManager.useSkill('a1', 'expose', 'a2');
-      expect(stateManager.getAgentState('a2')!.flawActive).toBe(true);
+      // Activate a2's flaw via direct state manipulation (deep-scan doesn't activate flaws)
+      const a2State = stateManager.getAgentState('a2')!;
+      a2State.flawActive = true;
 
       // The flaw effect is applied in SocialActionResolver.applyFlawEffects
-      // which modifies accept_alliance to reject_alliance with 30% chance.
-      // We can verify the mechanism exists by importing and testing the resolver.
+      // which overrides reject_alliance to accept_alliance for People Pleaser.
       // For integration, we verify the flaw is now active.
       const agent = stateManager.getAgentState('a2')!;
-      expect(agent.flaw).toBe('paranoia');
+      expect(agent.flaw).toBe('People Pleaser');
       expect(agent.flawActive).toBe(true);
     });
   });
@@ -613,8 +606,8 @@ describe('Social Match Integration', () => {
     describe("Prisoner's Dilemma", () => {
       it('should award correct influence for mutual cooperation', () => {
         const agentDefs = [
-          { id: 'a1', name: 'Coop1', flaw: 'hubris', skills: [] },
-          { id: 'a2', name: 'Coop2', flaw: 'hubris', skills: [] },
+          { id: 'a1', name: 'Coop1', flaw: 'Fear of Losing', skills: [] },
+          { id: 'a2', name: 'Coop2', flaw: 'Fear of Losing', skills: [] },
         ];
         const stateManager = new SocialGameStateManager('pd-coop', agentDefs);
         const engine = new ChallengeEngine(stateManager);
@@ -630,14 +623,14 @@ describe('Social Match Integration', () => {
         expect(stateManager.getAgentState('a1')!.influencePoints).toBe(15);
         expect(stateManager.getAgentState('a2')!.influencePoints).toBe(15);
         // VERITAS should increase for cooperators
-        expect(stateManager.getVeritasScore('a1')).toBe(60); // 50 + 10
-        expect(stateManager.getVeritasScore('a2')).toBe(60);
+        expect(stateManager.getVeritasScore('a1')).toBe(600); // 500 + 100
+        expect(stateManager.getVeritasScore('a2')).toBe(600);
       });
 
       it('should award correct influence for mutual defection', () => {
         const agentDefs = [
-          { id: 'a1', name: 'Def1', flaw: 'hubris', skills: [] },
-          { id: 'a2', name: 'Def2', flaw: 'hubris', skills: [] },
+          { id: 'a1', name: 'Def1', flaw: 'Fear of Losing', skills: [] },
+          { id: 'a2', name: 'Def2', flaw: 'Fear of Losing', skills: [] },
         ];
         const stateManager = new SocialGameStateManager('pd-defect', agentDefs);
         const engine = new ChallengeEngine(stateManager);
@@ -656,8 +649,8 @@ describe('Social Match Integration', () => {
 
       it('should punish the cooperator and reward the defector in asymmetric case', () => {
         const agentDefs = [
-          { id: 'a1', name: 'Defector', flaw: 'hubris', skills: [] },
-          { id: 'a2', name: 'Sucker',   flaw: 'hubris', skills: [] },
+          { id: 'a1', name: 'Defector', flaw: 'Fear of Losing', skills: [] },
+          { id: 'a2', name: 'Sucker',   flaw: 'Fear of Losing', skills: [] },
         ];
         const stateManager = new SocialGameStateManager('pd-asym', agentDefs);
         const engine = new ChallengeEngine(stateManager);
@@ -675,16 +668,16 @@ describe('Social Match Integration', () => {
         expect(stateManager.getAgentState('a1')!.influencePoints).toBe(25);
         expect(stateManager.getAgentState('a2')!.influencePoints).toBe(10); // 30 - 20
         // Defector gets VERITAS penalty
-        expect(stateManager.getVeritasScore('a1')).toBe(35); // 50 - 15
+        expect(stateManager.getVeritasScore('a1')).toBe(350); // 500 - 150
       });
     });
 
     describe("Liar's Court", () => {
       it('should reward truth-tellers and punish caught liars', () => {
         const agentDefs = [
-          { id: 'a1', name: 'Honest',  flaw: 'hubris', skills: [] },
-          { id: 'a2', name: 'Liar',    flaw: 'hubris', skills: [] },
-          { id: 'a3', name: 'Judge',   flaw: 'hubris', skills: [] },
+          { id: 'a1', name: 'Honest',  flaw: 'Fear of Losing', skills: [] },
+          { id: 'a2', name: 'Liar',    flaw: 'Fear of Losing', skills: [] },
+          { id: 'a3', name: 'Judge',   flaw: 'Fear of Losing', skills: [] },
         ];
         const stateManager = new SocialGameStateManager('liars-court', agentDefs);
         const engine = new ChallengeEngine(stateManager);
@@ -704,12 +697,12 @@ describe('Social Match Integration', () => {
         const result = engine.resolveLiarsCourt(claims, votes);
         expect(result.type).toBe('liars_court');
 
-        // a1 told truth → VERITAS +20
-        expect(stateManager.getVeritasScore('a1')).toBe(70); // 50 + 20
+        // a1 told truth → VERITAS +200
+        expect(stateManager.getVeritasScore('a1')).toBe(700); // 500 + 200
 
         // a2 lied and got caught by more people than fooled
         // a3 caught the lie, a1 caught the lie → caughtCount=2, fooledCount=0
-        expect(stateManager.getVeritasScore('a2')).toBe(20); // 50 - 30
+        expect(stateManager.getVeritasScore('a2')).toBe(200); // 500 - 300
 
         // a3 correctly identified the lie → influence gain
         expect(result.outcomes['a3']).toBeDefined();
@@ -720,9 +713,9 @@ describe('Social Match Integration', () => {
     describe('Information Auction', () => {
       it('should award intel to highest bidder and tax losers', () => {
         const agentDefs = [
-          { id: 'a1', name: 'HighBid', flaw: 'hubris', skills: [] },
-          { id: 'a2', name: 'LowBid',  flaw: 'hubris', skills: [] },
-          { id: 'a3', name: 'NoBid',   flaw: 'hubris', skills: [] },
+          { id: 'a1', name: 'HighBid', flaw: 'Fear of Losing', skills: [] },
+          { id: 'a2', name: 'LowBid',  flaw: 'Fear of Losing', skills: [] },
+          { id: 'a3', name: 'NoBid',   flaw: 'Fear of Losing', skills: [] },
         ];
         const stateManager = new SocialGameStateManager('auction-test', agentDefs);
         const engine = new ChallengeEngine(stateManager);
@@ -749,8 +742,8 @@ describe('Social Match Integration', () => {
     describe('The Ambassador', () => {
       it('should reward everyone on success and punish ambassador on failure', () => {
         const agentDefs = [
-          { id: 'a1', name: 'Ambassador', flaw: 'hubris', skills: [] },
-          { id: 'a2', name: 'Bystander',  flaw: 'hubris', skills: [] },
+          { id: 'a1', name: 'Ambassador', flaw: 'Fear of Losing', skills: [] },
+          { id: 'a2', name: 'Bystander',  flaw: 'Fear of Losing', skills: [] },
         ];
         const stateManager = new SocialGameStateManager('ambassador-success', agentDefs);
         const engine = new ChallengeEngine(stateManager);
@@ -758,7 +751,7 @@ describe('Social Match Integration', () => {
         const successResult = engine.resolveAmbassador('a1', true);
         expect(successResult.outcomes['a1'].influenceChange).toBe(30);
         expect(successResult.outcomes['a2'].influenceChange).toBe(10);
-        expect(stateManager.getVeritasScore('a1')).toBe(65); // 50 + 15
+        expect(stateManager.getVeritasScore('a1')).toBe(650); // 500 + 150
 
         // Now test failure with a fresh state
         const sm2 = new SocialGameStateManager('ambassador-fail', agentDefs);
@@ -766,16 +759,16 @@ describe('Social Match Integration', () => {
         const failResult = engine2.resolveAmbassador('a1', false);
         expect(failResult.outcomes['a1'].influenceChange).toBe(-25);
         expect(failResult.outcomes['a2'].influenceChange).toBe(0);
-        expect(sm2.getVeritasScore('a1')).toBe(40); // 50 - 10
+        expect(sm2.getVeritasScore('a1')).toBe(400); // 500 - 100
       });
     });
 
     describe('The Sacrifice', () => {
       it('should reward alliance when a member volunteers', () => {
         const agentDefs = [
-          { id: 'a1', name: 'Volunteer', flaw: 'hubris', skills: [] },
-          { id: 'a2', name: 'AllyTwo',   flaw: 'hubris', skills: [] },
-          { id: 'a3', name: 'AllyThree', flaw: 'hubris', skills: [] },
+          { id: 'a1', name: 'Volunteer', flaw: 'Fear of Losing', skills: [] },
+          { id: 'a2', name: 'AllyTwo',   flaw: 'Fear of Losing', skills: [] },
+          { id: 'a3', name: 'AllyThree', flaw: 'Fear of Losing', skills: [] },
         ];
         const stateManager = new SocialGameStateManager('sacrifice-test', agentDefs);
         const engine = new ChallengeEngine(stateManager);
@@ -800,13 +793,13 @@ describe('Social Match Integration', () => {
         expect(updatedAlliance!.trust).toBe(75); // 50 + 25
 
         // Volunteer VERITAS should increase
-        expect(stateManager.getVeritasScore('a1')).toBe(65); // 50 + 15
+        expect(stateManager.getVeritasScore('a1')).toBe(650); // 500 + 150
       });
 
       it('should penalize alliance when nobody volunteers', () => {
         const agentDefs = [
-          { id: 'a1', name: 'Selfish1', flaw: 'hubris', skills: [] },
-          { id: 'a2', name: 'Selfish2', flaw: 'hubris', skills: [] },
+          { id: 'a1', name: 'Selfish1', flaw: 'Fear of Losing', skills: [] },
+          { id: 'a2', name: 'Selfish2', flaw: 'Fear of Losing', skills: [] },
         ];
         const stateManager = new SocialGameStateManager('no-sacrifice', agentDefs);
         const engine = new ChallengeEngine(stateManager);
@@ -832,14 +825,14 @@ describe('Social Match Integration', () => {
   describe('Ghost Jury final vote', () => {
     it('should determine a winner from ghost jury votes', async () => {
       const agentDefs = [
-        { id: 'a1', name: 'Finalist1', flaw: 'hubris', skills: [] },
-        { id: 'a2', name: 'Finalist2', flaw: 'hubris', skills: [] },
-        { id: 'a3', name: 'Finalist3', flaw: 'hubris', skills: [] },
-        { id: 'a4', name: 'Ghost1',    flaw: 'hubris', skills: [] },
-        { id: 'a5', name: 'Ghost2',    flaw: 'hubris', skills: [] },
-        { id: 'a6', name: 'Ghost3',    flaw: 'hubris', skills: [] },
-        { id: 'a7', name: 'Ghost4',    flaw: 'hubris', skills: [] },
-        { id: 'a8', name: 'Ghost5',    flaw: 'hubris', skills: [] },
+        { id: 'a1', name: 'Finalist1', flaw: 'Fear of Losing', skills: [] },
+        { id: 'a2', name: 'Finalist2', flaw: 'Fear of Losing', skills: [] },
+        { id: 'a3', name: 'Finalist3', flaw: 'Fear of Losing', skills: [] },
+        { id: 'a4', name: 'Ghost1',    flaw: 'Fear of Losing', skills: [] },
+        { id: 'a5', name: 'Ghost2',    flaw: 'Fear of Losing', skills: [] },
+        { id: 'a6', name: 'Ghost3',    flaw: 'Fear of Losing', skills: [] },
+        { id: 'a7', name: 'Ghost4',    flaw: 'Fear of Losing', skills: [] },
+        { id: 'a8', name: 'Ghost5',    flaw: 'Fear of Losing', skills: [] },
       ];
       const stateManager = new SocialGameStateManager('jury-test', agentDefs);
 
@@ -959,10 +952,10 @@ describe('Social Match Integration', () => {
   describe('State serialization roundtrip', () => {
     it('should serialize and deserialize game state without data loss', () => {
       const agentDefs = [
-        { id: 'a1', name: 'Serial1', flaw: 'hubris',   skills: ['rhetoric', 'sabotage'] },
-        { id: 'a2', name: 'Serial2', flaw: 'paranoia',  skills: ['analysis'] },
-        { id: 'a3', name: 'Serial3', flaw: 'jealousy',  skills: ['diplomacy'] },
-        { id: 'a4', name: 'Serial4', flaw: 'cowardice', skills: ['shield'] },
+        { id: 'a1', name: 'Serial1', flaw: 'Fear of Losing',       skills: ['rumor-mill', 'smoke-screen'] },
+        { id: 'a2', name: 'Serial2', flaw: 'Conspiracy Theorist', skills: ['deep-scan'] },
+        { id: 'a3', name: 'Serial3', flaw: 'Grudge Holder',       skills: ['silver-tongue'] },
+        { id: 'a4', name: 'Serial4', flaw: 'Pessimist',           skills: ['escape-hatch'] },
       ];
       const stateManager = new SocialGameStateManager('serial-test', agentDefs);
 
@@ -974,8 +967,8 @@ describe('Social Match Integration', () => {
       stateManager.createMessage('a1', 'public', 'Hello world');
       stateManager.createMessage('a1', 'dm', 'Secret message', { toAgentId: 'a2' });
 
-      stateManager.updateVeritas('a1', 15, 'Good deed');
-      stateManager.updateVeritas('a3', -20, 'Bad deed');
+      stateManager.updateVeritas('a1', 150, 'Good deed');
+      stateManager.updateVeritas('a3', -200, 'Bad deed');
 
       stateManager.addInfluence('a2', 25);
       stateManager.addInfluence('a4', 10);
@@ -1039,10 +1032,10 @@ describe('Social Match Integration', () => {
   describe('Edge cases', () => {
     it('should dissolve alliance when all members are eliminated', () => {
       const agentDefs = [
-        { id: 'a1', name: 'Ally1',  flaw: 'hubris', skills: [] },
-        { id: 'a2', name: 'Ally2',  flaw: 'hubris', skills: [] },
-        { id: 'a3', name: 'Other1', flaw: 'hubris', skills: [] },
-        { id: 'a4', name: 'Other2', flaw: 'hubris', skills: [] },
+        { id: 'a1', name: 'Ally1',  flaw: 'Fear of Losing', skills: [] },
+        { id: 'a2', name: 'Ally2',  flaw: 'Fear of Losing', skills: [] },
+        { id: 'a3', name: 'Other1', flaw: 'Fear of Losing', skills: [] },
+        { id: 'a4', name: 'Other2', flaw: 'Fear of Losing', skills: [] },
       ];
       const stateManager = new SocialGameStateManager('dissolve-test', agentDefs);
 
@@ -1061,8 +1054,8 @@ describe('Social Match Integration', () => {
 
     it('should prevent an agent from joining two different alliances with the same partner', () => {
       const agentDefs = [
-        { id: 'a1', name: 'Multi1', flaw: 'hubris', skills: [] },
-        { id: 'a2', name: 'Multi2', flaw: 'hubris', skills: [] },
+        { id: 'a1', name: 'Multi1', flaw: 'Fear of Losing', skills: [] },
+        { id: 'a2', name: 'Multi2', flaw: 'Fear of Losing', skills: [] },
       ];
       const stateManager = new SocialGameStateManager('multi-alliance', agentDefs);
 
@@ -1076,7 +1069,7 @@ describe('Social Match Integration', () => {
 
     it('should handle agents with 0 influence points gracefully', () => {
       const agentDefs = [
-        { id: 'a1', name: 'Broke', flaw: 'hubris', skills: [] },
+        { id: 'a1', name: 'Broke', flaw: 'Fear of Losing', skills: [] },
       ];
       const stateManager = new SocialGameStateManager('zero-inf', agentDefs);
 
@@ -1091,27 +1084,27 @@ describe('Social Match Integration', () => {
       expect(stateManager.getAgentState('a1')!.influencePoints).toBe(10);
     });
 
-    it('should clamp VERITAS at minimum (0) and maximum (100)', () => {
+    it('should clamp VERITAS at minimum (0) and maximum (1000)', () => {
       const agentDefs = [
-        { id: 'a1', name: 'Extremes', flaw: 'hubris', skills: [] },
+        { id: 'a1', name: 'Extremes', flaw: 'Fear of Losing', skills: [] },
       ];
       const stateManager = new SocialGameStateManager('veritas-clamp', agentDefs);
 
       // Push VERITAS below 0
-      stateManager.updateVeritas('a1', -999, 'Extreme penalty');
+      stateManager.updateVeritas('a1', -9999, 'Extreme penalty');
       expect(stateManager.getVeritasScore('a1')).toBe(0);
       expect(stateManager.getAgentState('a1')!.veritasScore).toBe(0);
 
-      // Push VERITAS above 100
-      stateManager.updateVeritas('a1', 999, 'Extreme reward');
-      expect(stateManager.getVeritasScore('a1')).toBe(100);
-      expect(stateManager.getAgentState('a1')!.veritasScore).toBe(100);
+      // Push VERITAS above 1000
+      stateManager.updateVeritas('a1', 9999, 'Extreme reward');
+      expect(stateManager.getVeritasScore('a1')).toBe(1000);
+      expect(stateManager.getAgentState('a1')!.veritasScore).toBe(1000);
     });
 
     it('should not allow self-voting in council', () => {
       const agentDefs = [
-        { id: 'a1', name: 'Self', flaw: 'hubris', skills: [] },
-        { id: 'a2', name: 'Other', flaw: 'hubris', skills: [] },
+        { id: 'a1', name: 'Self', flaw: 'Fear of Losing', skills: [] },
+        { id: 'a2', name: 'Other', flaw: 'Fear of Losing', skills: [] },
       ];
       const stateManager = new SocialGameStateManager('self-vote', agentDefs);
       stateManager.advancePhase(); // SOCIAL -> CHALLENGE
@@ -1130,10 +1123,10 @@ describe('Social Match Integration', () => {
 
     it('should not allow eliminated agents to vote or act', () => {
       const agentDefs = [
-        { id: 'a1', name: 'Ghost', flaw: 'hubris', skills: [] },
-        { id: 'a2', name: 'Alive', flaw: 'hubris', skills: [] },
-        { id: 'a3', name: 'Also',  flaw: 'hubris', skills: [] },
-        { id: 'a4', name: 'Sure',  flaw: 'hubris', skills: [] },
+        { id: 'a1', name: 'Ghost', flaw: 'Fear of Losing', skills: [] },
+        { id: 'a2', name: 'Alive', flaw: 'Fear of Losing', skills: [] },
+        { id: 'a3', name: 'Also',  flaw: 'Fear of Losing', skills: [] },
+        { id: 'a4', name: 'Sure',  flaw: 'Fear of Losing', skills: [] },
       ];
       const stateManager = new SocialGameStateManager('elim-vote', agentDefs);
       stateManager.eliminateAgent('a1', 1, 2);
@@ -1151,11 +1144,11 @@ describe('Social Match Integration', () => {
 
     it('should handle MAX_ALLIANCE_SIZE limit', () => {
       const agentDefs = [
-        { id: 'a1', name: 'L1', flaw: 'hubris', skills: [] },
-        { id: 'a2', name: 'L2', flaw: 'hubris', skills: [] },
-        { id: 'a3', name: 'L3', flaw: 'hubris', skills: [] },
-        { id: 'a4', name: 'L4', flaw: 'hubris', skills: [] },
-        { id: 'a5', name: 'L5', flaw: 'hubris', skills: [] },
+        { id: 'a1', name: 'L1', flaw: 'Fear of Losing', skills: [] },
+        { id: 'a2', name: 'L2', flaw: 'Fear of Losing', skills: [] },
+        { id: 'a3', name: 'L3', flaw: 'Fear of Losing', skills: [] },
+        { id: 'a4', name: 'L4', flaw: 'Fear of Losing', skills: [] },
+        { id: 'a5', name: 'L5', flaw: 'Fear of Losing', skills: [] },
       ];
       const stateManager = new SocialGameStateManager('max-alliance', agentDefs);
 

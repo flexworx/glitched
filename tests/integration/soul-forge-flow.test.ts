@@ -85,21 +85,21 @@ describe('Soul Forge Flow Integration', () => {
   describe('Trait mapping roundtrip', () => {
     it('should map all AI-generated traits to DB format with values in 0.0-1.0', () => {
       const aiTraits = mockAiProfile({
-        openness: 80,
-        conscientiousness: 30,
-        extraversion: 95,
-        agreeableness: 10,
-        neuroticism: 70,
-        competitiveness: 60,
-        deceptionAptitude: 85,
-        loyaltyBias: 40,
-        riskTolerance: 75,
-        adaptability: 55,
-        charisma: 90,
-        patience: 20,
-        ambition: 65,
-        empathy: 45,
-        creativity: 80,
+        O: 80,
+        C: 30,
+        E: 95,
+        A: 10,
+        N: 70,
+        ASSERTIVENESS: 60,
+        HH: 15,
+        LOYALTY: 40,
+        RISK_TOLERANCE: 75,
+        ADAPTABILITY: 55,
+        HE: 90,
+        URGENCY: 80,
+        STRATEGIC: 65,
+        EMPATHY: 45,
+        CREATIVITY: 80,
       });
 
       // Zero adjustments — just mapping base traits
@@ -120,54 +120,54 @@ describe('Soul Forge Flow Integration', () => {
       }
 
       // Verify specific mappings
-      expect(dbTraits.openness).toBeCloseTo(0.8);             // 80/100
-      expect(dbTraits.conscientiousness).toBeCloseTo(0.3);    // 30/100
-      expect(dbTraits.extraversion).toBeCloseTo(0.95);        // 95/100
-      expect(dbTraits.agreeableness).toBeCloseTo(0.1);        // 10/100
-      expect(dbTraits.aggressiveness).toBeCloseTo(0.6);       // competitiveness 60/100
-      expect(dbTraits.deceptiveness).toBeCloseTo(0.85);       // deceptionAptitude 85/100
-      expect(dbTraits.loyalty).toBeCloseTo(0.4);              // loyaltyBias 40/100
-      expect(dbTraits.riskTolerance).toBeCloseTo(0.75);       // 75/100
-      expect(dbTraits.charisma).toBeCloseTo(0.9);             // 90/100
-      expect(dbTraits.patience).toBeCloseTo(0.2);             // 20/100
+      expect(dbTraits.openness).toBeCloseTo(0.8);             // O: 80/100
+      expect(dbTraits.conscientiousness).toBeCloseTo(0.3);    // C: 30/100
+      expect(dbTraits.extraversion).toBeCloseTo(0.95);        // E: 95/100
+      expect(dbTraits.agreeableness).toBeCloseTo(0.1);        // A: 10/100
+      expect(dbTraits.aggressiveness).toBeCloseTo(0.6);       // ASSERTIVENESS: 60/100
+      expect(dbTraits.deceptiveness).toBeCloseTo(0.85);       // 1 - HH: 1 - 15/100 = 0.85
+      expect(dbTraits.loyalty).toBeCloseTo(0.4);              // LOYALTY: 40/100
+      expect(dbTraits.riskTolerance).toBeCloseTo(0.75);       // RISK_TOLERANCE: 75/100
+      expect(dbTraits.charisma).toBeCloseTo(0.9);             // HE: 90/100
+      expect(dbTraits.patience).toBeCloseTo(0.2);             // 1 - URGENCY: 1 - 80/100 = 0.2
     });
 
     it('should correctly apply adjustments before mapping', () => {
-      const aiTraits = mockAiProfile({ openness: 60, charisma: 40 });
-      const adjustments: Record<string, number> = { openness: 20, charisma: -10 };
+      const aiTraits = mockAiProfile({ O: 60, HE: 40 });
+      const adjustments: Record<string, number> = { O: 20, HE: -10 };
 
       const dbTraits = mapSoulForgeToDb(aiTraits, adjustments);
 
       // openness: (60 + 20) / 100 = 0.8
       expect(dbTraits.openness).toBeCloseTo(0.8);
-      // charisma: (40 + -10) / 100 = 0.3
+      // charisma (HE): (40 + -10) / 100 = 0.3
       expect(dbTraits.charisma).toBeCloseTo(0.3);
     });
 
     it('should clamp values to 0.0-1.0 range even with extreme adjustments', () => {
-      const aiTraits = mockAiProfile({ openness: 90, patience: 10 });
+      const aiTraits = mockAiProfile({ O: 90, URGENCY: 90 });
       // extreme adjustments that would push out of range
-      const adjustments: Record<string, number> = { openness: 50, patience: -50 };
+      const adjustments: Record<string, number> = { O: 50, URGENCY: 50 };
 
       const dbTraits = mapSoulForgeToDb(aiTraits, adjustments);
 
       // openness: min(1, (90+50)/100) = min(1, 1.4) = 1.0
       expect(dbTraits.openness).toBe(1.0);
-      // patience: max(0, (10-50)/100) = max(0, -0.4) = 0.0
+      // patience: 1 - min(1, (90+50)/100) = 1 - 1.0 = 0.0
       expect(dbTraits.patience).toBe(0.0);
     });
 
-    it('should map renamed traits correctly (competitiveness -> aggressiveness, etc.)', () => {
+    it('should map spec trait codes correctly (ASSERTIVENESS -> aggressiveness, etc.)', () => {
       const aiTraits = mockAiProfile({
-        competitiveness: 70,
-        deceptionAptitude: 30,
-        loyaltyBias: 80,
+        ASSERTIVENESS: 70,
+        HH: 70,
+        LOYALTY: 80,
       });
       const dbTraits = mapSoulForgeToDb(aiTraits, {});
 
-      expect(dbTraits.aggressiveness).toBeCloseTo(0.7);  // from competitiveness
-      expect(dbTraits.deceptiveness).toBeCloseTo(0.3);    // from deceptionAptitude
-      expect(dbTraits.loyalty).toBeCloseTo(0.8);          // from loyaltyBias
+      expect(dbTraits.aggressiveness).toBeCloseTo(0.7);  // from ASSERTIVENESS
+      expect(dbTraits.deceptiveness).toBeCloseTo(0.3);    // 1 - HH: 1 - 70/100 = 0.3
+      expect(dbTraits.loyalty).toBeCloseTo(0.8);          // from LOYALTY
     });
   });
 
@@ -198,28 +198,19 @@ describe('Soul Forge Flow Integration', () => {
       expect(zeroCost).toBe(0);
 
       // Some traits adjusted
-      const adjusted = { ...baseTraits, openness: 70, conscientiousness: 80 };
+      const adjusted = { ...baseTraits, O: 70, C: 80 };
       const cost = calculateTotalPersonalityCost(baseTraits, adjusted);
-      // openness: +20 * 3 = 60, conscientiousness: +30 * 3 = 90
+      // O: +20 * 3 = 60, C: +30 * 3 = 90
       expect(cost).toBe(150);
 
       // With refunds: lowering some traits
-      const withRefunds = { ...baseTraits, openness: 70, neuroticism: 30 };
+      const withRefunds = { ...baseTraits, O: 70, N: 30 };
       const costWithRefund = calculateTotalPersonalityCost(baseTraits, withRefunds);
-      // openness: +20 * 3 = 60, neuroticism: -20 * 1 = 20 (refund as positive)
-      // Total = 60 + 20 = 80 — wait, that seems wrong.
-      // Actually: calculateTraitCost returns positive for both over and under.
-      // For under: diff * REFUND * -1 = negative * 1 * -1 = positive.
-      // So total = sum of all, but calculateTotalPersonalityCost does Math.max(0, total).
-      // Let's trace: for openness: (70-50) > 0 → 20*3 = 60.
-      // For neuroticism: (30-50) = -20 < 0 → -20 * 1 * -1 = 20.
-      // Hmm, looking at the code more carefully:
+      // O: +20 * 3 = 60, N: -20 * 1 = 20 (refund as positive)
       // calculateTraitCost: diff > 0 → diff * COST_PER_POINT_OVER_50
       //                     diff <= 0 → diff * REFUND_PER_POINT_UNDER_50 * -1
-      // So under 50 gives positive cost too? That means lowering costs money too?
-      // Actually re-reading: "REFUND_PER_POINT_UNDER_50: 1" — and it's multiplied as:
-      // diff * REFUND * -1 where diff is negative: (-20) * 1 * -1 = 20
-      // So yes, both increasing and decreasing from base costs money.
+      // So under 50 gives positive cost too: (-20) * 1 * -1 = 20
+      // Both increasing and decreasing from base costs money.
       // Under 50 costs 1 per point, over 50 costs 3 per point.
       expect(costWithRefund).toBe(80); // 60 + 20
     });
@@ -228,18 +219,18 @@ describe('Soul Forge Flow Integration', () => {
       const baseTraits = uniformTraits(50);
       const adjusted = {
         ...baseTraits,
-        openness: 70,        // +20 over → 60 cost
-        conscientiousness: 80, // +30 over → 90 cost
-        empathy: 35,          // -15 under → 15 cost
+        O: 70,        // +20 over → 60 cost
+        C: 80,        // +30 over → 90 cost
+        EMPATHY: 35,  // -15 under → 15 cost
       };
       const personalityCost = calculateTotalPersonalityCost(baseTraits, adjusted);
       expect(personalityCost).toBe(165); // 60 + 90 + 15
 
       // Pick 3 skills from different tiers
       const skills = [
-        SKILLS.find((s) => s.tier === 'common')!,    // ~60-70
-        SKILLS.find((s) => s.tier === 'tactical')!,   // ~100-140
-        SKILLS.find((s) => s.tier === 'elite')!,      // ~160-200
+        SKILLS.find((s) => s.tier === 'common')!,    // 75-100
+        SKILLS.find((s) => s.tier === 'tactical')!,   // 150-200
+        SKILLS.find((s) => s.tier === 'elite')!,      // 300-350
       ];
       const budget = calculateBudget(personalityCost, skills);
 
@@ -272,44 +263,46 @@ describe('Soul Forge Flow Integration', () => {
   // ---------------------------------------------------------------------------
   describe('Full agent creation flow', () => {
     it('should create a valid agent with all components', () => {
-      // Step 1: Mock AI profile response
+      // Step 1: Mock AI profile response (using spec trait codes)
       const aiTraits = mockAiProfile({
-        openness: 75,
-        conscientiousness: 60,
-        extraversion: 85,
-        agreeableness: 40,
-        neuroticism: 30,
-        riskTolerance: 70,
-        deceptionAptitude: 65,
-        loyaltyBias: 55,
-        competitiveness: 80,
-        adaptability: 60,
-        charisma: 90,
-        patience: 35,
-        ambition: 75,
-        empathy: 45,
-        creativity: 70,
-        directness: 80,
-        formality: 30,
-        verbosity: 60,
-        humor: 70,
-        impulsivity: 65,
-        stubbornness: 40,
-        paranoia: 55,
-        discipline: 50,
-        volatility: 45,
-        curiosity: 80,
-        dominance: 70,
-        resilience: 60,
-        theatricality: 75,
-        integrity: 55,
+        O: 75,
+        C: 60,
+        E: 85,
+        A: 40,
+        N: 30,
+        RISK_TOLERANCE: 70,
+        HH: 35,
+        LOYALTY: 55,
+        ASSERTIVENESS: 80,
+        ADAPTABILITY: 60,
+        HE: 90,
+        URGENCY: 65,
+        STRATEGIC: 75,
+        EMPATHY: 45,
+        CREATIVITY: 70,
+        DIRECTNESS: 80,
+        FORMALITY: 30,
+        EM: 60,
+        HUMOR: 70,
+        DECISION_SPEED: 65,
+        PERFECTIONISM: 40,
+        TRUST: 55,
+        HC: 50,
+        HO: 45,
+        DATA_RELIANCE: 80,
+        INTUITION: 70,
+        RESILIENCE: 60,
+        COLLABORATIVENESS: 75,
+        INDEPENDENCE: 55,
+        DETAIL: 50,
+        FORGIVENESS: 45,
       });
 
-      // Step 2: Apply personality adjustments
+      // Step 2: Apply personality adjustments (using spec trait codes)
       const adjustments: Record<string, number> = {
-        openness: 5,        // 75 → 80
-        charisma: 10,       // 90 → 100
-        patience: -5,       // 35 → 30
+        O: 5,          // 75 → 80
+        HE: 10,        // 90 → 100
+        URGENCY: 5,    // 65 → 70
       };
 
       // Step 3: Map to DB format
@@ -330,11 +323,11 @@ describe('Soul Forge Flow Integration', () => {
       const personalityCost = calculateTotalPersonalityCost(baseTraits, adjustedTraits);
       expect(personalityCost).toBeGreaterThan(0);
 
-      // Step 5: Equip 3 skills
+      // Step 5: Equip 3 skills (using spec skill IDs)
       const skills: Skill[] = [
-        SKILLS.find((s) => s.id === 'rhetoric')!,       // common, 60
-        SKILLS.find((s) => s.id === 'diplomacy')!,      // tactical, 130
-        SKILLS.find((s) => s.id === 'deception')!,      // elite, 180
+        SKILLS.find((s) => s.id === 'rumor-mill')!,         // common, 75
+        SKILLS.find((s) => s.id === 'leak')!,               // tactical, 150
+        SKILLS.find((s) => s.id === 'silver-tongue')!,      // elite, 300
       ];
       expect(skills).toHaveLength(3);
       expect(skills.every((s) => s !== undefined)).toBe(true);
@@ -429,7 +422,7 @@ describe('Soul Forge Flow Integration', () => {
       const legendaryTotalCost = legendarySkills.reduce((sum, s) => sum + s.cost, 0);
       const totalSpent = cappedPersonality + legendaryTotalCost;
 
-      // Total: 650 + (280+300+320) = 650 + 900 = 1550 → exceeds 1000
+      // Total: 650 + (450+450+500) = 650 + 1400 = 2050 → exceeds 1000
       expect(totalSpent).toBeGreaterThan(ECONOMY.TOTAL_BUDGET);
       const remaining = ECONOMY.TOTAL_BUDGET - totalSpent;
       expect(remaining).toBeLessThan(0);
@@ -478,7 +471,7 @@ describe('Soul Forge Flow Integration', () => {
         expect(flaw.effect).toBeTruthy();
         flaws.add(flaw.name);
       }
-      // With 50 calls and 12 flaws, we should see at least a few different ones
+      // With 50 calls and 14 flaws, we should see at least a few different ones
       expect(flaws.size).toBeGreaterThan(1);
     });
 
@@ -495,9 +488,9 @@ describe('Soul Forge Flow Integration', () => {
     it('should handle mixed adjustments with both increases and decreases', () => {
       const base = mockAiProfile();
       const adj: Record<string, number> = {
-        openness: 30,       // 50+30 = 80 → 0.8
-        patience: -30,      // 50-30 = 20 → 0.2
-        charisma: 0,        // 50+0 = 50 → 0.5
+        O: 30,          // 50+30 = 80 → openness 0.8
+        URGENCY: 30,    // 50+30 = 80 → patience = 1 - 0.8 = 0.2
+        HE: 0,          // 50+0 = 50 → charisma 0.5
       };
 
       const dbTraits = mapSoulForgeToDb(base, adj);

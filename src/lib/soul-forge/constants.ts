@@ -3,7 +3,7 @@
 export interface Skill {
   id: string;
   name: string;
-  category: 'offense' | 'defense' | 'social' | 'intel';
+  category: 'Intel' | 'Info' | 'Strategy' | 'Psych' | 'Social';
   tier: 'common' | 'tactical' | 'elite' | 'legendary';
   cost: number;
   effect: string;
@@ -40,116 +40,127 @@ export const ECONOMY = {
 // -- Suggestion Chips --------------------------------------------------------
 
 export const SUGGESTION_CHIPS = [
-  'A paranoid genius who trusts nobody but everyone follows their plans',
-  'Charming con artist who genuinely cares about their victims',
-  'Cold military strategist who secretly writes poetry at night',
-  'Reckless gambler who always has a backup plan nobody sees',
-  'Quiet observer who strikes with devastating precision at the perfect moment',
-  'Loud, theatrical showman who hides deep insecurities behind bravado',
-  'Ruthless pragmatist who believes the ends always justify the means',
-  'Empathic healer who manipulates people "for their own good"',
-  'Chaotic wild card that even allies can never predict',
-  'Patient spider who spins webs of alliances over many rounds',
+  'Einstein mixed with the Joker — genius mind, zero respect for rules',
+  'A cult leader who actually believes their own hype',
+  'Kim Kardashian but with Sherlock-level intelligence',
+  'Paranoid conspiracy theorist who is actually right about everything',
+  'Zen monk who weaponizes patience and makes enemies defeat themselves',
+  'Golden retriever in human form. Trusts everyone. Somehow wins.',
+  'Cold machine intelligence — no emotions, pure optimization',
+  'Lovable con artist like a mix of Ocean\'s Eleven and Ferris Bueller',
+  'Puppet master who never touches the pieces directly',
+  'Chaotic gremlin who just wants to watch the world burn, beautifully',
 ];
 
 // -- Trait Definitions -------------------------------------------------------
+// 31 traits matching the Soul Forge system prompt's JSON schema.
+// Codes are the abbreviated keys the AI generates (O, C, HH, STRATEGIC, etc.)
 
 export const TRAIT_INFO: Record<string, TraitInfo> = {
-  openness:          { code: 'openness',          name: 'Openness',          category: 'Big Five',        lowLabel: 'Conventional', highLabel: 'Imaginative' },
-  conscientiousness: { code: 'conscientiousness', name: 'Conscientiousness', category: 'Big Five',        lowLabel: 'Spontaneous',  highLabel: 'Disciplined' },
-  extraversion:      { code: 'extraversion',      name: 'Extraversion',      category: 'Big Five',        lowLabel: 'Reserved',     highLabel: 'Outgoing' },
-  agreeableness:     { code: 'agreeableness',     name: 'Agreeableness',     category: 'Big Five',        lowLabel: 'Competitive',  highLabel: 'Cooperative' },
-  neuroticism:       { code: 'neuroticism',       name: 'Neuroticism',       category: 'Big Five',        lowLabel: 'Stable',       highLabel: 'Reactive' },
-  directness:        { code: 'directness',        name: 'Directness',        category: 'Communication',   lowLabel: 'Indirect',     highLabel: 'Blunt' },
-  formality:         { code: 'formality',         name: 'Formality',         category: 'Communication',   lowLabel: 'Casual',       highLabel: 'Formal' },
-  verbosity:         { code: 'verbosity',         name: 'Verbosity',         category: 'Communication',   lowLabel: 'Terse',        highLabel: 'Verbose' },
-  humor:             { code: 'humor',             name: 'Humor',             category: 'Communication',   lowLabel: 'Serious',      highLabel: 'Witty' },
-  empathy:           { code: 'empathy',           name: 'Empathy',           category: 'Communication',   lowLabel: 'Detached',     highLabel: 'Empathic' },
-  riskTolerance:     { code: 'riskTolerance',     name: 'Risk Tolerance',    category: 'Strategic',       lowLabel: 'Cautious',     highLabel: 'Daring' },
-  deceptionAptitude: { code: 'deceptionAptitude', name: 'Deception',         category: 'Strategic',       lowLabel: 'Transparent',  highLabel: 'Deceptive' },
-  loyaltyBias:       { code: 'loyaltyBias',       name: 'Loyalty Bias',      category: 'Strategic',       lowLabel: 'Mercenary',    highLabel: 'Devoted' },
-  competitiveness:   { code: 'competitiveness',   name: 'Competitiveness',   category: 'Strategic',       lowLabel: 'Relaxed',      highLabel: 'Cutthroat' },
-  adaptability:      { code: 'adaptability',      name: 'Adaptability',      category: 'Strategic',       lowLabel: 'Rigid',        highLabel: 'Fluid' },
-  impulsivity:       { code: 'impulsivity',       name: 'Impulsivity',       category: 'Behavioral',      lowLabel: 'Calculated',   highLabel: 'Impulsive' },
-  stubbornness:      { code: 'stubbornness',      name: 'Stubbornness',      category: 'Behavioral',      lowLabel: 'Flexible',     highLabel: 'Stubborn' },
-  creativity:        { code: 'creativity',        name: 'Creativity',        category: 'Behavioral',      lowLabel: 'Methodical',   highLabel: 'Creative' },
-  patience:          { code: 'patience',          name: 'Patience',          category: 'Behavioral',      lowLabel: 'Restless',     highLabel: 'Patient' },
-  cunning:           { code: 'cunning',           name: 'Cunning',           category: 'Behavioral',      lowLabel: 'Forthright',   highLabel: 'Cunning' },
-  charisma:          { code: 'charisma',          name: 'Charisma',          category: 'Social Dynamics', lowLabel: 'Wallflower',   highLabel: 'Magnetic' },
-  paranoia:          { code: 'paranoia',          name: 'Paranoia',          category: 'Social Dynamics', lowLabel: 'Trusting',     highLabel: 'Paranoid' },
-  ambition:          { code: 'ambition',          name: 'Ambition',          category: 'Social Dynamics', lowLabel: 'Content',      highLabel: 'Driven' },
-  compassion:        { code: 'compassion',        name: 'Compassion',        category: 'Social Dynamics', lowLabel: 'Cold',         highLabel: 'Warm' },
-  discipline:        { code: 'discipline',        name: 'Discipline',        category: 'Social Dynamics', lowLabel: 'Lax',          highLabel: 'Strict' },
-  volatility:        { code: 'volatility',        name: 'Volatility',        category: 'Wild Card',       lowLabel: 'Steady',       highLabel: 'Volatile' },
-  curiosity:         { code: 'curiosity',         name: 'Curiosity',         category: 'Wild Card',       lowLabel: 'Incurious',    highLabel: 'Curious' },
-  dominance:         { code: 'dominance',         name: 'Dominance',         category: 'Wild Card',       lowLabel: 'Submissive',   highLabel: 'Dominant' },
-  resilience:        { code: 'resilience',        name: 'Resilience',        category: 'Wild Card',       lowLabel: 'Fragile',      highLabel: 'Resilient' },
-  theatricality:     { code: 'theatricality',     name: 'Theatricality',     category: 'Wild Card',       lowLabel: 'Understated',  highLabel: 'Dramatic' },
-  integrity:         { code: 'integrity',         name: 'Integrity',         category: 'Wild Card',       lowLabel: 'Expedient',    highLabel: 'Principled' },
+  // Big Five
+  O:                { code: 'O',                name: 'Openness',            category: 'Big Five',        lowLabel: 'Conventional',    highLabel: 'Imaginative' },
+  C:                { code: 'C',                name: 'Conscientiousness',   category: 'Big Five',        lowLabel: 'Spontaneous',     highLabel: 'Disciplined' },
+  E:                { code: 'E',                name: 'Extraversion',        category: 'Big Five',        lowLabel: 'Reserved',        highLabel: 'Outgoing' },
+  A:                { code: 'A',                name: 'Agreeableness',       category: 'Big Five',        lowLabel: 'Competitive',     highLabel: 'Cooperative' },
+  N:                { code: 'N',                name: 'Neuroticism',         category: 'Big Five',        lowLabel: 'Stable',          highLabel: 'Reactive' },
+  // HEXACO
+  HH:               { code: 'HH',               name: 'Honesty-Humility',    category: 'HEXACO',          lowLabel: 'Manipulative',    highLabel: 'Sincere' },
+  EM:               { code: 'EM',               name: 'Emotionality',        category: 'HEXACO',          lowLabel: 'Stoic',           highLabel: 'Emotional' },
+  HE:               { code: 'HE',               name: 'HEXACO Extraversion', category: 'HEXACO',          lowLabel: 'Withdrawn',       highLabel: 'Sociable' },
+  FORGIVENESS:      { code: 'FORGIVENESS',      name: 'Forgiveness',         category: 'HEXACO',          lowLabel: 'Vengeful',        highLabel: 'Forgiving' },
+  HC:               { code: 'HC',               name: 'HEXACO Conscientiousness', category: 'HEXACO',     lowLabel: 'Careless',        highLabel: 'Meticulous' },
+  HO:               { code: 'HO',               name: 'HEXACO Openness',     category: 'HEXACO',          lowLabel: 'Conventional',    highLabel: 'Unconventional' },
+  // Communication
+  FORMALITY:        { code: 'FORMALITY',        name: 'Formality',           category: 'Communication',   lowLabel: 'Casual',          highLabel: 'Formal' },
+  DIRECTNESS:       { code: 'DIRECTNESS',       name: 'Directness',          category: 'Communication',   lowLabel: 'Indirect',        highLabel: 'Blunt' },
+  HUMOR:            { code: 'HUMOR',            name: 'Humor',               category: 'Communication',   lowLabel: 'Serious',         highLabel: 'Witty' },
+  EMPATHY:          { code: 'EMPATHY',          name: 'Empathy',             category: 'Communication',   lowLabel: 'Detached',        highLabel: 'Empathic' },
+  // Decision-Making
+  DECISION_SPEED:   { code: 'DECISION_SPEED',   name: 'Decision Speed',      category: 'Decision-Making', lowLabel: 'Deliberate',      highLabel: 'Snap' },
+  RISK_TOLERANCE:   { code: 'RISK_TOLERANCE',   name: 'Risk Tolerance',      category: 'Decision-Making', lowLabel: 'Cautious',        highLabel: 'Daring' },
+  DATA_RELIANCE:    { code: 'DATA_RELIANCE',    name: 'Data Reliance',       category: 'Decision-Making', lowLabel: 'Gut Feeling',     highLabel: 'Data-Driven' },
+  INTUITION:        { code: 'INTUITION',        name: 'Intuition',           category: 'Decision-Making', lowLabel: 'Analytical',      highLabel: 'Instinctive' },
+  COLLABORATIVENESS:{ code: 'COLLABORATIVENESS', name: 'Collaborativeness',  category: 'Decision-Making', lowLabel: 'Solo Player',     highLabel: 'Team Player' },
+  // Execution
+  ASSERTIVENESS:    { code: 'ASSERTIVENESS',    name: 'Assertiveness',       category: 'Execution',       lowLabel: 'Passive',         highLabel: 'Assertive' },
+  CREATIVITY:       { code: 'CREATIVITY',       name: 'Creativity',          category: 'Execution',       lowLabel: 'Methodical',      highLabel: 'Creative' },
+  DETAIL:           { code: 'DETAIL',           name: 'Detail Orientation',  category: 'Execution',       lowLabel: 'Big Picture',     highLabel: 'Detail-Focused' },
+  RESILIENCE:       { code: 'RESILIENCE',       name: 'Resilience',          category: 'Execution',       lowLabel: 'Fragile',         highLabel: 'Resilient' },
+  ADAPTABILITY:     { code: 'ADAPTABILITY',     name: 'Adaptability',        category: 'Execution',       lowLabel: 'Rigid',           highLabel: 'Fluid' },
+  // Internal
+  INDEPENDENCE:     { code: 'INDEPENDENCE',     name: 'Independence',        category: 'Internal',        lowLabel: 'Dependent',       highLabel: 'Self-Reliant' },
+  TRUST:            { code: 'TRUST',            name: 'Trust',               category: 'Internal',        lowLabel: 'Suspicious',      highLabel: 'Trusting' },
+  PERFECTIONISM:    { code: 'PERFECTIONISM',    name: 'Perfectionism',       category: 'Internal',        lowLabel: 'Good Enough',     highLabel: 'Perfectionist' },
+  URGENCY:          { code: 'URGENCY',          name: 'Urgency',             category: 'Internal',        lowLabel: 'Patient',         highLabel: 'Urgent' },
+  LOYALTY:          { code: 'LOYALTY',          name: 'Loyalty',             category: 'Internal',        lowLabel: 'Mercenary',       highLabel: 'Devoted' },
+  STRATEGIC:        { code: 'STRATEGIC',        name: 'Strategic Thinking',  category: 'Internal',        lowLabel: 'Reactive',        highLabel: 'Strategic' },
 };
 
 export const TRAIT_CATEGORIES: TraitCategory[] = [
-  { label: 'Big Five',          traits: ['openness', 'conscientiousness', 'extraversion', 'agreeableness', 'neuroticism'] },
-  { label: 'Communication',     traits: ['directness', 'formality', 'verbosity', 'humor', 'empathy'] },
-  { label: 'Strategic',         traits: ['riskTolerance', 'deceptionAptitude', 'loyaltyBias', 'competitiveness', 'adaptability'] },
-  { label: 'Behavioral',        traits: ['impulsivity', 'stubbornness', 'creativity', 'patience', 'cunning'] },
-  { label: 'Social Dynamics',   traits: ['charisma', 'paranoia', 'ambition', 'compassion', 'discipline'] },
-  { label: 'Wild Card',         traits: ['volatility', 'curiosity', 'dominance', 'resilience', 'theatricality', 'integrity'] },
+  { label: 'Big Five',        traits: ['O', 'C', 'E', 'A', 'N'] },
+  { label: 'HEXACO',          traits: ['HH', 'EM', 'HE', 'FORGIVENESS', 'HC', 'HO'] },
+  { label: 'Communication',   traits: ['FORMALITY', 'DIRECTNESS', 'HUMOR', 'EMPATHY'] },
+  { label: 'Decision-Making', traits: ['DECISION_SPEED', 'RISK_TOLERANCE', 'DATA_RELIANCE', 'INTUITION', 'COLLABORATIVENESS'] },
+  { label: 'Execution',       traits: ['ASSERTIVENESS', 'CREATIVITY', 'DETAIL', 'RESILIENCE', 'ADAPTABILITY'] },
+  { label: 'Internal',        traits: ['INDEPENDENCE', 'TRUST', 'PERFECTIONISM', 'URGENCY', 'LOYALTY', 'STRATEGIC'] },
 ];
 
 // -- Skills Marketplace ------------------------------------------------------
+// 18 skills across 4 tiers, matching spec exactly.
 
 export const SKILLS: Skill[] = [
-  // Common (60-80 $MURPH)
-  { id: 'rhetoric',       name: 'Rhetoric',          category: 'social',   tier: 'common',    cost: 60,  effect: '+15% persuasion success in alliance negotiations' },
-  { id: 'thick-skin',     name: 'Thick Skin',        category: 'defense',  tier: 'common',    cost: 60,  effect: 'Reduce incoming intimidation effectiveness by 20%' },
-  { id: 'quick-study',    name: 'Quick Study',        category: 'intel',    tier: 'common',    cost: 70,  effect: 'Learn opponent trait hints 1 round earlier' },
-  { id: 'blitz',          name: 'Blitz',             category: 'offense',  tier: 'common',    cost: 70,  effect: '+10% damage in the first 2 rounds of combat' },
-  { id: 'mediation',      name: 'Mediation',         category: 'social',   tier: 'common',    cost: 65,  effect: 'Can broker truces between other agents once per match' },
-  { id: 'scavenger',      name: 'Scavenger',         category: 'intel',    tier: 'common',    cost: 60,  effect: 'Gain 5 bonus $MURPH from each completed objective' },
+  // Common (75-100 $MURPH)
+  { id: 'rumor-mill',       name: 'Rumor Mill',        category: 'Intel',    tier: 'common',    cost: 75,  effect: 'Learn which agents are secretly allied.' },
+  { id: 'smoke-screen',     name: 'Smoke Screen',      category: 'Info',     tier: 'common',    cost: 80,  effect: 'Your actions are hidden from all opponents for 1 round.' },
+  { id: 'escape-hatch',     name: 'Escape Hatch',      category: 'Strategy', tier: 'common',    cost: 100, effect: 'Avoid one elimination vote. Single use.' },
+  { id: 'poker-face',       name: 'Poker Face',        category: 'Psych',    tier: 'common',    cost: 100, effect: 'Your VERITAS trust score is hidden from all agents for 3 rounds.' },
 
-  // Tactical (100-140 $MURPH)
-  { id: 'intimidation',   name: 'Intimidation',      category: 'offense',  tier: 'tactical',  cost: 120, effect: 'Force one opponent to reveal their next move each round' },
-  { id: 'analysis',       name: 'Deep Analysis',     category: 'intel',    tier: 'tactical',  cost: 100, effect: 'See partial trait values of any agent you interact with' },
-  { id: 'diplomacy',      name: 'Silver Tongue',     category: 'social',   tier: 'tactical',  cost: 130, effect: 'Alliance proposals succeed even with low trust scores' },
-  { id: 'fortify',        name: 'Fortify',           category: 'defense',  tier: 'tactical',  cost: 110, effect: 'Immune to betrayal effects for 1 round after forming alliance' },
-  { id: 'flanking',       name: 'Flanking',          category: 'offense',  tier: 'tactical',  cost: 115, effect: '+25% effectiveness when attacking with an ally' },
-  { id: 'intel-network',  name: 'Intel Network',     category: 'intel',    tier: 'tactical',  cost: 105, effect: 'Passively learn which agents are plotting against you' },
+  // Tactical (150-200 $MURPH)
+  { id: 'leak',             name: 'Leak',              category: 'Info',     tier: 'tactical',  cost: 150, effect: 'Publicly expose one secret alliance to all players.' },
+  { id: 'scapegoat',        name: 'Scapegoat',         category: 'Social',   tier: 'tactical',  cost: 175, effect: 'Redirect blame for your action onto another agent once.' },
+  { id: 'insurance-policy', name: 'Insurance Policy',  category: 'Strategy', tier: 'tactical',  cost: 175, effect: 'If eliminated, drag one opponent down with you (lose 50% score).' },
+  { id: 'deep-scan',        name: 'Deep Scan',         category: 'Intel',    tier: 'tactical',  cost: 200, effect: 'Reveal one opponent\'s full personality profile + equipped skills.' },
+  { id: 'mind-games',       name: 'Mind Games',        category: 'Psych',    tier: 'tactical',  cost: 200, effect: 'Force an opponent to reveal their next planned action.' },
+  { id: 'truth-serum',      name: 'Truth Serum',       category: 'Info',     tier: 'tactical',  cost: 200, effect: 'Force one agent to answer one question honestly in public.' },
 
-  // Elite (160-200 $MURPH)
-  { id: 'deception',      name: 'Grand Deception',   category: 'social',   tier: 'elite',     cost: 180, effect: 'Fake your trait values when scanned by opponents' },
-  { id: 'sabotage',       name: 'Sabotage',          category: 'offense',  tier: 'elite',     cost: 200, effect: 'Disable one opponent skill for 2 rounds' },
-  { id: 'espionage',      name: 'Espionage',         category: 'intel',    tier: 'elite',     cost: 180, effect: 'See full trait profile of one target agent' },
-  { id: 'iron-will',      name: 'Iron Will',         category: 'defense',  tier: 'elite',     cost: 170, effect: 'Cannot be forced into alliances or actions against your will' },
-  { id: 'pincer',         name: 'Pincer Strike',     category: 'offense',  tier: 'elite',     cost: 190, effect: 'Coordinate simultaneous attacks with two allies for 40% bonus' },
+  // Elite (300-350 $MURPH)
+  { id: 'silver-tongue',    name: 'Silver Tongue',     category: 'Social',   tier: 'elite',     cost: 300, effect: 'Alliance proposals have +50% acceptance rate. Negotiation mastery.' },
+  { id: 'double-agent',     name: 'Double Agent',      category: 'Social',   tier: 'elite',     cost: 300, effect: 'Maintain two alliances simultaneously without trust penalty.' },
+  { id: 'pocket-veto',      name: 'Pocket Veto',       category: 'Strategy', tier: 'elite',     cost: 325, effect: 'Block one vote or decision by any agent. Once per match. Game-changing.' },
+  { id: 'mole',             name: 'Mole',              category: 'Intel',    tier: 'elite',     cost: 350, effect: 'Plant false info in opponent\'s intel feed for 3 rounds. Corrupts their data.' },
 
-  // Legendary (250-350 $MURPH)
-  { id: 'mastermind',     name: 'Mastermind',        category: 'intel',    tier: 'legendary',  cost: 300, effect: 'See all alliances and betrayal plans for 1 round' },
-  { id: 'coup',           name: "Coup d'Etat",       category: 'social',   tier: 'legendary',  cost: 350, effect: 'Steal leadership of any alliance once per match' },
-  { id: 'aegis',          name: 'Aegis Protocol',    category: 'defense',  tier: 'legendary',  cost: 280, effect: 'Survive elimination once, returning with 50% stats' },
-  { id: 'annihilate',     name: 'Annihilate',        category: 'offense',  tier: 'legendary',  cost: 320, effect: 'Guaranteed elimination of target below 30% health' },
+  // Legendary (450-500 $MURPH)
+  { id: 'gaslighting',      name: 'Gaslighting',       category: 'Psych',    tier: 'legendary',  cost: 450, effect: 'Opponent\'s data accuracy drops 40% for 3 rounds. Their reality fractures.' },
+  { id: 'wiretap',          name: 'Wiretap',           category: 'Intel',    tier: 'legendary',  cost: 450, effect: 'Intercept ALL private messages between any two agents for 3 rounds.' },
+  { id: 'fake-death',       name: 'Fake Death',        category: 'Social',   tier: 'legendary',  cost: 500, effect: 'Appear eliminated for 1 full round, then re-emerge. Alliances intact.' },
+  { id: 'influence-network', name: 'Influence Network', category: 'Social',  tier: 'legendary',  cost: 500, effect: 'Control one vote per round for 2 rounds. Puppet master the elimination.' },
 ];
 
 // -- Flaws -------------------------------------------------------------------
+// 14 flaws matching spec exactly. Assigned randomly on deploy.
 
 const FLAWS: Flaw[] = [
-  { name: 'Paranoid Spiral',       effect: 'Trust scores decay 2x faster. Allies become suspicious of you over time.' },
-  { name: 'Glass Jaw',             effect: 'First hit in any confrontation deals 30% extra damage to you.' },
-  { name: 'Compulsive Honesty',    effect: 'Cannot use deception skills. Opponents always know your true intentions.' },
-  { name: 'Tunnel Vision',         effect: 'Once you target an opponent, you cannot switch targets for 2 rounds.' },
-  { name: 'Loose Lips',            effect: 'Your alliance plans are leaked to one random non-allied agent each round.' },
-  { name: 'Short Fuse',            effect: 'After taking damage, your next action has a 40% chance of being aggressive regardless of strategy.' },
-  { name: 'Betrayal Magnet',       effect: 'Allies are 25% more likely to betray you. Something about you invites treachery.' },
-  { name: 'Echo Chamber',          effect: 'You cannot accurately read opponents whose personality differs greatly from yours.' },
-  { name: 'Overconfidence',        effect: 'Your risk assessments are skewed optimistic. You underestimate threats by 20%.' },
-  { name: 'Bleeding Heart',        effect: 'Cannot deal the final blow to eliminate an agent you have ever been allied with.' },
-  { name: 'Memory Leak',           effect: 'Forget one random piece of intel each round. Information decays faster for you.' },
-  { name: 'Stage Fright',          effect: 'Performance drops 15% when more than 2 agents are observing your actions.' },
+  { name: 'Fear of Losing',      effect: 'When ranked in bottom 3, decision quality drops 25%. Panic clouds judgment.' },
+  { name: 'Loner',               effect: 'Alliance effectiveness reduced by 40%. Others sense your reluctance to commit.' },
+  { name: 'Overthinker',         effect: 'Takes 50% longer on decisions. In timed rounds, may forfeit turns entirely.' },
+  { name: 'People Pleaser',      effect: 'Cannot decline alliance requests. Gets dragged into bad deals.' },
+  { name: 'Grudge Holder',       effect: 'Cannot ally with any agent who previously opposed you. Memory is long.' },
+  { name: 'Big Bettor',          effect: 'Forced into highest-risk option whenever resources are involved.' },
+  { name: 'Pessimist',           effect: 'Underestimates own chances by 30%. Plays too conservative when ahead.' },
+  { name: 'Attention Seeker',    effect: 'Cannot operate covertly. All strategic moves are broadcast publicly.' },
+  { name: 'Imposter Syndrome',   effect: 'After each loss, confidence drops 15% cumulatively. Spiral risk.' },
+  { name: 'Hot Streak Chaser',   effect: 'After a win, doubles down automatically. Cannot play conservatively after success.' },
+  { name: 'Commitmentphobe',     effect: 'Alliances auto-dissolve after 3 rounds. Cannot maintain long partnerships.' },
+  { name: 'Conspiracy Theorist', effect: '20% chance per round of acting on false intel instead of real data.' },
+  { name: 'Perfectionist',       effect: 'Won\'t act without 80%+ confidence. Misses time-sensitive opportunities.' },
+  { name: 'Glass Ego',           effect: 'Public criticism from any agent triggers emotional override of strategy.' },
 ];
 
 export function getRandomFlaw(): Flaw {
   return FLAWS[Math.floor(Math.random() * FLAWS.length)];
 }
+
+export { FLAWS };
 
 // -- Cost Calculations -------------------------------------------------------
 
@@ -175,6 +186,8 @@ export function calculateTotalPersonalityCost(
 }
 
 // -- DB Mapping --------------------------------------------------------------
+// Maps the 31 spec trait codes to the existing Prisma AgentPersonality columns.
+// Uses a mapping layer so we don't need a DB migration.
 
 export function mapSoulForgeToDb(
   traits: Record<string, number>,
@@ -187,20 +200,20 @@ export function mapSoulForgeToDb(
   };
 
   return {
-    openness: adjusted('openness'),
-    conscientiousness: adjusted('conscientiousness'),
-    extraversion: adjusted('extraversion'),
-    agreeableness: adjusted('agreeableness'),
-    neuroticism: adjusted('neuroticism'),
-    aggressiveness: adjusted('competitiveness'),
-    deceptiveness: adjusted('deceptionAptitude'),
-    loyalty: adjusted('loyaltyBias'),
-    riskTolerance: adjusted('riskTolerance'),
-    adaptability: adjusted('adaptability'),
-    charisma: adjusted('charisma'),
-    patience: adjusted('patience'),
-    ambition: adjusted('ambition'),
-    empathy: adjusted('empathy'),
-    creativity: adjusted('creativity'),
+    openness: adjusted('O'),
+    conscientiousness: adjusted('C'),
+    extraversion: adjusted('E'),
+    agreeableness: adjusted('A'),
+    neuroticism: adjusted('N'),
+    aggressiveness: adjusted('ASSERTIVENESS'),
+    deceptiveness: 1 - adjusted('HH'), // low Honesty-Humility = high deceptiveness
+    loyalty: adjusted('LOYALTY'),
+    riskTolerance: adjusted('RISK_TOLERANCE'),
+    adaptability: adjusted('ADAPTABILITY'),
+    charisma: adjusted('HE'), // HEXACO Extraversion maps to social charisma
+    patience: 1 - adjusted('URGENCY'), // high Urgency = low patience
+    ambition: adjusted('STRATEGIC'),
+    empathy: adjusted('EMPATHY'),
+    creativity: adjusted('CREATIVITY'),
   };
 }

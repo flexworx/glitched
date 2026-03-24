@@ -17,10 +17,11 @@ const TIER_STYLES: Record<string, { border: string; bg: string; text: string; ba
 };
 
 const CATEGORY_ICONS: Record<string, string> = {
-  offense: '\u2694\uFE0F',
-  defense: '\uD83D\uDEE1\uFE0F',
-  social:  '\uD83D\uDDE3\uFE0F',
-  intel:   '\uD83D\uDD0D',
+  Intel:    '\uD83D\uDD0D',
+  Info:     '\uD83D\uDCE1',
+  Strategy: '\u265F\uFE0F',
+  Psych:    '\uD83E\uDDE0',
+  Social:   '\uD83D\uDDE3\uFE0F',
 };
 
 export function SkillCard({ skill, equipped, onToggle, disabled }: SkillCardProps) {

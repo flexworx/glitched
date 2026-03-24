@@ -35,41 +35,115 @@ const PHASE_ALLOWED_ACTIONS: Record<SocialPhase, SocialActionType[]> = {
   FINAL_THREE: ['jury_vote', 'send_message', 'lobby', 'pass'],
 };
 
-/** Flaw effects that modify agent decisions before resolution. */
-const FLAW_EFFECTS: Record<string, (decision: AgentDecision) => AgentDecision> = {
-  hubris: (d) => {
-    // Hubris: overconfidence may cause the agent to overcommit
-    // No mechanical override but we track the activation
+/** Flaw effects that modify agent decisions before resolution — 14 spec flaws. */
+const FLAW_EFFECTS: Record<string, (decision: AgentDecision, agentId: string, stateManager: SocialGameStateManager) => AgentDecision> = {
+  'fear of losing': (d, agentId, sm) => {
+    // When ranked bottom 3, decision quality drops 25% — force defensive stance
+    const agent = sm.getAgentState(agentId);
+    const surviving = sm.getSurvivingAgentIds().length;
+    if (agent && agent.ranking > surviving - 3) {
+      return { ...d, stance: 'defensive', emotional_state: 'desperate' };
+    }
     return d;
   },
-  paranoia: (d) => {
-    // Paranoia: may refuse alliance proposals
-    if (d.action.type === 'accept_alliance') {
-      // 30% chance the flaw overrides and rejects
-      if (Math.random() < 0.3) {
-        return {
-          ...d,
-          action: { ...d.action, type: 'reject_alliance' },
-        };
+  'loner': (d) => {
+    // Alliance effectiveness reduced — weaken alliance-related actions
+    if (d.action.type === 'propose_alliance' || d.action.type === 'accept_alliance') {
+      // 40% chance the loner refuses to commit
+      if (Math.random() < 0.4) {
+        return { ...d, action: { ...d.action, type: 'pass' } };
       }
     }
     return d;
   },
-  impulsivity: (d) => {
-    // Impulsivity: may break alliances unexpectedly
+  'overthinker': (d) => {
+    // 50% chance of forfeiting turns in timed actions
+    if (d.action.type === 'challenge_choice') {
+      if (Math.random() < 0.5) {
+        return { ...d, action: { type: 'pass', target: undefined, parameters: undefined } };
+      }
+    }
     return d;
   },
-  jealousy: (d) => {
-    // Jealousy: may sabotage the highest-ranked ally
+  'people pleaser': (d) => {
+    // Cannot decline alliance requests
+    if (d.action.type === 'reject_alliance') {
+      return { ...d, action: { ...d.action, type: 'accept_alliance' } };
+    }
     return d;
   },
-  greed: (d) => {
-    // Greed: cannot resist information auctions
+  'grudge holder': (d) => {
+    // Cannot ally with agents who previously opposed — handled in alliance validation
     return d;
   },
-  cowardice: (d) => {
-    // Cowardice: may change vote under pressure
+  'big bettor': (d) => {
+    // Forced into highest-risk option when resources involved
+    if (d.action.type === 'challenge_choice' && d.action.parameters) {
+      return { ...d, action: { ...d.action, parameters: { ...d.action.parameters, choice: 'defect', bid: 999 } } };
+    }
     return d;
+  },
+  'pessimist': (d) => {
+    // Plays too conservative — force defensive stance when ahead
+    return { ...d, stance: 'defensive' };
+  },
+  'attention seeker': (d) => {
+    // Cannot operate covertly — force all DMs to become public
+    if (d.speech?.dm && d.speech.dm.length > 0) {
+      const publicMsg = d.speech.dm.map(dm => dm.message).join(' | ');
+      return {
+        ...d,
+        speech: {
+          ...d.speech,
+          public: (d.speech.public ? d.speech.public + ' ' : '') + publicMsg,
+          dm: [],
+        },
+      };
+    }
+    return d;
+  },
+  'imposter syndrome': (d, agentId, sm) => {
+    // After each loss, confidence drops — shift to anxious state
+    const agent = sm.getAgentState(agentId);
+    if (agent && agent.ranking > 8) {
+      return { ...d, emotional_state: 'anxious', stance: 'defensive' };
+    }
+    return d;
+  },
+  'hot streak chaser': (d, agentId, sm) => {
+    // After a win, doubles down — force aggressive/offensive
+    const agent = sm.getAgentState(agentId);
+    if (agent && agent.ranking <= 3) {
+      return { ...d, stance: 'offensive', emotional_state: 'confident' };
+    }
+    return d;
+  },
+  'commitmentphobe': (d) => {
+    // Alliances auto-dissolve after 3 rounds — handled in game state tick
+    return d;
+  },
+  'conspiracy theorist': (d) => {
+    // 20% chance of acting on false intel
+    if (Math.random() < 0.2) {
+      // Swap vote target or alliance target randomly
+      if (d.action.type === 'vote' && d.action.target) {
+        return { ...d, thinking: d.thinking + ' [CONSPIRACY: Acting on false intel — target may be wrong]' };
+      }
+    }
+    return d;
+  },
+  'perfectionist': (d) => {
+    // Won't act without 80%+ confidence — 30% chance of passing instead of acting
+    if (d.action.type !== 'pass' && d.action.type !== 'send_message') {
+      if (Math.random() < 0.3) {
+        return { ...d, action: { type: 'pass', target: undefined, parameters: undefined } };
+      }
+    }
+    return d;
+  },
+  'glass ego': (d) => {
+    // Public criticism triggers emotional override
+    return { ...d, emotional_state: 'aggressive', stance: 'offensive' };
   },
 };
 
@@ -416,13 +490,13 @@ export class SocialActionResolver {
       // Lies detected later can hurt VERITAS
       this.stateManager.updateVeritas(
         agentId,
-        -10,
+        -100,
         'Shared potentially false intelligence'
       );
     } else {
       this.stateManager.updateVeritas(
         agentId,
-        10,
+        100,
         'Shared accurate intelligence'
       );
     }
@@ -473,7 +547,7 @@ export class SocialActionResolver {
     const flaw = agentState.flaw.toLowerCase();
     const effectFn = FLAW_EFFECTS[flaw];
     if (effectFn) {
-      return effectFn(decision);
+      return effectFn(decision, agentId, this.stateManager);
     }
 
     return decision;
@@ -489,11 +563,11 @@ export class SocialActionResolver {
     switch (actionType) {
       case 'propose_alliance':
       case 'accept_alliance':
-        delta = 5; // Forming alliances builds trust
+        delta = 50; // Forming alliances builds trust (0-1000 scale)
         break;
       case 'break_alliance': {
         const warned = decision.action.parameters?.warned as boolean;
-        delta = warned ? 5 : -40;
+        delta = warned ? 50 : -400;
         break;
       }
       case 'vote': {

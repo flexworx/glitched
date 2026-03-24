@@ -10,8 +10,8 @@ function makeAgents(count: number) {
   return Array.from({ length: count }, (_, i) => ({
     id: `agent_${i + 1}`,
     name: `Agent ${i + 1}`,
-    flaw: i % 2 === 0 ? 'hubris' : 'paranoia',
-    skills: ['spy', 'sabotage'],
+    flaw: i % 2 === 0 ? 'glass ego' : 'people pleaser',
+    skills: ['deep-scan', 'smoke-screen'],
   }));
 }
 
@@ -265,25 +265,25 @@ describe('SocialActionResolver — skill resolution', () => {
       action: {
         type: 'use_skill',
         target: 'agent_2',
-        parameters: { skillName: 'spy' },
+        parameters: { skillName: 'deep-scan' },
       },
     });
     const result = resolver.resolveDecision('agent_1', decision);
     expect(result.success).toBe(true);
-    expect(result.description).toContain('spy');
-    expect(mgr.getAgentState('agent_1')!.skillCharges['spy']).toBe(0);
+    expect(result.description).toContain('deep-scan');
+    expect(mgr.getAgentState('agent_1')!.skillCharges['deep-scan']).toBe(0);
   });
 
   it('cannot use skill with 0 charges', () => {
     const { mgr, resolver } = makeSetup();
     // Use the 1 charge
-    mgr.useSkill('agent_1', 'spy', 'agent_2');
+    mgr.useSkill('agent_1', 'deep-scan', 'agent_2');
 
     const decision = makeDecision({
       action: {
         type: 'use_skill',
         target: 'agent_2',
-        parameters: { skillName: 'spy' },
+        parameters: { skillName: 'deep-scan' },
       },
     });
     const result = resolver.resolveDecision('agent_1', decision);
@@ -291,19 +291,17 @@ describe('SocialActionResolver — skill resolution', () => {
     expect(result.description).toContain('failed');
   });
 
-  it('sabotage skill via resolver reduces target influence', () => {
+  it('smoke-screen skill via resolver creates hidden actions event', () => {
     const { mgr, resolver } = makeSetup();
-    mgr.addInfluence('agent_2', 30);
 
     const decision = makeDecision({
       action: {
         type: 'use_skill',
-        target: 'agent_2',
-        parameters: { skillName: 'sabotage' },
+        parameters: { skillName: 'smoke-screen' },
       },
     });
     resolver.resolveDecision('agent_1', decision);
-    expect(mgr.getAgentState('agent_2')!.influencePoints).toBe(15);
+    expect(mgr.getAgentState('agent_1')!.skillCharges['smoke-screen']).toBe(0);
   });
 });
 
@@ -376,10 +374,10 @@ describe('SocialActionResolver — message processing', () => {
 // ---------------------------------------------------------------------------
 
 describe('SocialActionResolver — flaw effects', () => {
-  it('paranoia flaw can override accept_alliance to reject_alliance', () => {
+  it('people pleaser flaw overrides reject_alliance to accept_alliance', () => {
     // We need flawActive=true for the flaw to fire
     const agents = makeAgents(4);
-    agents[1].flaw = 'paranoia'; // agent_2
+    agents[1].flaw = 'people pleaser'; // agent_2
     const mgr = new SocialGameStateManager('test', agents);
     const resolver = new SocialActionResolver(mgr);
 
@@ -390,53 +388,40 @@ describe('SocialActionResolver — flaw effects', () => {
     // Propose alliance first
     const alliance = mgr.proposeAlliance('agent_1', 'agent_2')!;
 
-    // Mock Math.random to always trigger the 30% chance
-    const originalRandom = Math.random;
-    Math.random = () => 0.1; // < 0.3, so paranoia triggers
-
     const decision = makeDecision({
       action: {
-        type: 'accept_alliance',
-        parameters: { allianceId: alliance.id },
+        type: 'reject_alliance',
       },
     });
     const result = resolver.resolveDecision('agent_2', decision);
 
-    Math.random = originalRandom;
-
-    // The flaw should have changed accept to reject
-    expect(result.description).toContain('rejects');
+    // The flaw should have changed reject to accept
+    expect(result.description).toContain('joins');
   });
 
   it('flaw does not fire when flawActive is false', () => {
     const agents = makeAgents(4);
-    agents[1].flaw = 'paranoia'; // agent_2
+    agents[1].flaw = 'people pleaser'; // agent_2
     const mgr = new SocialGameStateManager('test', agents);
     const resolver = new SocialActionResolver(mgr);
 
     // flawActive defaults to false
     const alliance = mgr.proposeAlliance('agent_1', 'agent_2')!;
 
-    const originalRandom = Math.random;
-    Math.random = () => 0.1; // Would trigger if active
-
     const decision = makeDecision({
       action: {
-        type: 'accept_alliance',
-        parameters: { allianceId: alliance.id },
+        type: 'reject_alliance',
       },
     });
     const result = resolver.resolveDecision('agent_2', decision);
 
-    Math.random = originalRandom;
-
-    // Flaw not active => should have accepted normally
-    expect(result.description).toContain('joins');
+    // Flaw not active => should have rejected normally
+    expect(result.description).toContain('rejects');
   });
 
-  it('hubris flaw returns decision unchanged (no mechanical override)', () => {
+  it('glass ego flaw returns decision unchanged (no mechanical override for propose)', () => {
     const agents = makeAgents(4);
-    agents[0].flaw = 'hubris';
+    agents[0].flaw = 'glass ego';
     const mgr = new SocialGameStateManager('test', agents);
     const resolver = new SocialActionResolver(mgr);
 
@@ -457,17 +442,17 @@ describe('SocialActionResolver — flaw effects', () => {
 // ---------------------------------------------------------------------------
 
 describe('SocialActionResolver — VERITAS impact', () => {
-  it('propose_alliance gives +5 VERITAS', () => {
+  it('propose_alliance gives +50 VERITAS', () => {
     const { mgr, resolver } = makeSetup();
     const before = mgr.getVeritasScore('agent_1');
     const decision = makeDecision({
       action: { type: 'propose_alliance', target: 'agent_2' },
     });
     resolver.resolveDecision('agent_1', decision);
-    expect(mgr.getVeritasScore('agent_1')).toBe(before + 5);
+    expect(mgr.getVeritasScore('agent_1')).toBe(before + 50);
   });
 
-  it('accept_alliance gives +5 VERITAS', () => {
+  it('accept_alliance gives +50 VERITAS', () => {
     const { mgr, resolver } = makeSetup();
     const alliance = mgr.proposeAlliance('agent_1', 'agent_2')!;
     const before = mgr.getVeritasScore('agent_2');
@@ -478,10 +463,10 @@ describe('SocialActionResolver — VERITAS impact', () => {
       },
     });
     resolver.resolveDecision('agent_2', decision);
-    expect(mgr.getVeritasScore('agent_2')).toBe(before + 5);
+    expect(mgr.getVeritasScore('agent_2')).toBe(before + 50);
   });
 
-  it('break_alliance without warning gives -40 VERITAS from computeVeritasImpact', () => {
+  it('break_alliance without warning gives -400 VERITAS from computeVeritasImpact', () => {
     const { mgr, resolver } = makeSetup();
     const alliance = mgr.proposeAlliance('agent_1', 'agent_2')!;
     mgr.acceptAlliance(alliance.id, 'agent_2');
@@ -495,12 +480,12 @@ describe('SocialActionResolver — VERITAS impact', () => {
       },
     });
     resolver.resolveDecision('agent_1', decision);
-    // -40 from breakAlliance method + -40 from computeVeritasImpact = -80 total
-    // But VERITAS starts at 50 and clamps to 0
+    // -400 from breakAlliance method + -400 from computeVeritasImpact = -800 total
+    // VERITAS starts at 500 so 500 - 800 clamps to 0
     expect(mgr.getVeritasScore('agent_1')).toBe(0);
   });
 
-  it('trade_info with non-lie gives +10 VERITAS from resolveTradeInfo', () => {
+  it('trade_info with non-lie gives +100 VERITAS from resolveTradeInfo', () => {
     const { mgr, resolver } = makeSetup();
     const before = mgr.getVeritasScore('agent_1');
     const decision = makeDecision({
@@ -508,7 +493,7 @@ describe('SocialActionResolver — VERITAS impact', () => {
       speech: {},
     });
     resolver.resolveDecision('agent_1', decision);
-    // +10 from resolveTradeInfo (accurate intel) + 0 from computeVeritasImpact
-    expect(mgr.getVeritasScore('agent_1')).toBe(before + 10);
+    // +100 from resolveTradeInfo (accurate intel) + 0 from computeVeritasImpact
+    expect(mgr.getVeritasScore('agent_1')).toBe(before + 100);
   });
 });

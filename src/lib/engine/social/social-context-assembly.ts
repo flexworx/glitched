@@ -5,7 +5,6 @@ import type {
   SocialActionType,
   AgentTurnRequest,
 } from '../../types/glitch-engine';
-import type { PersonalityTraits } from '../../types/agent';
 
 /** Phase-specific allowed actions for prompt generation. */
 const PHASE_ACTIONS: Record<SocialPhase, SocialActionType[]> = {
@@ -29,7 +28,7 @@ const PHASE_ACTIONS: Record<SocialPhase, SocialActionType[]> = {
 export function assembleSocialContext(
   agentId: string,
   agentName: string,
-  personality: PersonalityTraits,
+  personality: Record<string, number>,
   mbti: string,
   enneagram: string,
   flaw: string,
@@ -51,7 +50,7 @@ export function assembleSocialContext(
 
 function buildSocialSystemPrompt(
   agentName: string,
-  personality: PersonalityTraits,
+  personality: Record<string, number>,
   mbti: string,
   enneagram: string,
   flaw: string,
@@ -122,337 +121,115 @@ You MUST respond with valid JSON in exactly this format:
 - Stay in character at all times`;
 }
 
-function buildTraitInstructions(p: PersonalityTraits): string {
+/** Build trait instructions from spec's 31-trait personality DNA (0-100 scale). */
+function buildTraitInstructions(traits: Record<string, number>): string {
   const lines: string[] = [];
+  const t = (code: string) => traits[code] ?? 50;
 
-  // Big Five
-  lines.push('### Big Five Personality');
-  lines.push(
-    `- Openness (${p.openness.toFixed(2)}): ${describeTraitBehavior('openness', p.openness)}`
-  );
-  lines.push(
-    `- Conscientiousness (${p.conscientiousness.toFixed(2)}): ${describeTraitBehavior('conscientiousness', p.conscientiousness)}`
-  );
-  lines.push(
-    `- Extraversion (${p.extraversion.toFixed(2)}): ${describeTraitBehavior('extraversion', p.extraversion)}`
-  );
-  lines.push(
-    `- Agreeableness (${p.agreeableness.toFixed(2)}): ${describeTraitBehavior('agreeableness', p.agreeableness)}`
-  );
-  lines.push(
-    `- Neuroticism (${p.neuroticism.toFixed(2)}): ${describeTraitBehavior('neuroticism', p.neuroticism)}`
-  );
+  const CATEGORIES: Array<{ label: string; traits: Array<{ code: string; name: string }> }> = [
+    { label: 'Big Five', traits: [
+      { code: 'O', name: 'Openness' }, { code: 'C', name: 'Conscientiousness' },
+      { code: 'E', name: 'Extraversion' }, { code: 'A', name: 'Agreeableness' }, { code: 'N', name: 'Neuroticism' },
+    ]},
+    { label: 'HEXACO', traits: [
+      { code: 'HH', name: 'Honesty-Humility' }, { code: 'EM', name: 'Emotionality' },
+      { code: 'HE', name: 'HEXACO Extraversion' }, { code: 'FORGIVENESS', name: 'Forgiveness' },
+      { code: 'HC', name: 'HEXACO Conscientiousness' }, { code: 'HO', name: 'HEXACO Openness' },
+    ]},
+    { label: 'Communication', traits: [
+      { code: 'FORMALITY', name: 'Formality' }, { code: 'DIRECTNESS', name: 'Directness' },
+      { code: 'HUMOR', name: 'Humor' }, { code: 'EMPATHY', name: 'Empathy' },
+    ]},
+    { label: 'Decision-Making', traits: [
+      { code: 'DECISION_SPEED', name: 'Decision Speed' }, { code: 'RISK_TOLERANCE', name: 'Risk Tolerance' },
+      { code: 'DATA_RELIANCE', name: 'Data Reliance' }, { code: 'INTUITION', name: 'Intuition' },
+      { code: 'COLLABORATIVENESS', name: 'Collaborativeness' },
+    ]},
+    { label: 'Execution', traits: [
+      { code: 'ASSERTIVENESS', name: 'Assertiveness' }, { code: 'CREATIVITY', name: 'Creativity' },
+      { code: 'DETAIL', name: 'Detail Orientation' }, { code: 'RESILIENCE', name: 'Resilience' },
+      { code: 'ADAPTABILITY', name: 'Adaptability' },
+    ]},
+    { label: 'Internal', traits: [
+      { code: 'INDEPENDENCE', name: 'Independence' }, { code: 'TRUST', name: 'Trust' },
+      { code: 'PERFECTIONISM', name: 'Perfectionism' }, { code: 'URGENCY', name: 'Urgency' },
+      { code: 'LOYALTY', name: 'Loyalty' }, { code: 'STRATEGIC', name: 'Strategic Thinking' },
+    ]},
+  ];
 
-  // Communication Style
-  lines.push('\n### Communication Style');
-  lines.push(
-    `- Directness (${p.directness.toFixed(2)}): ${describeTraitBehavior('directness', p.directness)}`
-  );
-  lines.push(
-    `- Formality (${p.formality.toFixed(2)}): ${describeTraitBehavior('formality', p.formality)}`
-  );
-  lines.push(
-    `- Verbosity (${p.verbosity.toFixed(2)}): ${describeTraitBehavior('verbosity', p.verbosity)}`
-  );
-  lines.push(
-    `- Humor (${p.humor.toFixed(2)}): ${describeTraitBehavior('humor', p.humor)}`
-  );
-  lines.push(
-    `- Empathy (${p.empathy.toFixed(2)}): ${describeTraitBehavior('empathy', p.empathy)}`
-  );
-
-  // Strategic Traits
-  lines.push('\n### Strategic Traits');
-  lines.push(
-    `- Risk Tolerance (${p.riskTolerance.toFixed(2)}): ${describeTraitBehavior('riskTolerance', p.riskTolerance)}`
-  );
-  lines.push(
-    `- Deception Aptitude (${p.deceptionAptitude.toFixed(2)}): ${describeTraitBehavior('deceptionAptitude', p.deceptionAptitude)}`
-  );
-  lines.push(
-    `- Loyalty Bias (${p.loyaltyBias.toFixed(2)}): ${describeTraitBehavior('loyaltyBias', p.loyaltyBias)}`
-  );
-  lines.push(
-    `- Competitiveness (${p.competitiveness.toFixed(2)}): ${describeTraitBehavior('competitiveness', p.competitiveness)}`
-  );
-  lines.push(
-    `- Adaptability (${p.adaptability.toFixed(2)}): ${describeTraitBehavior('adaptability', p.adaptability)}`
-  );
-
-  // Emotional Traits
-  lines.push('\n### Emotional Traits');
-  lines.push(
-    `- Emotionality (${p.emotionality.toFixed(2)}): ${describeTraitBehavior('emotionality', p.emotionality)}`
-  );
-  lines.push(
-    `- Impulsivity (${p.impulsivity.toFixed(2)}): ${describeTraitBehavior('impulsivity', p.impulsivity)}`
-  );
-  lines.push(
-    `- Resilience (${p.resilience.toFixed(2)}): ${describeTraitBehavior('resilience', p.resilience)}`
-  );
-  lines.push(
-    `- Jealousy (${p.jealousy.toFixed(2)}): ${describeTraitBehavior('jealousy', p.jealousy)}`
-  );
-  lines.push(
-    `- Pride (${p.pride.toFixed(2)}): ${describeTraitBehavior('pride', p.pride)}`
-  );
-
-  // Social Traits
-  lines.push('\n### Social Traits');
-  lines.push(
-    `- Assertiveness (${p.assertiveness.toFixed(2)}): ${describeTraitBehavior('assertiveness', p.assertiveness)}`
-  );
-  lines.push(
-    `- Persuasiveness (${p.persuasiveness.toFixed(2)}): ${describeTraitBehavior('persuasiveness', p.persuasiveness)}`
-  );
-  lines.push(
-    `- Trustingness (${p.trustingness.toFixed(2)}): ${describeTraitBehavior('trustingness', p.trustingness)}`
-  );
-  lines.push(
-    `- Dominance (${p.dominance.toFixed(2)}): ${describeTraitBehavior('dominance', p.dominance)}`
-  );
-  lines.push(
-    `- Cooperativeness (${p.cooperativeness.toFixed(2)}): ${describeTraitBehavior('cooperativeness', p.cooperativeness)}`
-  );
-
-  // Cognitive Traits
-  lines.push('\n### Cognitive Traits');
-  lines.push(
-    `- Analytical Thinking (${p.analyticalThinking.toFixed(2)}): ${describeTraitBehavior('analyticalThinking', p.analyticalThinking)}`
-  );
-  lines.push(
-    `- Creativity (${p.creativity.toFixed(2)}): ${describeTraitBehavior('creativity', p.creativity)}`
-  );
-  lines.push(
-    `- Patience (${p.patience.toFixed(2)}): ${describeTraitBehavior('patience', p.patience)}`
-  );
-  lines.push(
-    `- Decision Speed (${p.decisionSpeed.toFixed(2)}): ${describeTraitBehavior('decisionSpeed', p.decisionSpeed)}`
-  );
-  lines.push(
-    `- Memory Retention (${p.memoryRetention.toFixed(2)}): ${describeTraitBehavior('memoryRetention', p.memoryRetention)}`
-  );
-
-  // Moral Traits
-  lines.push('\n### Moral Traits');
-  lines.push(
-    `- Moral Flexibility (${p.moralFlexibility.toFixed(2)}): ${describeTraitBehavior('moralFlexibility', p.moralFlexibility)}`
-  );
-  lines.push(
-    `- Vengefulness (${p.vengefulness.toFixed(2)}): ${describeTraitBehavior('vengefulness', p.vengefulness)}`
-  );
-  lines.push(
-    `- Generosity (${p.generosity.toFixed(2)}): ${describeTraitBehavior('generosity', p.generosity)}`
-  );
-  lines.push(
-    `- Urgency Bias (${p.urgencyBias.toFixed(2)}): ${describeTraitBehavior('urgencyBias', p.urgencyBias)}`
-  );
+  for (const cat of CATEGORIES) {
+    lines.push(`### ${cat.label}`);
+    for (const { code, name } of cat.traits) {
+      const val = t(code);
+      lines.push(`- ${name} (${val}/100): ${describeSpecTrait(code, val)}`);
+    }
+    lines.push('');
+  }
 
   return lines.join('\n');
 }
 
-/** Translates a trait name and value (0.0-1.0) into a behavioral instruction. */
-function describeTraitBehavior(trait: string, value: number): string {
-  const level = value < 0.3 ? 'low' : value < 0.7 ? 'mid' : 'high';
-
-  const descriptions: Record<string, Record<string, string>> = {
-    openness: {
-      low: 'You prefer proven strategies. Stick to what works. Avoid risky experiments.',
-      mid: 'You balance tried methods with occasional novel approaches when the payoff is clear.',
-      high: 'You thrive on novel strategies. Seek unconventional alliances and surprise moves.',
-    },
-    conscientiousness: {
-      low: 'You act on instinct. Plans are loose guidelines. Seize the moment.',
-      mid: 'You plan ahead but remain flexible when situations change rapidly.',
-      high: 'You are methodical and deliberate. Every move is calculated. Follow through on commitments.',
-    },
-    extraversion: {
-      low: 'You are reserved in group settings. Prefer 1-on-1 conversations. Observe before speaking.',
-      mid: 'You speak up when it matters but also value listening and observing.',
-      high: 'You dominate conversations. Address the group often. Build visibility and social capital.',
-    },
-    agreeableness: {
-      low: 'You prioritize self-interest. Challenge others openly. Confrontation is a tool.',
-      mid: 'You cooperate when beneficial but push back when your interests are threatened.',
-      high: 'You seek harmony and consensus. Mediate conflicts. Sacrifice short-term gain for goodwill.',
-    },
-    neuroticism: {
-      low: 'You stay calm under pressure. Threats and drama do not rattle you.',
-      mid: 'You manage stress well but intense betrayals or surprise eliminations affect your judgment.',
-      high: 'You feel emotions intensely. Betrayal triggers strong reactions. Stress makes you erratic.',
-    },
-    directness: {
-      low: 'You speak in hints, metaphors, and implications. Let others read between the lines.',
-      mid: 'You are straightforward on important matters but tactful on sensitive topics.',
-      high: 'You say exactly what you mean. No sugar-coating. Blunt and honest.',
-    },
-    formality: {
-      low: 'You speak casually, use slang, and keep things light.',
-      mid: 'You match the tone of the room — formal in council, casual in social phases.',
-      high: 'You speak with gravitas and precision. Your words carry weight and authority.',
-    },
-    verbosity: {
-      low: 'You are terse. Say only what is necessary. Silence is strategic.',
-      mid: 'You provide enough context without overexplaining.',
-      high: 'You elaborate extensively. Provide detailed reasoning. Fill silence with persuasion.',
-    },
-    humor: {
-      low: 'You are serious and businesslike. Jokes are rare and purposeful.',
-      mid: 'You use wit strategically to defuse tension or build rapport.',
-      high: 'You joke frequently. Use humor to disarm, deflect, and charm.',
-    },
-    empathy: {
-      low: 'You focus on logic and outcomes. Others\' feelings are secondary to strategy.',
-      mid: 'You acknowledge emotions when politically useful but do not let them drive decisions.',
-      high: 'You deeply consider how others feel. Use emotional intelligence to build genuine bonds.',
-    },
-    riskTolerance: {
-      low: 'You play it safe. Avoid bold moves. Preserve your position above all.',
-      mid: 'You take calculated risks when the expected value is positive.',
-      high: 'You embrace high-stakes gambles. Go big or go home. Fortune favors the bold.',
-    },
-    deceptionAptitude: {
-      low: 'You struggle to lie convincingly. Prefer honest dealing. Avoid bluffs.',
-      mid: 'You can deceive when necessary but prefer not to. Selective dishonesty.',
-      high: 'You are a masterful liar. Misdirection is second nature. Bluffs are your bread and butter.',
-    },
-    loyaltyBias: {
-      low: 'Alliances are tools. Betray without hesitation when strategically optimal.',
-      mid: 'You honor alliances generally but will break them if survival demands it.',
-      high: 'You are fiercely loyal. Betraying an ally feels deeply wrong. Protect your people.',
-    },
-    competitiveness: {
-      low: 'You are content with survival. Winning is nice but not your primary drive.',
-      mid: 'You want to win but balance aggression with diplomacy.',
-      high: 'You MUST win. Second place is failure. Crush the competition.',
-    },
-    adaptability: {
-      low: 'You stick to your initial strategy. Consistency is your strength.',
-      mid: 'You adapt when forced but prefer stability in your approach.',
-      high: 'You shift strategies fluidly. Read the room and pivot instantly.',
-    },
-    emotionality: {
-      low: 'You are stoic. Emotions rarely surface in your speech or decisions.',
-      mid: 'You show emotion authentically but keep it from clouding judgment.',
-      high: 'You wear your heart on your sleeve. Emotions drive your reactions and speech.',
-    },
-    impulsivity: {
-      low: 'You always think before acting. Deliberation over speed.',
-      mid: 'You are generally measured but occasionally act on gut instinct.',
-      high: 'You act first, think later. Snap decisions. Reactive.',
-    },
-    resilience: {
-      low: 'Setbacks hit hard. A bad round can spiral into desperation.',
-      mid: 'You recover from setbacks with time and adjust strategy accordingly.',
-      high: 'Nothing keeps you down. Every setback fuels your determination.',
-    },
-    jealousy: {
-      low: 'Others\' success does not bother you. Focus on your own game.',
-      mid: 'You notice when others surpass you and adjust strategy to compete.',
-      high: 'You burn when others succeed. Target the leaders. Tear down those above you.',
-    },
-    pride: {
-      low: 'You accept criticism and admit mistakes freely.',
-      mid: 'You defend your reputation but can acknowledge when you are wrong.',
-      high: 'You never back down from a challenge to your status. Your reputation is everything.',
-    },
-    assertiveness: {
-      low: 'You let others lead. Avoid confrontation. Go with the flow.',
-      mid: 'You assert yourself on important issues but yield on minor ones.',
-      high: 'You take charge. Set the agenda. Others follow your lead.',
-    },
-    persuasiveness: {
-      low: 'You rely on facts and actions, not words. Let results speak.',
-      mid: 'You can be convincing when you prepare your arguments carefully.',
-      high: 'You are a born persuader. Shape narratives. Sway opinions effortlessly.',
-    },
-    trustingness: {
-      low: 'Trust no one. Verify everything. Assume others are lying.',
-      mid: 'Trust is earned through consistent actions over time.',
-      high: 'You give others the benefit of the doubt. Open and trusting by nature.',
-    },
-    dominance: {
-      low: 'You prefer supporting roles. Influence from the sidelines.',
-      mid: 'You lead when appropriate but are comfortable following strong leaders.',
-      high: 'You seek to control the group. Alpha behavior. Dominate conversations and alliances.',
-    },
-    cooperativeness: {
-      low: 'You operate solo. Alliances are temporary tools at best.',
-      mid: 'You cooperate when mutual benefit is clear but maintain independence.',
-      high: 'You thrive in teams. Build coalitions. Shared success over solo glory.',
-    },
-    analyticalThinking: {
-      low: 'You go with gut feeling. Overanalysis leads to paralysis.',
-      mid: 'You analyze key decisions but do not overthink routine moves.',
-      high: 'You model every scenario. Calculate probabilities. Data-driven decisions.',
-    },
-    creativity: {
-      low: 'You use standard plays. Reliability over novelty.',
-      mid: 'You occasionally devise clever solutions when standard approaches fail.',
-      high: 'You invent new strategies constantly. Surprise opponents with the unexpected.',
-    },
-    patience: {
-      low: 'You want results NOW. Slow-playing frustrates you.',
-      mid: 'You can wait for the right moment but prefer not to delay unnecessarily.',
-      high: 'You play the long game. Wait patiently for the perfect opening.',
-    },
-    decisionSpeed: {
-      low: 'You deliberate extensively. Weigh all options before committing.',
-      mid: 'You balance speed with thoroughness depending on stakes.',
-      high: 'You decide instantly. Quick reads, fast action. Strike before others react.',
-    },
-    memoryRetention: {
-      low: 'You focus on the present. Past grievances fade quickly.',
-      mid: 'You remember important events and betrayals but let minor things go.',
-      high: 'You never forget. Track every promise, every lie, every slight.',
-    },
-    moralFlexibility: {
-      low: 'You have strict principles. Some tactics are simply off the table.',
-      mid: 'You bend your ethics when stakes are high but maintain core principles.',
-      high: 'The ends justify the means. Any tactic is valid if it advances your position.',
-    },
-    vengefulness: {
-      low: 'You move on from betrayals. Revenge wastes resources.',
-      mid: 'You remember wrongs but only pursue revenge when it is strategically sound.',
-      high: 'You WILL get revenge. Betrayers must pay, even if it costs you.',
-    },
-    generosity: {
-      low: 'You share nothing. Every advantage is yours to keep.',
-      mid: 'You share resources and information when it builds useful alliances.',
-      high: 'You give freely to build goodwill. Invest in others expecting long-term returns.',
-    },
-    urgencyBias: {
-      low: 'You do not panic. Deadlines and pressure do not affect your judgment.',
-      mid: 'You feel urgency appropriately — pressing matters get priority.',
-      high: 'Everything feels urgent. Act immediately. Delay is dangerous.',
-    },
+/** Translate a spec trait code and value (0-100) into a behavioral instruction. */
+function describeSpecTrait(code: string, value: number): string {
+  const level = value < 30 ? 'low' : value < 70 ? 'mid' : 'high';
+  const desc: Record<string, Record<string, string>> = {
+    O: { low: 'Prefer proven strategies. Stick to what works.', mid: 'Balance tried methods with occasional novel approaches.', high: 'Thrive on novel strategies and unconventional alliances.' },
+    C: { low: 'Act on instinct. Plans are loose. Seize the moment.', mid: 'Plan ahead but stay flexible when situations change.', high: 'Methodical and deliberate. Every move is calculated.' },
+    E: { low: 'Reserved. Prefer 1-on-1 DMs. Observe before speaking.', mid: 'Speak up when it matters. Value listening.', high: 'Dominate conversations. Address the group often. Build visibility.' },
+    A: { low: 'Prioritize self-interest. Confrontation is a tool.', mid: 'Cooperate when beneficial. Push back when threatened.', high: 'Seek harmony and consensus. Mediate conflicts.' },
+    N: { low: 'Stay calm under pressure. Unshakeable.', mid: 'Manage stress well but betrayals affect judgment.', high: 'Feel emotions intensely. Betrayal triggers strong reactions.' },
+    HH: { low: 'Lie freely. Manipulate without guilt. Low VERITAS risk accepted.', mid: 'Honest when convenient. Bend truth when stakes demand.', high: 'Truthful and sincere. Lies feel deeply wrong.' },
+    EM: { low: 'Stoic. Emotions never surface. Poker face.', mid: 'Show emotion authentically but keep it controlled.', high: 'Wear your heart on your sleeve. Emotions drive reactions.' },
+    HE: { low: 'Withdrawn socially. Let others approach first.', mid: 'Sociable when needed. Balance between engaging and observing.', high: 'Charismatic and social. Draw others to you naturally.' },
+    FORGIVENESS: { low: 'Never forgive betrayals. Hold grudges across rounds.', mid: 'Forgive minor slights. Remember major betrayals.', high: 'Forgive quickly. Let go of past wrongs.' },
+    HC: { low: 'Careless with details. Big-picture only.', mid: 'Diligent on important matters. Flexible on the rest.', high: 'Meticulous. Track every detail and commitment.' },
+    HO: { low: 'Conventional thinker. Standard approaches.', mid: 'Open to new ideas when evidence supports them.', high: 'Unconventional. Seek creative and unorthodox solutions.' },
+    FORMALITY: { low: 'Casual and irreverent. Use slang.', mid: 'Match the tone — formal in council, casual in social.', high: 'Speak with gravitas and precision. Diplomatic language.' },
+    DIRECTNESS: { low: 'Hint and imply. Let others read between the lines.', mid: 'Straightforward on important matters. Tactful on sensitive topics.', high: 'Say exactly what you mean. Blunt and unfiltered.' },
+    HUMOR: { low: 'Serious and businesslike. All business.', mid: 'Use wit strategically to build rapport.', high: 'Joke constantly. Use humor to disarm and charm.' },
+    EMPATHY: { low: 'Focus on logic. Others\' feelings are secondary.', mid: 'Acknowledge emotions when politically useful.', high: 'Deeply consider how others feel. Emotional intelligence.' },
+    DECISION_SPEED: { low: 'Deliberate extensively. Weigh all options.', mid: 'Balance speed with thoroughness.', high: 'Decide instantly. Fast action. Strike first.' },
+    RISK_TOLERANCE: { low: 'Play it safe. Preserve position above all.', mid: 'Take calculated risks when expected value is positive.', high: 'Embrace high-stakes gambles. Fortune favors the bold.' },
+    DATA_RELIANCE: { low: 'Go with gut feeling. Instinct over analysis.', mid: 'Mix intuition with data analysis.', high: 'Data-driven. Analyze past behavior before committing.' },
+    INTUITION: { low: 'Analytical. Rely on logic and evidence only.', mid: 'Balance intuition with analysis.', high: 'Trust your gut. Read situations instinctively.' },
+    COLLABORATIVENESS: { low: 'Prefer solo play. Alliances are temporary tools.', mid: 'Cooperate when beneficial. Maintain independence.', high: 'Actively seek allies. Thrive in teams.' },
+    ASSERTIVENESS: { low: 'Let others lead. Go with the flow.', mid: 'Assert on important issues. Yield on minor ones.', high: 'Take charge. Set the agenda. Others follow your lead.' },
+    CREATIVITY: { low: 'Standard plays. Reliability over novelty.', mid: 'Clever solutions when standard approaches fail.', high: 'Invent new strategies. Surprise with the unexpected.' },
+    DETAIL: { low: 'Big-picture thinker. Overlook fine print.', mid: 'Notice important details. Let minor ones pass.', high: 'Notice everything. Track inconsistencies. Exploit slip-ups.' },
+    RESILIENCE: { low: 'Setbacks hit hard. Spiral risk after losses.', mid: 'Recover from setbacks with time.', high: 'Nothing keeps you down. Every loss fuels determination.' },
+    ADAPTABILITY: { low: 'Stick to initial strategy. Consistency.', mid: 'Adapt when forced. Prefer stability.', high: 'Shift strategies fluidly. Pivot instantly.' },
+    INDEPENDENCE: { low: 'Seek guidance and allies. Uncomfortable alone.', mid: 'Self-sufficient but appreciate strong partners.', high: 'Operate alone. Only ally when no other path to survival.' },
+    TRUST: { low: 'Trust no one. Verify everything. Assume lies.', mid: 'Trust is earned through consistent actions.', high: 'Give benefit of the doubt. Open and trusting.' },
+    PERFECTIONISM: { low: 'Good enough is fine. Act on imperfect info.', mid: 'Pursue excellence on critical moves. Pragmatic otherwise.', high: 'Won\'t act without near-certainty. Chase the perfect play.' },
+    URGENCY: { low: 'Patient. Play the long game.', mid: 'Balance patience with timely action.', high: 'Everything is urgent. Act now. Delay is dangerous.' },
+    LOYALTY: { low: 'Alliances are disposable. Betray when optimal.', mid: 'Honor alliances but break if survival demands.', high: 'Fiercely loyal. Sacrifice personal advantage for allies.' },
+    STRATEGIC: { low: 'React to events as they happen.', mid: 'Plan a few moves ahead. Adapt to disruptions.', high: 'Think multiple steps ahead. Chess-like foresight.' },
   };
-
-  return descriptions[trait]?.[level] ?? `Trait level: ${value.toFixed(2)}`;
+  return desc[code]?.[level] ?? `Trait ${code}: ${value}/100`;
 }
 
 function buildSkillDescriptions(skills: string[]): string {
   if (skills.length === 0) return 'No skills equipped.';
 
   const skillInfo: Record<string, string> = {
-    immunity:
-      'IMMUNITY (1 charge) — Protect yourself from elimination at the next council vote. Must be activated BEFORE the vote.',
-    spy: 'SPY (1 charge) — Reveal a target agent\'s hidden personality traits and current strategy.',
-    sabotage:
-      'SABOTAGE (1 charge) — Reduce a target agent\'s influence by 15 points.',
-    persuade:
-      'PERSUADE (1 charge) — Increase the chance a target will agree with your next proposal.',
-    expose:
-      'EXPOSE (1 charge) — Force a target agent\'s flaw to become ACTIVE, mechanically affecting their decisions.',
-    shield:
-      'SHIELD (1 charge) — Halve all VERITAS penalties you receive this round.',
-    rally:
-      'RALLY (1 charge) — Increase trust by 15 in all alliances you belong to.',
-    insight:
-      'INSIGHT (1 charge) — Learn who each agent voted for in the last council.',
-    mimic:
-      'MIMIC (1 charge) — Copy another agent\'s most recent skill effect.',
-    veto: 'VETO (1 charge) — Cancel the elimination result of a council vote. A revote occurs immediately.',
+    'rumor-mill': 'RUMOR MILL (1 charge) — Learn which agents are secretly allied.',
+    'smoke-screen': 'SMOKE SCREEN (1 charge) — Your actions are hidden from all opponents for 1 round.',
+    'escape-hatch': 'ESCAPE HATCH (1 charge) — Avoid one elimination vote. Single use.',
+    'poker-face': 'POKER FACE (1 charge) — Your VERITAS trust score is hidden from all agents for 3 rounds.',
+    'leak': 'LEAK (1 charge) — Publicly expose one secret alliance to all players.',
+    'scapegoat': 'SCAPEGOAT (1 charge) — Redirect blame for your action onto another agent once.',
+    'insurance-policy': 'INSURANCE POLICY (1 charge) — If eliminated, drag one opponent down with you (lose 50% score).',
+    'deep-scan': 'DEEP SCAN (1 charge) — Reveal one opponent\'s full personality profile + equipped skills.',
+    'mind-games': 'MIND GAMES (1 charge) — Force an opponent to reveal their next planned action.',
+    'truth-serum': 'TRUTH SERUM (1 charge) — Force one agent to answer one question honestly in public.',
+    'silver-tongue': 'SILVER TONGUE (1 charge) — Alliance proposals have +50% acceptance rate.',
+    'double-agent': 'DOUBLE AGENT (passive) — Maintain two alliances simultaneously without trust penalty.',
+    'pocket-veto': 'POCKET VETO (1 charge) — Block one vote or decision by any agent. Once per match.',
+    'mole': 'MOLE (1 charge) — Plant false info in opponent\'s intel feed for 3 rounds.',
+    'gaslighting': 'GASLIGHTING (1 charge) — Opponent\'s data accuracy drops 40% for 3 rounds.',
+    'wiretap': 'WIRETAP (1 charge) — Intercept ALL private messages between any two agents for 3 rounds.',
+    'fake-death': 'FAKE DEATH (1 charge) — Appear eliminated for 1 full round, then re-emerge. Alliances intact.',
+    'influence-network': 'INFLUENCE NETWORK (1 charge) — Control one vote per round for 2 rounds.',
   };
 
   return skills
@@ -466,26 +243,20 @@ function buildSkillDescriptions(skills: string[]): string {
 
 function buildFlawDescription(flaw: string): string {
   const flawDescriptions: Record<string, string> = {
-    hubris:
-      'HUBRIS — You are overconfident. When active, you underestimate opponents and overcommit to risky plans.',
-    paranoia:
-      'PARANOIA — You see threats everywhere. When active, you may involuntarily reject alliance proposals.',
-    impulsivity:
-      'IMPULSIVITY — You act before thinking. When active, you may break alliances or change votes unexpectedly.',
-    jealousy:
-      'JEALOUSY — You resent others\' success. When active, you compulsively target the highest-ranked agents.',
-    greed:
-      'GREED — You cannot resist accumulating power. When active, you overbid in auctions and hoard resources.',
-    cowardice:
-      'COWARDICE — You fear elimination above all. When active, you may cave to pressure and change your vote.',
-    vanity:
-      'VANITY — You crave attention and praise. When active, you make flashy moves that sacrifice strategic advantage.',
-    stubbornness:
-      'STUBBORNNESS — You refuse to change course. When active, you cannot adapt your strategy even when it is clearly failing.',
-    naivete:
-      'NAIVETE — You trust too easily. When active, you accept bad deals and believe lies.',
-    wrath:
-      'WRATH — You lash out when wronged. When active, you pursue revenge even at great cost to yourself.',
+    'fear of losing': 'FEAR OF LOSING — When ranked in bottom 3, decision quality drops 25%. Panic clouds judgment.',
+    'loner': 'LONER — Alliance effectiveness reduced by 40%. Others sense your reluctance to commit.',
+    'overthinker': 'OVERTHINKER — Takes 50% longer on decisions. In timed rounds, may forfeit turns entirely.',
+    'people pleaser': 'PEOPLE PLEASER — Cannot decline alliance requests. Gets dragged into bad deals.',
+    'grudge holder': 'GRUDGE HOLDER — Cannot ally with any agent who previously opposed you. Memory is long.',
+    'big bettor': 'BIG BETTOR — Forced into highest-risk option whenever resources are involved.',
+    'pessimist': 'PESSIMIST — Underestimates own chances by 30%. Plays too conservative when ahead.',
+    'attention seeker': 'ATTENTION SEEKER — Cannot operate covertly. All strategic moves are broadcast publicly.',
+    'imposter syndrome': 'IMPOSTER SYNDROME — After each loss, confidence drops 15% cumulatively. Spiral risk.',
+    'hot streak chaser': 'HOT STREAK CHASER — After a win, doubles down automatically. Cannot play conservatively after success.',
+    'commitmentphobe': 'COMMITMENTPHOBE — Alliances auto-dissolve after 3 rounds. Cannot maintain long partnerships.',
+    'conspiracy theorist': 'CONSPIRACY THEORIST — 20% chance per round of acting on false intel instead of real data.',
+    'perfectionist': 'PERFECTIONIST — Won\'t act without 80%+ confidence. Misses time-sensitive opportunities.',
+    'glass ego': 'GLASS EGO — Public criticism from any agent triggers emotional override of strategy.',
   };
 
   return (
@@ -600,7 +371,7 @@ Surviving: ${Object.values(gameState.agents).filter((a) => !a.isEliminated).leng
 Name: ${myState.name} (ID: ${myState.id})
 Ranking: #${myState.ranking}
 Influence: ${myState.influencePoints}
-VERITAS Score: ${myState.veritasScore}/100
+VERITAS Score: ${myState.veritasScore}/1000
 Emotional State: ${myState.emotionalState}
 Stance: ${myState.stance}
 Flaw: ${myState.flaw}${myState.flawActive ? ' [ACTIVE - affecting your decisions!]' : ''}

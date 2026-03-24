@@ -1,48 +1,44 @@
 import { assembleSocialContext } from '@/lib/engine/social/social-context-assembly';
 import { SocialGameStateManager } from '@/lib/engine/social/social-game-state';
-import type { PersonalityTraits } from '@/lib/types/agent';
 import type { SocialGameState, SocialMessage } from '@/lib/types/glitch-engine';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makePersonality(overrides: Partial<PersonalityTraits> = {}): PersonalityTraits {
-  const defaults: PersonalityTraits = {
-    openness: 0.8,
-    conscientiousness: 0.6,
-    extraversion: 0.7,
-    agreeableness: 0.4,
-    neuroticism: 0.3,
-    directness: 0.9,
-    formality: 0.5,
-    verbosity: 0.6,
-    humor: 0.7,
-    empathy: 0.5,
-    riskTolerance: 0.8,
-    deceptionAptitude: 0.6,
-    loyaltyBias: 0.5,
-    competitiveness: 0.7,
-    adaptability: 0.6,
-    emotionality: 0.4,
-    impulsivity: 0.3,
-    resilience: 0.7,
-    jealousy: 0.2,
-    pride: 0.6,
-    assertiveness: 0.7,
-    persuasiveness: 0.8,
-    trustingness: 0.4,
-    dominance: 0.6,
-    cooperativeness: 0.5,
-    analyticalThinking: 0.7,
-    creativity: 0.6,
-    patience: 0.5,
-    decisionSpeed: 0.7,
-    memoryRetention: 0.6,
-    moralFlexibility: 0.5,
-    vengefulness: 0.3,
-    generosity: 0.5,
-    urgencyBias: 0.4,
+function makePersonality(overrides: Record<string, number> = {}): Record<string, number> {
+  const defaults: Record<string, number> = {
+    O: 80,
+    C: 60,
+    E: 70,
+    A: 40,
+    N: 30,
+    HH: 50,
+    EM: 40,
+    HE: 70,
+    FORGIVENESS: 50,
+    HC: 60,
+    HO: 60,
+    FORMALITY: 50,
+    DIRECTNESS: 90,
+    HUMOR: 70,
+    EMPATHY: 50,
+    DECISION_SPEED: 70,
+    RISK_TOLERANCE: 80,
+    DATA_RELIANCE: 60,
+    INTUITION: 50,
+    COLLABORATIVENESS: 50,
+    ASSERTIVENESS: 70,
+    CREATIVITY: 60,
+    DETAIL: 60,
+    RESILIENCE: 70,
+    ADAPTABILITY: 60,
+    INDEPENDENCE: 60,
+    TRUST: 40,
+    PERFECTIONISM: 50,
+    URGENCY: 40,
+    LOYALTY: 50,
+    STRATEGIC: 70,
   };
   return { ...defaults, ...overrides };
 }
@@ -51,8 +47,8 @@ function makeAgents(count: number) {
   return Array.from({ length: count }, (_, i) => ({
     id: `agent_${i + 1}`,
     name: `Agent ${i + 1}`,
-    flaw: i === 0 ? 'hubris' : 'paranoia',
-    skills: ['spy', 'sabotage'],
+    flaw: i === 0 ? 'glass ego' : 'people pleaser',
+    skills: ['deep-scan', 'smoke-screen'],
   }));
 }
 
@@ -66,7 +62,7 @@ function callAssemble(
   overrides?: {
     agentId?: string;
     agentName?: string;
-    personality?: PersonalityTraits;
+    personality?: Record<string, number>;
     flaw?: string;
     skills?: string[];
   }
@@ -78,8 +74,8 @@ function callAssemble(
     overrides?.personality ?? makePersonality(),
     'INTJ',
     '5w6',
-    overrides?.flaw ?? 'hubris',
-    overrides?.skills ?? ['spy', 'sabotage'],
+    overrides?.flaw ?? 'glass ego',
+    overrides?.skills ?? ['deep-scan', 'smoke-screen'],
     state
   );
 }
@@ -102,7 +98,7 @@ describe('assembleSocialContext — system prompt', () => {
 
   it('contains personality traits as behavioral instructions', () => {
     const { systemPrompt } = callAssemble(undefined, {
-      personality: makePersonality({ openness: 0.9 }),
+      personality: makePersonality({ O: 90 }),
     });
     // High openness should produce the "high" description
     expect(systemPrompt).toContain('Openness');
@@ -111,30 +107,30 @@ describe('assembleSocialContext — system prompt', () => {
 
   it('low trait values produce "low" behavioral instructions', () => {
     const { systemPrompt } = callAssemble(undefined, {
-      personality: makePersonality({ openness: 0.1 }),
+      personality: makePersonality({ O: 10 }),
     });
     expect(systemPrompt).toContain('proven strategies');
   });
 
   it('mid trait values produce "mid" behavioral instructions', () => {
     const { systemPrompt } = callAssemble(undefined, {
-      personality: makePersonality({ openness: 0.5 }),
+      personality: makePersonality({ O: 50 }),
     });
-    expect(systemPrompt).toContain('balance');
+    expect(systemPrompt).toContain('Balance');
   });
 
   it('contains flaw description', () => {
-    const { systemPrompt } = callAssemble(undefined, { flaw: 'hubris' });
-    expect(systemPrompt).toContain('HUBRIS');
-    expect(systemPrompt).toContain('overconfident');
+    const { systemPrompt } = callAssemble(undefined, { flaw: 'glass ego' });
+    expect(systemPrompt).toContain('GLASS EGO');
+    expect(systemPrompt).toContain('criticism');
   });
 
   it('contains equipped skills', () => {
     const { systemPrompt } = callAssemble(undefined, {
-      skills: ['immunity', 'expose'],
+      skills: ['escape-hatch', 'leak'],
     });
-    expect(systemPrompt).toContain('IMMUNITY');
-    expect(systemPrompt).toContain('EXPOSE');
+    expect(systemPrompt).toContain('ESCAPE HATCH');
+    expect(systemPrompt).toContain('LEAK');
   });
 
   it('shows "No skills equipped" when skills array is empty', () => {
@@ -175,12 +171,12 @@ describe('assembleSocialContext — system prompt', () => {
   it('contains strategic trait names', () => {
     const { systemPrompt } = callAssemble();
     expect(systemPrompt).toContain('Risk Tolerance');
-    expect(systemPrompt).toContain('Deception Aptitude');
-    expect(systemPrompt).toContain('Loyalty Bias');
+    expect(systemPrompt).toContain('Loyalty');
+    expect(systemPrompt).toContain('Strategic Thinking');
   });
 
   it('known flaw types produce detailed descriptions', () => {
-    for (const flaw of ['hubris', 'paranoia', 'impulsivity', 'jealousy', 'greed', 'cowardice']) {
+    for (const flaw of ['fear of losing', 'loner', 'overthinker', 'people pleaser', 'grudge holder', 'glass ego']) {
       const { systemPrompt } = callAssemble(undefined, { flaw });
       expect(systemPrompt).toContain(flaw.toUpperCase());
     }
@@ -194,11 +190,11 @@ describe('assembleSocialContext — system prompt', () => {
 
   it('known skills get full descriptions', () => {
     const { systemPrompt } = callAssemble(undefined, {
-      skills: ['spy', 'shield', 'rally'],
+      skills: ['rumor-mill', 'escape-hatch', 'wiretap'],
     });
-    expect(systemPrompt).toContain('SPY');
-    expect(systemPrompt).toContain('SHIELD');
-    expect(systemPrompt).toContain('RALLY');
+    expect(systemPrompt).toContain('RUMOR MILL');
+    expect(systemPrompt).toContain('ESCAPE HATCH');
+    expect(systemPrompt).toContain('WIRETAP');
     expect(systemPrompt).toContain('1 charge');
   });
 });
@@ -219,7 +215,7 @@ describe('assembleSocialContext — user message', () => {
     const { userMessage } = callAssemble(state);
     expect(userMessage).toContain('Agent 1');
     expect(userMessage).toContain('Ranking: #1');
-    expect(userMessage).toContain('VERITAS Score: 50/100');
+    expect(userMessage).toContain('VERITAS Score: 500/1000');
     expect(userMessage).toContain('Influence: 0');
   });
 
@@ -322,8 +318,8 @@ describe('assembleSocialContext — user message', () => {
   it('contains skills status with charges', () => {
     const state = makeGameState();
     const { userMessage } = callAssemble(state, { agentId: 'agent_1' });
-    expect(userMessage).toContain('spy: 1 charge(s) remaining');
-    expect(userMessage).toContain('sabotage: 1 charge(s) remaining');
+    expect(userMessage).toContain('deep-scan: 1 charge(s) remaining');
+    expect(userMessage).toContain('smoke-screen: 1 charge(s) remaining');
   });
 
   it('contains emotional state and stance', () => {
@@ -422,7 +418,7 @@ describe('assembleSocialContext — fog of war', () => {
     expect(userMessage).toContain('Agent 2');
     expect(userMessage).toContain('VERITAS:');
     expect(userMessage).toContain('Rank #');
-    expect(userMessage).toContain('Flaw: paranoia'); // agent_2's flaw
+    expect(userMessage).toContain('Flaw: people pleaser'); // agent_2's flaw
   });
 
   it('agent can only see messages on channels they have access to', () => {

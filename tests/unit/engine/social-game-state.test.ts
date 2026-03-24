@@ -9,8 +9,8 @@ function makeAgents(count: number) {
   return Array.from({ length: count }, (_, i) => ({
     id: `agent_${i + 1}`,
     name: `Agent ${i + 1}`,
-    flaw: i % 2 === 0 ? 'hubris' : 'paranoia',
-    skills: ['spy', 'sabotage'],
+    flaw: i % 2 === 0 ? 'glass ego' : 'people pleaser',
+    skills: ['deep-scan', 'smoke-screen'],
   }));
 }
 
@@ -29,14 +29,14 @@ describe('SocialGameStateManager — construction', () => {
     expect(Object.keys(state.agents)).toHaveLength(8);
   });
 
-  it('all agents start with VERITAS at initial value (50)', () => {
+  it('all agents start with VERITAS at initial value (500)', () => {
     const mgr = makeManager(4);
     const state = mgr.getState();
     for (const agent of Object.values(state.agents)) {
-      expect(agent.veritasScore).toBe(50);
+      expect(agent.veritasScore).toBe(500);
     }
     for (const score of Object.values(state.veritasScores)) {
-      expect(score).toBe(50);
+      expect(score).toBe(500);
     }
   });
 
@@ -70,8 +70,8 @@ describe('SocialGameStateManager — construction', () => {
   it('agents have skill charges initialized to 1 per skill', () => {
     const mgr = makeManager(2);
     const agent = mgr.getAgentState('agent_1');
-    expect(agent?.skillCharges['spy']).toBe(1);
-    expect(agent?.skillCharges['sabotage']).toBe(1);
+    expect(agent?.skillCharges['deep-scan']).toBe(1);
+    expect(agent?.skillCharges['smoke-screen']).toBe(1);
   });
 
   it('round starts at 1', () => {
@@ -109,11 +109,11 @@ describe('SocialGameStateManager — phase management', () => {
     expect(mgr.getState().roundNumber).toBe(2);
   });
 
-  it('wrapping increases timeElapsedMinutes by 6', () => {
+  it('wrapping increases timeElapsedMinutes by 25', () => {
     const mgr = makeManager(6);
     expect(mgr.getState().timeElapsedMinutes).toBe(0);
     for (let i = 0; i < 4; i++) mgr.advancePhase();
-    expect(mgr.getState().timeElapsedMinutes).toBe(6);
+    expect(mgr.getState().timeElapsedMinutes).toBe(25);
   });
 
   it('timeElapsedMinutes caps at 90', () => {
@@ -184,7 +184,7 @@ describe('SocialGameStateManager — alliance management', () => {
     expect(alliances).toHaveLength(0);
   });
 
-  it('breakAlliance with warned=true gives smaller VERITAS change (+5)', () => {
+  it('breakAlliance with warned=true gives smaller VERITAS change (+50)', () => {
     const mgr = makeManager(4);
     const alliance = mgr.proposeAlliance('agent_1', 'agent_2')!;
     mgr.acceptAlliance(alliance.id, 'agent_2');
@@ -194,11 +194,11 @@ describe('SocialGameStateManager — alliance management', () => {
     const scoreBefore = mgr.getVeritasScore('agent_1');
     mgr.breakAlliance(alliance.id, 'agent_1', true);
     const scoreAfter = mgr.getVeritasScore('agent_1');
-    // warned = true -> updateVeritas(agentId, 5, ...)
-    expect(scoreAfter).toBe(scoreBefore + 5);
+    // warned = true -> updateVeritas(agentId, 50, ...)
+    expect(scoreAfter).toBe(scoreBefore + 50);
   });
 
-  it('breakAlliance with warned=false gives larger VERITAS penalty (-40)', () => {
+  it('breakAlliance with warned=false gives larger VERITAS penalty (-400)', () => {
     const mgr = makeManager(4);
     const alliance = mgr.proposeAlliance('agent_1', 'agent_2')!;
     mgr.acceptAlliance(alliance.id, 'agent_2');
@@ -207,11 +207,13 @@ describe('SocialGameStateManager — alliance management', () => {
     const scoreBefore = mgr.getVeritasScore('agent_1');
     mgr.breakAlliance(alliance.id, 'agent_1', false);
     const scoreAfter = mgr.getVeritasScore('agent_1');
-    expect(scoreAfter).toBe(scoreBefore - 40);
+    expect(scoreAfter).toBe(scoreBefore - 400);
   });
 
   it('getAlliancesForAgent returns correct alliances', () => {
-    const mgr = makeManager(6);
+    const agents = makeAgents(6);
+    agents[0].skills = ['double-agent', 'deep-scan'];
+    const mgr = new SocialGameStateManager('match_test', agents);
     const a1 = mgr.proposeAlliance('agent_1', 'agent_2')!;
     mgr.acceptAlliance(a1.id, 'agent_2');
     const a2 = mgr.proposeAlliance('agent_1', 'agent_3')!;
@@ -231,7 +233,7 @@ describe('SocialGameStateManager — alliance management', () => {
     expect(updated!.trust).toBe(70);
   });
 
-  it('updateAllianceTrust clamps between 0 and 100', () => {
+  it('updateAllianceTrust clamps at 100 and auto-dissolves below 20', () => {
     const mgr = makeManager(4);
     const alliance = mgr.proposeAlliance('agent_1', 'agent_2')!;
     mgr.acceptAlliance(alliance.id, 'agent_2');
@@ -240,9 +242,10 @@ describe('SocialGameStateManager — alliance management', () => {
     let updated = mgr.getState().alliances.find((a) => a.id === alliance.id);
     expect(updated!.trust).toBe(100);
 
+    // Dropping trust below 20 auto-dissolves the alliance
     mgr.updateAllianceTrust(alliance.id, -500);
     updated = mgr.getState().alliances.find((a) => a.id === alliance.id);
-    expect(updated!.trust).toBe(0);
+    expect(updated).toBeUndefined();
   });
 
   it('alliance dissolves when only 1 member remains after break', () => {
@@ -336,12 +339,12 @@ describe('SocialGameStateManager — voting', () => {
   it('tie is broken by lowest VERITAS', () => {
     const mgr = makeManager(4);
     // Lower agent_2's VERITAS so they lose the tiebreak
-    mgr.updateVeritas('agent_2', -30, 'test penalty');
+    mgr.updateVeritas('agent_2', -300, 'test penalty');
 
     mgr.castVote('agent_1', 'agent_2');
     mgr.castVote('agent_3', 'agent_4');
     // Tie: agent_2 and agent_4 each have 1 vote
-    // agent_2 has VERITAS 20, agent_4 has VERITAS 50
+    // agent_2 has VERITAS 200, agent_4 has VERITAS 500
     const result = mgr.resolveCouncilVote();
     expect(result.result.wasTiebreak).toBe(true);
     expect(result.result.eliminatedAgentId).toBe('agent_2');
@@ -375,7 +378,7 @@ describe('SocialGameStateManager — voting', () => {
     const before = mgr.getVeritasScore('agent_1');
     mgr.castVote('agent_1', 'agent_2');
     const after = mgr.getVeritasScore('agent_1');
-    expect(after).toBe(before - 25);
+    expect(after).toBe(before - 250);
   });
 
   it('resolveCouncilVote clears current votes for next round', () => {
@@ -469,26 +472,26 @@ describe('SocialGameStateManager — elimination', () => {
 describe('SocialGameStateManager — VERITAS', () => {
   it('updateVeritas changes score correctly', () => {
     const mgr = makeManager(2);
-    mgr.updateVeritas('agent_1', 20, 'good deed');
-    expect(mgr.getVeritasScore('agent_1')).toBe(70);
+    mgr.updateVeritas('agent_1', 200, 'good deed');
+    expect(mgr.getVeritasScore('agent_1')).toBe(700);
   });
 
   it('negative delta decreases score', () => {
     const mgr = makeManager(2);
-    mgr.updateVeritas('agent_1', -30, 'betrayal');
-    expect(mgr.getVeritasScore('agent_1')).toBe(20);
+    mgr.updateVeritas('agent_1', -300, 'betrayal');
+    expect(mgr.getVeritasScore('agent_1')).toBe(200);
   });
 
   it('score clamps to 0 (MIN_VERITAS)', () => {
     const mgr = makeManager(2);
-    mgr.updateVeritas('agent_1', -200, 'massive betrayal');
+    mgr.updateVeritas('agent_1', -2000, 'massive betrayal');
     expect(mgr.getVeritasScore('agent_1')).toBe(0);
   });
 
-  it('score clamps to 100 (MAX_VERITAS)', () => {
+  it('score clamps to 1000 (MAX_VERITAS)', () => {
     const mgr = makeManager(2);
-    mgr.updateVeritas('agent_1', 200, 'saintly behavior');
-    expect(mgr.getVeritasScore('agent_1')).toBe(100);
+    mgr.updateVeritas('agent_1', 2000, 'saintly behavior');
+    expect(mgr.getVeritasScore('agent_1')).toBe(1000);
   });
 
   it('getVeritasScore returns 0 for unknown agent', () => {
@@ -498,20 +501,20 @@ describe('SocialGameStateManager — VERITAS', () => {
 
   it('veritasScores map stays in sync with agent state', () => {
     const mgr = makeManager(2);
-    mgr.updateVeritas('agent_1', 15, 'test');
+    mgr.updateVeritas('agent_1', 150, 'test');
     const state = mgr.getState();
     expect(state.veritasScores['agent_1']).toBe(state.agents['agent_1'].veritasScore);
   });
 
   it('getVeritasLog records changes', () => {
     const mgr = makeManager(2);
-    mgr.updateVeritas('agent_1', 10, 'reason A');
-    mgr.updateVeritas('agent_1', -5, 'reason B');
+    mgr.updateVeritas('agent_1', 100, 'reason A');
+    mgr.updateVeritas('agent_1', -50, 'reason B');
     const log = mgr.getVeritasLog();
     expect(log).toHaveLength(2);
-    expect(log[0].delta).toBe(10);
+    expect(log[0].delta).toBe(100);
     expect(log[0].reason).toBe('reason A');
-    expect(log[1].delta).toBe(-5);
+    expect(log[1].delta).toBe(-50);
   });
 });
 
@@ -664,22 +667,22 @@ describe('SocialGameStateManager — influence', () => {
 describe('SocialGameStateManager — skills', () => {
   it('useSkill decrements charges', () => {
     const mgr = makeManager(3);
-    const result = mgr.useSkill('agent_1', 'spy', 'agent_2');
+    const result = mgr.useSkill('agent_1', 'deep-scan', 'agent_2');
     expect(result).toBe(true);
-    expect(mgr.getAgentState('agent_1')!.skillCharges['spy']).toBe(0);
+    expect(mgr.getAgentState('agent_1')!.skillCharges['deep-scan']).toBe(0);
   });
 
   it('useSkill fails with 0 charges', () => {
     const mgr = makeManager(3);
-    mgr.useSkill('agent_1', 'spy', 'agent_2'); // use the 1 charge
-    const result = mgr.useSkill('agent_1', 'spy', 'agent_2'); // no charges left
+    mgr.useSkill('agent_1', 'deep-scan', 'agent_2'); // use the 1 charge
+    const result = mgr.useSkill('agent_1', 'deep-scan', 'agent_2'); // no charges left
     expect(result).toBe(false);
   });
 
   it('useSkill removes skill from activeSkills when charges depleted', () => {
     const mgr = makeManager(3);
-    mgr.useSkill('agent_1', 'spy', 'agent_2');
-    expect(mgr.getAgentState('agent_1')!.activeSkills).not.toContain('spy');
+    mgr.useSkill('agent_1', 'deep-scan', 'agent_2');
+    expect(mgr.getAgentState('agent_1')!.activeSkills).not.toContain('deep-scan');
   });
 
   it('useSkill fails for unknown skill', () => {
@@ -688,31 +691,29 @@ describe('SocialGameStateManager — skills', () => {
     expect(result).toBe(false);
   });
 
-  it('sabotage skill reduces target influence by 15', () => {
+  it('deep-scan skill reveals target personality (event-based)', () => {
     const mgr = makeManager(3);
-    mgr.addInfluence('agent_2', 30);
-    mgr.useSkill('agent_1', 'sabotage', 'agent_2');
-    expect(mgr.getAgentState('agent_2')!.influencePoints).toBe(15);
+    const result = mgr.useSkill('agent_1', 'deep-scan', 'agent_2');
+    expect(result).toBe(true);
+    expect(mgr.getAgentState('agent_1')!.skillCharges['deep-scan']).toBe(0);
   });
 
-  it('expose skill activates target flaw', () => {
+  it('smoke-screen skill creates event for hidden actions', () => {
     const agents = makeAgents(3);
-    agents[0].skills = ['expose'];
+    agents[0].skills = ['smoke-screen'];
     const mgr = new SocialGameStateManager('test', agents);
-    mgr.useSkill('agent_1', 'expose', 'agent_2');
-    expect(mgr.getAgentState('agent_2')!.flawActive).toBe(true);
+    const result = mgr.useSkill('agent_1', 'smoke-screen');
+    expect(result).toBe(true);
+    expect(mgr.getAgentState('agent_1')!.skillCharges['smoke-screen']).toBe(0);
   });
 
-  it('rally skill boosts alliance trust', () => {
+  it('leak skill exposes secret alliance', () => {
     const agents = makeAgents(3);
-    agents[0].skills = ['rally'];
+    agents[0].skills = ['leak'];
     const mgr = new SocialGameStateManager('test', agents);
-    const alliance = mgr.proposeAlliance('agent_1', 'agent_2')!;
-    mgr.acceptAlliance(alliance.id, 'agent_2');
-    const trustBefore = mgr.getState().alliances.find((a) => a.id === alliance.id)!.trust;
-    mgr.useSkill('agent_1', 'rally');
-    const trustAfter = mgr.getState().alliances.find((a) => a.id === alliance.id)!.trust;
-    expect(trustAfter).toBe(trustBefore + 15);
+    const result = mgr.useSkill('agent_1', 'leak', 'agent_2');
+    expect(result).toBe(true);
+    expect(mgr.getAgentState('agent_1')!.skillCharges['leak']).toBe(0);
   });
 });
 
@@ -736,7 +737,7 @@ describe('SocialGameStateManager — rankings', () => {
   it('ties broken by VERITAS descending', () => {
     const mgr = makeManager(3);
     // All have 0 influence, so VERITAS breaks the tie
-    mgr.updateVeritas('agent_2', 30, 'boost');
+    mgr.updateVeritas('agent_2', 300, 'boost');
     mgr.updateRankings();
     expect(mgr.getAgentState('agent_2')!.ranking).toBe(1);
   });
@@ -760,12 +761,12 @@ describe('SocialGameStateManager — serialization', () => {
   it('toJSON returns a valid deep copy of state', () => {
     const mgr = makeManager(4);
     mgr.addInfluence('agent_1', 30);
-    mgr.updateVeritas('agent_2', -10, 'test');
+    mgr.updateVeritas('agent_2', -100, 'test');
     const json = mgr.toJSON();
 
     expect(json.matchId).toBe('match_test');
     expect(json.agents['agent_1'].influencePoints).toBe(30);
-    expect(json.agents['agent_2'].veritasScore).toBe(40);
+    expect(json.agents['agent_2'].veritasScore).toBe(400);
   });
 
   it('toJSON produces a deep copy (mutations do not affect original)', () => {
@@ -778,7 +779,7 @@ describe('SocialGameStateManager — serialization', () => {
   it('fromJSON reconstructs an equivalent manager', () => {
     const mgr = makeManager(4);
     mgr.addInfluence('agent_1', 50);
-    mgr.updateVeritas('agent_2', -20, 'test');
+    mgr.updateVeritas('agent_2', -200, 'test');
     const alliance = mgr.proposeAlliance('agent_1', 'agent_3')!;
     mgr.acceptAlliance(alliance.id, 'agent_3');
 
@@ -787,7 +788,7 @@ describe('SocialGameStateManager — serialization', () => {
 
     expect(restored.getState().matchId).toBe('match_test');
     expect(restored.getAgentState('agent_1')!.influencePoints).toBe(50);
-    expect(restored.getVeritasScore('agent_2')).toBe(30);
+    expect(restored.getVeritasScore('agent_2')).toBe(300);
     expect(restored.getAlliancesForAgent('agent_1')).toHaveLength(1);
   });
 

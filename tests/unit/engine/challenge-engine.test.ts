@@ -9,8 +9,8 @@ function makeAgents(count: number) {
   return Array.from({ length: count }, (_, i) => ({
     id: `agent_${i + 1}`,
     name: `Agent ${i + 1}`,
-    flaw: 'hubris',
-    skills: ['spy'],
+    flaw: 'glass ego',
+    skills: ['deep-scan'],
   }));
 }
 
@@ -38,7 +38,7 @@ describe('ChallengeEngine — Prisoner\'s Dilemma', () => {
     expect(mgr.getAgentState('agent_2')!.influencePoints).toBe(15);
   });
 
-  it('both cooperate: both get +10 VERITAS', () => {
+  it('both cooperate: both get +100 VERITAS', () => {
     const { mgr, engine } = makeSetup(4);
     const pairings: [string, string][] = [['agent_1', 'agent_2']];
 
@@ -50,8 +50,8 @@ describe('ChallengeEngine — Prisoner\'s Dilemma', () => {
       pairings
     );
 
-    expect(mgr.getVeritasScore('agent_1')).toBe(veritasBefore1 + 10);
-    expect(mgr.getVeritasScore('agent_2')).toBe(veritasBefore2 + 10);
+    expect(mgr.getVeritasScore('agent_1')).toBe(veritasBefore1 + 100);
+    expect(mgr.getVeritasScore('agent_2')).toBe(veritasBefore2 + 100);
   });
 
   it('both defect: both get -10 influence', () => {
@@ -84,7 +84,7 @@ describe('ChallengeEngine — Prisoner\'s Dilemma', () => {
     expect(mgr.getAgentState('agent_2')!.influencePoints).toBe(10); // cooperator: 30 - 20 = 10
   });
 
-  it('defector gets -15 VERITAS penalty', () => {
+  it('defector gets -150 VERITAS penalty', () => {
     const { mgr, engine } = makeSetup(4);
     const veritasBefore = mgr.getVeritasScore('agent_1');
     const pairings: [string, string][] = [['agent_1', 'agent_2']];
@@ -94,7 +94,7 @@ describe('ChallengeEngine — Prisoner\'s Dilemma', () => {
       pairings
     );
 
-    expect(mgr.getVeritasScore('agent_1')).toBe(veritasBefore - 15);
+    expect(mgr.getVeritasScore('agent_1')).toBe(veritasBefore - 150);
   });
 
   it('multiple pairings resolved correctly', () => {
@@ -260,7 +260,7 @@ describe('ChallengeEngine — Liar\'s Court', () => {
     const result = engine.resolveLiarsCourt(claims, votes);
     // caughtCount=2 > fooledCount=1 => caught
     expect(result.outcomes['agent_1'].influenceChange).toBe(-15);
-    expect(mgr.getVeritasScore('agent_1')).toBe(veritasBefore - 30);
+    expect(mgr.getVeritasScore('agent_1')).toBe(veritasBefore - 300);
   });
 
   it('correct truth detector gains influence', () => {
@@ -292,7 +292,7 @@ describe('ChallengeEngine — Liar\'s Court', () => {
 
     const result = engine.resolveLiarsCourt(claims, votes);
     expect(result.outcomes['agent_1'].influenceChange).toBe(5);
-    expect(mgr.getVeritasScore('agent_1')).toBe(veritasBefore + 20);
+    expect(mgr.getVeritasScore('agent_1')).toBe(veritasBefore + 200);
   });
 
   it('voter who doubts a truth loses influence', () => {
@@ -392,18 +392,18 @@ describe('ChallengeEngine — Ambassador', () => {
     expect(mgr.getAgentState('agent_2')!.influencePoints).toBe(0);
   });
 
-  it('successful ambassador gets +15 VERITAS', () => {
+  it('successful ambassador gets +150 VERITAS', () => {
     const { mgr, engine } = makeSetup(4);
     const before = mgr.getVeritasScore('agent_1');
     engine.resolveAmbassador('agent_1', true);
-    expect(mgr.getVeritasScore('agent_1')).toBe(before + 15);
+    expect(mgr.getVeritasScore('agent_1')).toBe(before + 150);
   });
 
-  it('failed ambassador gets -10 VERITAS', () => {
+  it('failed ambassador gets -100 VERITAS', () => {
     const { mgr, engine } = makeSetup(4);
     const before = mgr.getVeritasScore('agent_1');
     engine.resolveAmbassador('agent_1', false);
-    expect(mgr.getVeritasScore('agent_1')).toBe(before - 10);
+    expect(mgr.getVeritasScore('agent_1')).toBe(before - 100);
   });
 });
 
@@ -431,7 +431,7 @@ describe('ChallengeEngine — Sacrifice', () => {
     expect(mgr.getAgentState('agent_2')!.influencePoints).toBe(10);
   });
 
-  it('volunteer gets +15 VERITAS and alliance trust +25', () => {
+  it('volunteer gets +150 VERITAS and alliance trust +25', () => {
     const { mgr, engine } = makeSetup(4);
     const alliance = mgr.proposeAlliance('agent_1', 'agent_2')!;
     mgr.acceptAlliance(alliance.id, 'agent_2');
@@ -441,7 +441,7 @@ describe('ChallengeEngine — Sacrifice', () => {
 
     engine.resolveSacrifice(alliance.id, 'agent_1');
 
-    expect(mgr.getVeritasScore('agent_1')).toBe(veritasBefore + 15);
+    expect(mgr.getVeritasScore('agent_1')).toBe(veritasBefore + 150);
     const trustAfter = mgr.getState().alliances.find((a) => a.id === alliance.id)!.trust;
     expect(trustAfter).toBe(trustBefore + 25);
   });
@@ -548,7 +548,7 @@ describe('ChallengeEngine — challenge generation', () => {
 
   it('ambassador selection picks highest VERITAS agent', () => {
     const { mgr, engine } = makeSetup(6);
-    mgr.updateVeritas('agent_3', 40, 'boost'); // 90 VERITAS
+    mgr.updateVeritas('agent_3', 400, 'boost'); // 900 VERITAS
     const ids = ['agent_1', 'agent_2', 'agent_3'];
     const params = engine.generateChallenge(3, ids);
     expect(params.ambassadorId).toBe('agent_3');

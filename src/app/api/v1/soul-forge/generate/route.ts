@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const description = body?.description;
+    const player_id = body?.player_id ?? null;
     const budget = body?.budget ?? 1000;
 
     if (!description || typeof description !== 'string') {
@@ -96,6 +97,7 @@ export async function POST(req: NextRequest) {
       budget,
       personality_cost: 0,
       remaining_budget: budget,
+      soul_json_url: `s3://glitched-souls/${agentId}/SOUL.json`,
       created_at: new Date().toISOString(),
     });
   } catch (error) {

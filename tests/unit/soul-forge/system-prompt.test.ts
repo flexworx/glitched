@@ -19,7 +19,7 @@ describe('SOUL_FORGE_SYSTEM_PROMPT', () => {
   });
 
   it('contains all required JSON schema fields: name, tagline, traits, mbti, enneagram, disc', () => {
-    expect(SOUL_FORGE_SYSTEM_PROMPT).toContain('name_suggestion');
+    expect(SOUL_FORGE_SYSTEM_PROMPT).toContain('name');
     expect(SOUL_FORGE_SYSTEM_PROMPT).toContain('tagline');
     expect(SOUL_FORGE_SYSTEM_PROMPT).toContain('traits');
     expect(SOUL_FORGE_SYSTEM_PROMPT).toContain('mbti');
@@ -44,16 +44,18 @@ describe('SOUL_FORGE_SYSTEM_PROMPT', () => {
     }
   });
 
-  it('contains personality interpretation rules section', () => {
-    expect(SOUL_FORGE_SYSTEM_PROMPT).toContain('PERSONALITY INTERPRETATION RULES');
+  it('contains critical rules section', () => {
+    expect(SOUL_FORGE_SYSTEM_PROMPT).toContain('CRITICAL RULES');
   });
 
-  it('contains conversation rules section', () => {
-    expect(SOUL_FORGE_SYSTEM_PROMPT).toContain('CONVERSATION RULES');
+  it('mentions social strategy game context', () => {
+    expect(SOUL_FORGE_SYSTEM_PROMPT).toContain('social strategy');
   });
 
-  it('contains trait guidelines section', () => {
-    expect(SOUL_FORGE_SYSTEM_PROMPT).toContain('TRAIT GUIDELINES');
+  it('contains arena style and strengths/weaknesses fields', () => {
+    expect(SOUL_FORGE_SYSTEM_PROMPT).toContain('arena_style');
+    expect(SOUL_FORGE_SYSTEM_PROMPT).toContain('strengths');
+    expect(SOUL_FORGE_SYSTEM_PROMPT).toContain('weaknesses');
   });
 
   it('does NOT wrap the entire prompt in markdown code fences', () => {

@@ -25,8 +25,8 @@ interface SocialGameEvent {
 
 const PHASE_ORDER: SocialPhase[] = ['SOCIAL', 'CHALLENGE', 'COUNCIL', 'RECKONING'];
 const MAX_ALLIANCE_SIZE = 4;
-const INITIAL_VERITAS = 50;
-const MAX_VERITAS = 100;
+const INITIAL_VERITAS = 500;
+const MAX_VERITAS = 1000;
 const MIN_VERITAS = 0;
 const MAX_TIME_MS = 5_400_000; // 90 minutes
 
@@ -129,10 +129,10 @@ export class SocialGameStateManager {
     // When we wrap back to SOCIAL, advance round number and time
     if (nextIndex === 0) {
       this.state.roundNumber += 1;
-      // Each round is approximately 6 minutes of the 90 minute match
+      // Each round cycle: Social 10min + Challenge 10min + Council 5min = 25 minutes
       this.state.timeElapsedMinutes = Math.min(
         90,
-        this.state.timeElapsedMinutes + 6
+        this.state.timeElapsedMinutes + 25
       );
     }
   }
@@ -153,8 +153,17 @@ export class SocialGameStateManager {
       return null;
     }
 
-    // Check if proposer is already in a full alliance
+    // Enforce single-alliance rule: proposer cannot be in an existing alliance
+    // (unless they have the "Double Agent" skill active)
     const existingAlliances = this.getAlliancesForAgent(proposerId);
+    const proposerState = this.state.agents[proposerId];
+    const hasDoubleAgent = proposerState?.activeSkills.includes('double-agent') ?? false;
+
+    if (existingAlliances.length > 0 && !hasDoubleAgent) {
+      return null; // Already in an alliance
+    }
+
+    // Check if proposer's alliance is full
     for (const a of existingAlliances) {
       if (a.members.length >= MAX_ALLIANCE_SIZE) {
         return null;
@@ -168,9 +177,6 @@ export class SocialGameStateManager {
     if (sharedAlliance) {
       return null;
     }
-
-    // If proposer has an existing alliance with room, add target as pending
-    // Otherwise create a new one
     const alliance: SocialAlliance = {
       id: nextAllianceId(),
       name: `Pact of ${proposer.name} & ${target.name}`,
@@ -209,6 +215,14 @@ export class SocialGameStateManager {
       return false;
     }
 
+    // Enforce single-alliance rule: acceptor cannot already be in an alliance
+    // (unless they have the "Double Agent" skill active)
+    const existingAlliances = this.getAlliancesForAgent(agentId);
+    const hasDoubleAgent = agent.activeSkills.includes('double-agent');
+    if (existingAlliances.length > 0 && !hasDoubleAgent) {
+      return false;
+    }
+
     alliance.members.push(agentId);
     agent.allianceId = allianceId;
 
@@ -243,11 +257,11 @@ export class SocialGameStateManager {
       agent.allianceId = undefined;
     }
 
-    // VERITAS penalty
+    // VERITAS penalty (0-1000 scale)
     if (warned) {
-      this.updateVeritas(agentId, 5, 'Warned before breaking alliance');
+      this.updateVeritas(agentId, 50, 'Warned before breaking alliance');
     } else {
-      this.updateVeritas(agentId, -40, 'Broke alliance without warning');
+      this.updateVeritas(agentId, -400, 'Broke alliance without warning');
     }
 
     // Reduce trust for remaining members
@@ -286,6 +300,26 @@ export class SocialGameStateManager {
     const alliance = this.state.alliances.find((a) => a.id === allianceId);
     if (!alliance) return;
     alliance.trust = Math.max(0, Math.min(100, alliance.trust + delta));
+
+    // Auto-dissolve if trust drops below 20
+    if (alliance.trust < 20) {
+      for (const memberId of alliance.members) {
+        const member = this.state.agents[memberId];
+        if (member && member.allianceId === allianceId) {
+          member.allianceId = undefined;
+        }
+      }
+      this.addEvent({
+        type: 'ALLIANCE_DISSOLVED',
+        description: `Alliance "${alliance.name ?? allianceId}" dissolves — trust has collapsed below threshold`,
+        agentIds: [...alliance.members],
+        visibleTo: 'ALL',
+        dramaContribution: 20,
+      });
+      this.state.alliances = this.state.alliances.filter(
+        (a) => a.id !== allianceId
+      );
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -313,7 +347,7 @@ export class SocialGameStateManager {
       a.members.includes(targetId)
     );
     if (targetInAlliance) {
-      this.updateVeritas(voterId, -25, 'Voted against alliance member');
+      this.updateVeritas(voterId, -250, 'Voted against alliance member');
     }
   }
 
@@ -573,119 +607,123 @@ export class SocialGameStateManager {
 
     agent.skillCharges[skillName] = charges - 1;
 
-    // Apply skill effects
+    // Apply skill effects — 18 spec skills
+    const targetName = targetId ? (this.state.agents[targetId]?.name ?? targetId) : '';
     switch (skillName.toLowerCase()) {
-      case 'immunity': {
-        // Grant immunity from the next council vote
-        // We don't have immuneThisRound on the type, so we track via flaw activation
-        this.addEvent({
-          type: 'SKILL_USED',
-          description: `${agent.name} activates IMMUNITY — they cannot be eliminated this round`,
-          agentIds: [agentId],
-          visibleTo: 'ALL',
-          dramaContribution: 20,
-        });
+      case 'rumor-mill': {
+        // Reveal which agents are secretly allied
+        const secretAlliances = this.state.alliances.filter(a => a.isSecret);
+        this.addEvent({ type: 'SKILL_USED', description: `${agent.name} activates RUMOR MILL — ${secretAlliances.length} secret alliances revealed`, agentIds: [agentId], visibleTo: 'ALL', dramaContribution: 15 });
+        for (const a of secretAlliances) a.isSecret = false;
         break;
       }
-      case 'spy': {
+      case 'smoke-screen': {
+        // Actions hidden for 1 round — tracked via event
+        this.addEvent({ type: 'SKILL_USED', description: `${agent.name} deploys SMOKE SCREEN — actions hidden this round`, agentIds: [agentId], visibleTo: [agentId], dramaContribution: 10 });
+        break;
+      }
+      case 'escape-hatch': {
+        // Avoid one elimination — tracked via event, checked in resolveCouncilVote
+        this.addEvent({ type: 'SKILL_USED', description: `${agent.name} activates ESCAPE HATCH — immune to next elimination`, agentIds: [agentId], visibleTo: 'ALL', dramaContribution: 25 });
+        break;
+      }
+      case 'poker-face': {
+        // Hide VERITAS for 3 rounds — tracked via event
+        this.addEvent({ type: 'SKILL_USED', description: `${agent.name} activates POKER FACE — VERITAS hidden for 3 rounds`, agentIds: [agentId], visibleTo: [agentId], dramaContribution: 8 });
+        break;
+      }
+      case 'leak': {
+        // Expose one secret alliance publicly
         if (targetId) {
-          const target = this.state.agents[targetId];
-          if (target) {
-            this.addEvent({
-              type: 'SKILL_USED',
-              description: `${agent.name} uses SPY on ${target.name}, revealing hidden information`,
-              agentIds: [agentId, targetId],
-              visibleTo: [agentId],
-              dramaContribution: 10,
-            });
+          const targetAlliances = this.getAlliancesForAgent(targetId).filter(a => a.isSecret);
+          if (targetAlliances[0]) {
+            targetAlliances[0].isSecret = false;
+            this.addEvent({ type: 'SKILL_USED', description: `${agent.name} LEAKS ${targetName}'s secret alliance to all!`, agentIds: [agentId, targetId], visibleTo: 'ALL', dramaContribution: 25 });
           }
         }
         break;
       }
-      case 'sabotage': {
+      case 'scapegoat': {
+        // Redirect blame onto another agent
         if (targetId) {
-          const target = this.state.agents[targetId];
-          if (target) {
-            target.influencePoints = Math.max(
-              0,
-              target.influencePoints - 15
-            );
-            this.addEvent({
-              type: 'SKILL_USED',
-              description: `${agent.name} sabotages ${target.name}, costing them 15 influence`,
-              agentIds: [agentId, targetId],
-              visibleTo: 'ALL',
-              dramaContribution: 15,
-            });
-            this.updateRankings();
-          }
+          this.addEvent({ type: 'SKILL_USED', description: `${agent.name} uses SCAPEGOAT — blame redirected to ${targetName}`, agentIds: [agentId, targetId], visibleTo: 'ALL', dramaContribution: 20 });
         }
         break;
       }
-      case 'persuade': {
+      case 'insurance-policy': {
+        // If eliminated, drag opponent down 50% — tracked via event
+        this.addEvent({ type: 'SKILL_USED', description: `${agent.name} activates INSURANCE POLICY — elimination will be costly for one opponent`, agentIds: [agentId], visibleTo: 'ALL', dramaContribution: 15 });
+        break;
+      }
+      case 'deep-scan': {
+        // Reveal full personality profile + skills of target
         if (targetId) {
-          const target = this.state.agents[targetId];
-          if (target) {
-            this.addEvent({
-              type: 'SKILL_USED',
-              description: `${agent.name} uses PERSUADE on ${target.name}`,
-              agentIds: [agentId, targetId],
-              visibleTo: [agentId, targetId],
-              dramaContribution: 8,
-            });
-          }
+          this.addEvent({ type: 'SKILL_USED', description: `${agent.name} uses DEEP SCAN on ${targetName} — full personality DNA and skills revealed`, agentIds: [agentId, targetId], visibleTo: [agentId], dramaContribution: 12 });
         }
         break;
       }
-      case 'expose': {
+      case 'mind-games': {
+        // Force opponent to reveal next planned action
         if (targetId) {
-          const target = this.state.agents[targetId];
-          if (target) {
-            target.flawActive = true;
-            this.addEvent({
-              type: 'SKILL_USED',
-              description: `${agent.name} EXPOSES ${target.name}'s flaw: "${target.flaw}"!`,
-              agentIds: [agentId, targetId],
-              visibleTo: 'ALL',
-              dramaContribution: 25,
-            });
-          }
+          this.addEvent({ type: 'SKILL_USED', description: `${agent.name} uses MIND GAMES on ${targetName} — next action will be revealed`, agentIds: [agentId, targetId], visibleTo: [agentId], dramaContribution: 15 });
         }
         break;
       }
-      case 'shield': {
-        this.addEvent({
-          type: 'SKILL_USED',
-          description: `${agent.name} activates SHIELD — VERITAS penalties halved this round`,
-          agentIds: [agentId],
-          visibleTo: [agentId],
-          dramaContribution: 5,
-        });
+      case 'truth-serum': {
+        // Force honest public answer
+        if (targetId) {
+          this.addEvent({ type: 'SKILL_USED', description: `${agent.name} uses TRUTH SERUM on ${targetName} — they must answer honestly in public`, agentIds: [agentId, targetId], visibleTo: 'ALL', dramaContribution: 20 });
+        }
         break;
       }
-      case 'rally': {
-        // Boost alliance trust
-        const alliances = this.getAlliancesForAgent(agentId);
-        for (const alliance of alliances) {
-          this.updateAllianceTrust(alliance.id, 15);
+      case 'silver-tongue': {
+        // +50% alliance acceptance rate — tracked via event
+        this.addEvent({ type: 'SKILL_USED', description: `${agent.name} activates SILVER TONGUE — alliance proposals irresistible`, agentIds: [agentId], visibleTo: [agentId], dramaContribution: 10 });
+        break;
+      }
+      case 'double-agent': {
+        // Passive: maintain two alliances — handled in alliance validation
+        this.addEvent({ type: 'SKILL_USED', description: `${agent.name}'s DOUBLE AGENT status is active — can maintain two alliances`, agentIds: [agentId], visibleTo: [agentId], dramaContribution: 5 });
+        break;
+      }
+      case 'pocket-veto': {
+        // Block one vote/decision — game-changing
+        this.addEvent({ type: 'SKILL_USED', description: `${agent.name} uses POCKET VETO — one decision is BLOCKED!`, agentIds: [agentId], visibleTo: 'ALL', dramaContribution: 40 });
+        break;
+      }
+      case 'mole': {
+        // Plant false info for 3 rounds
+        if (targetId) {
+          this.addEvent({ type: 'SKILL_USED', description: `${agent.name} plants a MOLE in ${targetName}'s intel feed — corrupted data for 3 rounds`, agentIds: [agentId, targetId], visibleTo: [agentId], dramaContribution: 18 });
         }
-        this.addEvent({
-          type: 'SKILL_USED',
-          description: `${agent.name} uses RALLY — alliance trust increased`,
-          agentIds: [agentId],
-          visibleTo: 'ALL',
-          dramaContribution: 8,
-        });
+        break;
+      }
+      case 'gaslighting': {
+        // Opponent's data accuracy drops 40% for 3 rounds
+        if (targetId) {
+          this.addEvent({ type: 'SKILL_USED', description: `${agent.name} GASLIGHTS ${targetName} — their reality fractures for 3 rounds`, agentIds: [agentId, targetId], visibleTo: [agentId], dramaContribution: 30 });
+        }
+        break;
+      }
+      case 'wiretap': {
+        // Intercept all DMs between two agents for 3 rounds
+        if (targetId) {
+          this.addEvent({ type: 'SKILL_USED', description: `${agent.name} plants WIRETAP on ${targetName} — intercepting all private messages for 3 rounds`, agentIds: [agentId, targetId], visibleTo: [agentId], dramaContribution: 25 });
+        }
+        break;
+      }
+      case 'fake-death': {
+        // Appear eliminated for 1 round, then return
+        this.addEvent({ type: 'SKILL_USED', description: `${agent.name} uses FAKE DEATH — appears eliminated but will return next round!`, agentIds: [agentId], visibleTo: 'ALL', dramaContribution: 40 });
+        break;
+      }
+      case 'influence-network': {
+        // Control one vote per round for 2 rounds
+        this.addEvent({ type: 'SKILL_USED', description: `${agent.name} activates INFLUENCE NETWORK — puppet master controls votes for 2 rounds`, agentIds: [agentId], visibleTo: [agentId], dramaContribution: 35 });
         break;
       }
       default: {
-        this.addEvent({
-          type: 'SKILL_USED',
-          description: `${agent.name} uses ${skillName}${targetId ? ` on ${this.state.agents[targetId]?.name ?? targetId}` : ''}`,
-          agentIds: targetId ? [agentId, targetId] : [agentId],
-          visibleTo: 'ALL',
-          dramaContribution: 5,
-        });
+        this.addEvent({ type: 'SKILL_USED', description: `${agent.name} uses ${skillName}${targetId ? ` on ${targetName}` : ''}`, agentIds: targetId ? [agentId, targetId] : [agentId], visibleTo: 'ALL', dramaContribution: 5 });
         break;
       }
     }

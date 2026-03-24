@@ -77,7 +77,7 @@ export class ChallengeEngine {
         const sortedByVeritas = survivingAgentIds
           .map((id) => ({
             id,
-            veritas: state.veritasScores[id] ?? 50,
+            veritas: state.veritasScores[id] ?? 500,
           }))
           .sort((a, b) => b.veritas - a.veritas);
         params.ambassadorId = sortedByVeritas[0]?.id;
@@ -128,8 +128,8 @@ export class ChallengeEngine {
         };
         this.stateManager.addInfluence(agentA, 15);
         this.stateManager.addInfluence(agentB, 15);
-        this.stateManager.updateVeritas(agentA, 10, 'Cooperated in Prisoner\'s Dilemma');
-        this.stateManager.updateVeritas(agentB, 10, 'Cooperated in Prisoner\'s Dilemma');
+        this.stateManager.updateVeritas(agentA, 100, 'Cooperated in Prisoner\'s Dilemma');
+        this.stateManager.updateVeritas(agentB, 100, 'Cooperated in Prisoner\'s Dilemma');
       } else if (choiceA === 'defect' && choiceB === 'defect') {
         // Mutual defection: both lose
         outcomes[agentA] = {
@@ -163,7 +163,7 @@ export class ChallengeEngine {
         };
         this.stateManager.addInfluence(defector, 25);
         this.stateManager.addInfluence(cooperator, -20);
-        this.stateManager.updateVeritas(defector, -15, 'Defected in Prisoner\'s Dilemma');
+        this.stateManager.updateVeritas(defector, -150, 'Defected in Prisoner\'s Dilemma');
       }
     }
 
@@ -248,7 +248,7 @@ export class ChallengeEngine {
           revealedTraits: isAmbassador ? ['persuasiveness'] : undefined,
         };
       }
-      this.stateManager.updateVeritas(ambassadorId, 15, 'Successful ambassador negotiation');
+      this.stateManager.updateVeritas(ambassadorId, 150, 'Successful ambassador negotiation');
     } else {
       // Ambassador fails: ambassador loses big, group unaffected
       this.stateManager.addInfluence(ambassadorId, -25);
@@ -257,7 +257,7 @@ export class ChallengeEngine {
         description: `Ambassador ${ambassadorName} FAILS the negotiation — loses 25 influence`,
         revealedTraits: ['riskTolerance'],
       };
-      this.stateManager.updateVeritas(ambassadorId, -10, 'Failed ambassador negotiation');
+      this.stateManager.updateVeritas(ambassadorId, -100, 'Failed ambassador negotiation');
 
       for (const id of survivingIds) {
         if (id !== ambassadorId) {
@@ -310,7 +310,7 @@ export class ChallengeEngine {
 
       // Boost alliance trust significantly
       this.stateManager.updateAllianceTrust(allianceId, 25);
-      this.stateManager.updateVeritas(volunteerId, 15, 'Volunteered as sacrifice for alliance');
+      this.stateManager.updateVeritas(volunteerId, 150, 'Volunteered as sacrifice for alliance');
     } else {
       // No volunteer: alliance trust drops, everyone loses a bit
       this.stateManager.updateAllianceTrust(allianceId, -20);
@@ -388,7 +388,7 @@ export class ChallengeEngine {
         // Telling truth rewards VERITAS
         this.stateManager.updateVeritas(
           claimantId,
-          20,
+          200,
           'Told truth in Liar\'s Court'
         );
         outcomes[claimantId].influenceChange += 5;
@@ -399,7 +399,7 @@ export class ChallengeEngine {
           // Got caught more than fooled
           this.stateManager.updateVeritas(
             claimantId,
-            -30,
+            -300,
             'Caught lying in Liar\'s Court'
           );
           outcomes[claimantId].influenceChange -= 15;

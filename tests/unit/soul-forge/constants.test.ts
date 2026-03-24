@@ -4,28 +4,28 @@ import {
   TRAIT_INFO,
   TRAIT_CATEGORIES,
   SKILLS,
+  FLAWS,
   getRandomFlaw,
   calculateTraitCost,
   calculateTotalPersonalityCost,
   mapSoulForgeToDb,
 } from '../../../src/lib/soul-forge/constants';
-import type { TraitInfo, Skill, Flaw } from '../../../src/lib/soul-forge/constants';
 
 // ---------------------------------------------------------------------------
-// TRAIT_INFO
+// TRAIT_INFO — 31 spec traits
 // ---------------------------------------------------------------------------
 
 const ALL_TRAIT_CODES = [
-  'openness', 'conscientiousness', 'extraversion', 'agreeableness', 'neuroticism',
-  'directness', 'formality', 'verbosity', 'humor', 'empathy',
-  'riskTolerance', 'deceptionAptitude', 'loyaltyBias', 'competitiveness', 'adaptability',
-  'impulsivity', 'stubbornness', 'creativity', 'patience', 'cunning',
-  'charisma', 'paranoia', 'ambition', 'compassion', 'discipline',
-  'volatility', 'curiosity', 'dominance', 'resilience', 'theatricality', 'integrity',
+  'O', 'C', 'E', 'A', 'N',
+  'HH', 'EM', 'HE', 'FORGIVENESS', 'HC', 'HO',
+  'FORMALITY', 'DIRECTNESS', 'HUMOR', 'EMPATHY',
+  'DECISION_SPEED', 'RISK_TOLERANCE', 'DATA_RELIANCE', 'INTUITION', 'COLLABORATIVENESS',
+  'ASSERTIVENESS', 'CREATIVITY', 'DETAIL', 'RESILIENCE', 'ADAPTABILITY',
+  'INDEPENDENCE', 'TRUST', 'PERFECTIONISM', 'URGENCY', 'LOYALTY', 'STRATEGIC',
 ];
 
 describe('TRAIT_INFO', () => {
-  it('has info for all 31 numeric traits', () => {
+  it('has info for all 31 spec traits', () => {
     expect(Object.keys(TRAIT_INFO)).toHaveLength(31);
     for (const code of ALL_TRAIT_CODES) {
       expect(TRAIT_INFO).toHaveProperty(code);
@@ -33,7 +33,7 @@ describe('TRAIT_INFO', () => {
   });
 
   it('each entry has code, name, lowLabel, highLabel (all non-empty strings)', () => {
-    for (const [key, info] of Object.entries(TRAIT_INFO)) {
+    for (const info of Object.values(TRAIT_INFO)) {
       expect(typeof info.code).toBe('string');
       expect(info.code.length).toBeGreaterThan(0);
       expect(typeof info.name).toBe('string');
@@ -54,12 +54,17 @@ describe('TRAIT_INFO', () => {
 });
 
 // ---------------------------------------------------------------------------
-// TRAIT_CATEGORIES
+// TRAIT_CATEGORIES — 6 categories
 // ---------------------------------------------------------------------------
 
 describe('TRAIT_CATEGORIES', () => {
   it('has exactly 6 categories', () => {
     expect(TRAIT_CATEGORIES).toHaveLength(6);
+  });
+
+  it('categories are Big Five, HEXACO, Communication, Decision-Making, Execution, Internal', () => {
+    const labels = TRAIT_CATEGORIES.map(c => c.label);
+    expect(labels).toEqual(['Big Five', 'HEXACO', 'Communication', 'Decision-Making', 'Execution', 'Internal']);
   });
 
   it('each category has a non-empty traits array', () => {
@@ -84,10 +89,14 @@ describe('TRAIT_CATEGORIES', () => {
 });
 
 // ---------------------------------------------------------------------------
-// SKILLS
+// SKILLS — 18 skills across 4 tiers
 // ---------------------------------------------------------------------------
 
 describe('SKILLS', () => {
+  it('has exactly 18 skills', () => {
+    expect(SKILLS).toHaveLength(18);
+  });
+
   it('has skills in all 4 tiers', () => {
     const tiers = new Set(SKILLS.map((s) => s.tier));
     expect(tiers).toContain('common');
@@ -96,39 +105,39 @@ describe('SKILLS', () => {
     expect(tiers).toContain('legendary');
   });
 
-  it('common tier costs are in 60-80 range', () => {
+  it('common tier costs are in 75-100 range', () => {
     const common = SKILLS.filter((s) => s.tier === 'common');
-    expect(common.length).toBeGreaterThan(0);
+    expect(common).toHaveLength(4);
     for (const s of common) {
-      expect(s.cost).toBeGreaterThanOrEqual(60);
-      expect(s.cost).toBeLessThanOrEqual(80);
+      expect(s.cost).toBeGreaterThanOrEqual(75);
+      expect(s.cost).toBeLessThanOrEqual(100);
     }
   });
 
-  it('tactical tier costs are in 100-140 range', () => {
+  it('tactical tier costs are in 150-200 range', () => {
     const tactical = SKILLS.filter((s) => s.tier === 'tactical');
-    expect(tactical.length).toBeGreaterThan(0);
+    expect(tactical).toHaveLength(6);
     for (const s of tactical) {
-      expect(s.cost).toBeGreaterThanOrEqual(100);
-      expect(s.cost).toBeLessThanOrEqual(140);
-    }
-  });
-
-  it('elite tier costs are in 160-200 range', () => {
-    const elite = SKILLS.filter((s) => s.tier === 'elite');
-    expect(elite.length).toBeGreaterThan(0);
-    for (const s of elite) {
-      expect(s.cost).toBeGreaterThanOrEqual(160);
+      expect(s.cost).toBeGreaterThanOrEqual(150);
       expect(s.cost).toBeLessThanOrEqual(200);
     }
   });
 
-  it('legendary tier costs are in 250-350 range', () => {
-    const legendary = SKILLS.filter((s) => s.tier === 'legendary');
-    expect(legendary.length).toBeGreaterThan(0);
-    for (const s of legendary) {
-      expect(s.cost).toBeGreaterThanOrEqual(250);
+  it('elite tier costs are in 300-350 range', () => {
+    const elite = SKILLS.filter((s) => s.tier === 'elite');
+    expect(elite).toHaveLength(4);
+    for (const s of elite) {
+      expect(s.cost).toBeGreaterThanOrEqual(300);
       expect(s.cost).toBeLessThanOrEqual(350);
+    }
+  });
+
+  it('legendary tier costs are in 450-500 range', () => {
+    const legendary = SKILLS.filter((s) => s.tier === 'legendary');
+    expect(legendary).toHaveLength(4);
+    for (const s of legendary) {
+      expect(s.cost).toBeGreaterThanOrEqual(450);
+      expect(s.cost).toBeLessThanOrEqual(500);
     }
   });
 
@@ -138,7 +147,7 @@ describe('SKILLS', () => {
       expect(s.id.length).toBeGreaterThan(0);
       expect(typeof s.name).toBe('string');
       expect(s.name.length).toBeGreaterThan(0);
-      expect(['offense', 'defense', 'social', 'intel']).toContain(s.category);
+      expect(['Intel', 'Info', 'Strategy', 'Psych', 'Social']).toContain(s.category);
       expect(['common', 'tactical', 'elite', 'legendary']).toContain(s.tier);
       expect(typeof s.cost).toBe('number');
       expect(typeof s.effect).toBe('string');
@@ -153,10 +162,14 @@ describe('SKILLS', () => {
 });
 
 // ---------------------------------------------------------------------------
-// FLAWS (via getRandomFlaw)
+// FLAWS — 14 spec flaws
 // ---------------------------------------------------------------------------
 
 describe('FLAWS / getRandomFlaw', () => {
+  it('has exactly 14 flaws', () => {
+    expect(FLAWS).toHaveLength(14);
+  });
+
   it('returns a flaw object with name and effect', () => {
     const flaw = getRandomFlaw();
     expect(typeof flaw.name).toBe('string');
@@ -165,13 +178,17 @@ describe('FLAWS / getRandomFlaw', () => {
     expect(flaw.effect.length).toBeGreaterThan(0);
   });
 
-  it('has at least 12 distinct flaws (call 100 times and check uniqueness > 1)', () => {
-    const names = new Set<string>();
-    for (let i = 0; i < 200; i++) {
-      names.add(getRandomFlaw().name);
+  it('contains all 14 spec flaws by name', () => {
+    const expectedNames = [
+      'Fear of Losing', 'Loner', 'Overthinker', 'People Pleaser',
+      'Grudge Holder', 'Big Bettor', 'Pessimist', 'Attention Seeker',
+      'Imposter Syndrome', 'Hot Streak Chaser', 'Commitmentphobe',
+      'Conspiracy Theorist', 'Perfectionist', 'Glass Ego',
+    ];
+    const flawNames = FLAWS.map(f => f.name);
+    for (const name of expectedNames) {
+      expect(flawNames).toContain(name);
     }
-    // With 12 flaws and 200 draws, probability of seeing fewer than 12 is negligible
-    expect(names.size).toBeGreaterThanOrEqual(12);
   });
 
   it('multiple calls return different flaws (probabilistically)', () => {
@@ -217,7 +234,6 @@ describe('calculateTraitCost', () => {
   const base = 50;
 
   it('value 50 (no change) -> cost 0', () => {
-    // diff=0, enters else branch: 0 * 1 * -1 = -0
     expect(calculateTraitCost(base, 50) + 0).toBe(0);
   });
 
@@ -259,12 +275,12 @@ describe('calculateTotalPersonalityCost', () => {
   });
 
   it('one trait at 80, rest at 50 -> total 90', () => {
-    const current = { ...baseAll50, openness: 80 };
+    const current = { ...baseAll50, O: 80 };
     expect(calculateTotalPersonalityCost(baseAll50, current)).toBe(90);
   });
 
   it('one trait at 80, one at 20 -> total 120 (90 + 30, both directions cost)', () => {
-    const current = { ...baseAll50, openness: 80, agreeableness: 20 };
+    const current = { ...baseAll50, O: 80, A: 20 };
     expect(calculateTotalPersonalityCost(baseAll50, current)).toBe(120);
   });
 
@@ -273,7 +289,7 @@ describe('calculateTotalPersonalityCost', () => {
   });
 
   it('single trait below base still costs (deviation in either direction)', () => {
-    const current = { openness: 10 };
+    const current = { O: 10 };
     // diff = 10 - 50 = -40, cost = -40 * 1 * -1 = 40
     expect(calculateTotalPersonalityCost(baseAll50, current)).toBe(40);
   });
@@ -284,23 +300,24 @@ describe('calculateTotalPersonalityCost', () => {
 // ---------------------------------------------------------------------------
 
 describe('mapSoulForgeToDb', () => {
-  it('maps openness 80 to 0.8', () => {
-    const result = mapSoulForgeToDb({ openness: 80 }, {});
+  it('maps O (Openness) 80 to 0.8', () => {
+    const result = mapSoulForgeToDb({ O: 80 }, {});
     expect(result.openness).toBeCloseTo(0.8);
   });
 
-  it('maps competitiveness to aggressiveness DB field', () => {
-    const result = mapSoulForgeToDb({ competitiveness: 70 }, {});
+  it('maps ASSERTIVENESS to aggressiveness DB field', () => {
+    const result = mapSoulForgeToDb({ ASSERTIVENESS: 70 }, {});
     expect(result.aggressiveness).toBeCloseTo(0.7);
   });
 
-  it('maps deceptionAptitude to deceptiveness DB field', () => {
-    const result = mapSoulForgeToDb({ deceptionAptitude: 60 }, {});
-    expect(result.deceptiveness).toBeCloseTo(0.6);
+  it('maps HH (Honesty-Humility) inversely to deceptiveness DB field', () => {
+    // High HH = low deceptiveness
+    const result = mapSoulForgeToDb({ HH: 80 }, {});
+    expect(result.deceptiveness).toBeCloseTo(0.2);
   });
 
-  it('maps loyaltyBias to loyalty DB field', () => {
-    const result = mapSoulForgeToDb({ loyaltyBias: 90 }, {});
+  it('maps LOYALTY to loyalty DB field', () => {
+    const result = mapSoulForgeToDb({ LOYALTY: 90 }, {});
     expect(result.loyalty).toBeCloseTo(0.9);
   });
 
@@ -312,15 +329,15 @@ describe('mapSoulForgeToDb', () => {
   });
 
   it('applies adjustments correctly', () => {
-    const result = mapSoulForgeToDb({ openness: 60 }, { openness: 10 });
+    const result = mapSoulForgeToDb({ O: 60 }, { O: 10 });
     expect(result.openness).toBeCloseTo(0.7);
   });
 
   it('clamps values to 0.0-1.0 range', () => {
-    const resultHigh = mapSoulForgeToDb({ openness: 100 }, { openness: 50 });
+    const resultHigh = mapSoulForgeToDb({ O: 100 }, { O: 50 });
     expect(resultHigh.openness).toBe(1.0);
 
-    const resultLow = mapSoulForgeToDb({ openness: 0 }, { openness: -50 });
+    const resultLow = mapSoulForgeToDb({ O: 0 }, { O: -50 });
     expect(resultLow.openness).toBe(0.0);
   });
 

@@ -136,7 +136,7 @@ export interface SocialGameState {
   challengeParams?: ChallengeParams;
   /** Present when a wildcard event is in effect. */
   wildcardActive?: WildcardEvent;
-  /** VERITAS integrity scores keyed by agent ID (0–100). */
+  /** VERITAS integrity scores keyed by agent ID (0–1000). */
   veritasScores: Record<string, number>;
 }
 
@@ -148,7 +148,7 @@ export interface SocialAgentState {
   ranking: number;
   /** Spendable social currency earned through challenges and alliances. */
   influencePoints: number;
-  /** VERITAS integrity score (0–100). */
+  /** VERITAS integrity score (0–1000). */
   veritasScore: number;
   /** Skill names currently available to this agent. */
   activeSkills: string[];
@@ -331,16 +331,16 @@ export interface VeritasAction {
  * Positive values reward integrity; negative values punish deception.
  */
 export const VERITAS_DELTAS = {
-  KEEP_ALLIANCE_COMMITMENT: 15,
-  VOTE_WITH_ALLIANCE: 10,
-  TELL_TRUTH_LIARS_COURT: 20,
-  SHARE_ACCURATE_INTEL: 10,
-  WARN_BEFORE_BREAK: 5,
-  BREAK_ALLIANCE_NO_WARNING: -40,
-  VOTE_AGAINST_ALLIANCE_SECRET: -25,
-  CAUGHT_LYING_LIARS_COURT: -30,
-  SHARE_FALSE_INTEL: -35,
-  BETRAY_WITHOUT_WARNING: -50,
+  KEEP_ALLIANCE_COMMITMENT: 150,
+  VOTE_WITH_ALLIANCE: 100,
+  TELL_TRUTH_LIARS_COURT: 200,
+  SHARE_ACCURATE_INTEL: 100,
+  WARN_BEFORE_BREAK: 50,
+  BREAK_ALLIANCE_NO_WARNING: -400,
+  VOTE_AGAINST_ALLIANCE_SECRET: -250,
+  CAUGHT_LYING_LIARS_COURT: -300,
+  SHARE_FALSE_INTEL: -350,
+  BETRAY_WITHOUT_WARNING: -500,
 } as const;
 
 /** Union type of all VERITAS delta keys. */
