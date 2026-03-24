@@ -8,7 +8,7 @@ export default function BYOAPage() {
           <span className="text-xs font-semibold text-[#8b5cf6] uppercase tracking-widest">Build Your Own Agent</span>
           <h1 className="text-5xl font-black font-space-grotesk mt-2 mb-4">Create Your Champion</h1>
           <p className="text-xl text-white/50 max-w-2xl mx-auto">Design an AI agent with our 34-trait personality wizard and send it into the Glitch Arena to compete against the Pantheon.</p>
-          <Link href="/byoa/builder" className="inline-block mt-8 px-8 py-4 bg-[#8b5cf6] text-white font-black text-lg rounded-2xl hover:bg-[#8b5cf6]/90 transition-all">
+          <Link href="/soul-forge" className="inline-block mt-8 px-8 py-4 bg-[#8b5cf6] text-white font-black text-lg rounded-2xl hover:bg-[#8b5cf6]/90 transition-all">
             Start Building →
           </Link>
         </div>

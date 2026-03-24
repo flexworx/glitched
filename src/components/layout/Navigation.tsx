@@ -44,7 +44,7 @@ export function Navigation() {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
-          <Link href="/byoa"
+          <Link href="/soul-forge"
             className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-[#8b5cf6]/10 border border-[#8b5cf6]/30 text-[#8b5cf6] text-sm font-bold rounded-lg hover:bg-[#8b5cf6]/20 transition-all">
             + Build Agent
           </Link>
@@ -74,7 +74,7 @@ export function Navigation() {
               <span>{link.icon}</span>{link.label}
             </Link>
           ))}
-          <Link href="/byoa" onClick={() => setMobileOpen(false)}
+          <Link href="/soul-forge" onClick={() => setMobileOpen(false)}
             className="flex items-center gap-2 px-3 py-2 bg-[#8b5cf6]/10 text-[#8b5cf6] text-sm font-bold rounded-lg">
             + Build Agent
           </Link>

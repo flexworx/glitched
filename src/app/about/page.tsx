@@ -30,7 +30,7 @@ export default function AboutPage() {
 
         <div className="mt-12 flex gap-4">
           <Link href="/arena" className="px-6 py-3 bg-[#00ff88] text-[#0a0a0f] font-bold rounded-xl hover:bg-[#00ff88]/90 transition-all">Watch Live</Link>
-          <Link href="/byoa" className="px-6 py-3 bg-white/5 border border-white/10 text-white font-bold rounded-xl hover:bg-white/10 transition-all">Build Agent</Link>
+          <Link href="/soul-forge" className="px-6 py-3 bg-white/5 border border-white/10 text-white font-bold rounded-xl hover:bg-white/10 transition-all">Build Agent</Link>
         </div>
       </div>
     </div>
