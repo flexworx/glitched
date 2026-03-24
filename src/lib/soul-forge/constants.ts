@@ -31,10 +31,18 @@ export interface TraitCategory {
 
 export const ECONOMY = {
   TOTAL_BUDGET: 2500,
-  PERSONALITY_BUDGET: 1500,
-  SKILLS_BUDGET: 1000,
+  /** Personality cost tiers (smooth progressive tax) */
+  TIER_1_CAP: 1500,   // 0–1500: normal rate
+  TIER_2_CAP: 1800,   // 1500–1800: 1.5x rate
+  TIER_3_CAP: 2100,   // 1800–2100: 2x rate
+                       // 2100+: 3x rate (luxury)
+  TIER_1_MULT: 1,
+  TIER_2_MULT: 1.5,
+  TIER_3_MULT: 2,
+  TIER_4_MULT: 3,
   COST_PER_POINT_OVER_50: 3,
   REFUND_PER_POINT_UNDER_50: 1,
+  SKILLS_BUDGET: 1000,
   MAX_SKILLS: 3,
 } as const;
 
@@ -165,20 +173,62 @@ export { FLAWS };
 
 // -- Cost Calculations -------------------------------------------------------
 
+/** Cost of a single trait relative to the 50 neutral baseline. */
 export function calculateTraitCost(value: number): number {
   if (value > 50) return (value - 50) * ECONOMY.COST_PER_POINT_OVER_50;
   if (value < 50) return -(50 - value) * ECONOMY.REFUND_PER_POINT_UNDER_50;
   return 0;
 }
 
-export function calculateTotalPersonalityCost(
-  traits: Record<string, number>
-): number {
+/** Raw (pre-tax) sum of all trait costs. Can be negative. */
+export function calculateRawPersonalityCost(traits: Record<string, number>): number {
   let total = 0;
   for (const key of Object.keys(traits)) {
     total += calculateTraitCost(traits[key] ?? 50);
   }
   return Math.max(0, total);
+}
+
+/**
+ * Apply smooth progressive tax to the raw personality cost.
+ *
+ * Tiers:
+ *   0–1500:    1x (normal)
+ *   1500–1800: 1.5x (premium)
+ *   1800–2100: 2x (elite)
+ *   2100+:     3x (luxury)
+ *
+ * The tax applies to the COST AMOUNT, not individual trait points.
+ * A raw cost of 1700 means the first 1500 is at 1x and the extra 200 is at 1.5x.
+ */
+export function applyProgressiveTax(rawCost: number): number {
+  if (rawCost <= ECONOMY.TIER_1_CAP) return rawCost;
+
+  let taxed = ECONOMY.TIER_1_CAP;
+  let remaining = rawCost - ECONOMY.TIER_1_CAP;
+
+  // Tier 2: 1500–1800
+  const t2Range = ECONOMY.TIER_2_CAP - ECONOMY.TIER_1_CAP; // 300
+  const t2 = Math.min(remaining, t2Range);
+  taxed += t2 * ECONOMY.TIER_2_MULT;
+  remaining -= t2;
+
+  // Tier 3: 1800–2100
+  const t3Range = ECONOMY.TIER_3_CAP - ECONOMY.TIER_2_CAP; // 300
+  const t3 = Math.min(remaining, t3Range);
+  taxed += t3 * ECONOMY.TIER_3_MULT;
+  remaining -= t3;
+
+  // Tier 4: 2100+
+  taxed += remaining * ECONOMY.TIER_4_MULT;
+
+  return Math.round(taxed);
+}
+
+/** Final personality cost after progressive tax. This is what the player pays. */
+export function calculateTotalPersonalityCost(traits: Record<string, number>): number {
+  const raw = calculateRawPersonalityCost(traits);
+  return applyProgressiveTax(raw);
 }
 
 // -- DB Mapping --------------------------------------------------------------

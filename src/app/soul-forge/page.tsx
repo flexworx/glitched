@@ -12,6 +12,7 @@ import {
   SKILLS,
   ECONOMY,
   calculateTraitCost,
+  calculateRawPersonalityCost,
   calculateTotalPersonalityCost,
   type Skill,
   type Flaw,
@@ -108,7 +109,9 @@ export default function SoulForgePage() {
   const descriptionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const rawPersonalityCost = calculateRawPersonalityCost(currentTraits);
   const personalityCost = calculateTotalPersonalityCost(currentTraits);
+  const taxAmount = personalityCost - rawPersonalityCost;
   const skillsCost = equippedSkills.reduce((sum, id) => {
     const skill = SKILLS.find(s => s.id === id);
     return sum + (skill?.cost ?? 0);
@@ -353,9 +356,11 @@ export default function SoulForgePage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="font-orbitron text-sm text-white uppercase tracking-wider">Personality DNA</h3>
-                  <span className={['font-mono text-sm font-bold', personalityCost > ECONOMY.PERSONALITY_BUDGET ? 'text-red-400' : 'text-neon-green'].join(' ')}>{personalityCost} / {ECONOMY.PERSONALITY_BUDGET} $MURPH</span>
+                  <span className={['font-mono text-sm font-bold', remaining < 0 ? 'text-red-400' : 'text-neon-green'].join(' ')}>
+                    {personalityCost} $MURPH{taxAmount > 0 ? <span className="text-neon-pink/60 text-[10px] ml-1">(+{taxAmount} tax)</span> : null}
+                  </span>
                 </div>
-                <p className="text-xs text-white/30">Each point above 50 costs 3 $MURPH. Each point below 50 refunds 1 $MURPH. Drag sliders or type values.</p>
+                <p className="text-xs text-white/30">Each point above 50 costs 3 $MURPH. Each point below 50 refunds 1 $MURPH. Above 1,500 $M total, a progressive tax kicks in.</p>
                 {TRAIT_CATEGORIES.map(cat => {
                   const isCollapsed = collapsedCategories[cat.label] ?? false;
                   const catCost = cat.traits.reduce((sum, code) => sum + calculateTraitCost(currentTraits[code] ?? 50), 0);
@@ -480,7 +485,7 @@ export default function SoulForgePage() {
               {error && <p className="text-sm text-red-400">{error}</p>}
               <div className="flex gap-3">
                 <button onClick={() => setStep('forge')} className="flex-1 py-3 bg-white/5 border border-white/10 text-white font-bold rounded-xl hover:bg-white/10 transition-all">&larr; Back</button>
-                <button onClick={() => setStep('skills')} disabled={personalityCost > ECONOMY.PERSONALITY_BUDGET || !agentName.trim()} className="flex-1 py-3 bg-neon-green text-arena-black font-bold rounded-xl hover:bg-neon-green/90 transition-all disabled:opacity-40">Next: Skills &rarr;</button>
+                <button onClick={() => setStep('skills')} disabled={remaining < 0 || !agentName.trim()} className="flex-1 py-3 bg-neon-green text-arena-black font-bold rounded-xl hover:bg-neon-green/90 transition-all disabled:opacity-40">Next: Skills &rarr;</button>
               </div>
             </motion.div>
           )}
