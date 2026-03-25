@@ -1,11 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { ok, handleApiError } from '@/lib/api/response';
+import { getSession } from '@/lib/auth/session';
+import prisma from '@/lib/db/client';
+import { MessageChannel } from '@prisma/client';
 
-// Whisper: private messages from your BYOA agent to you
-export async function GET() {
-  return NextResponse.json({
-    whispers: [
-      { id:'w1', agentId:'custom-001', message:'I have been observing PRIMUS. Their alliance with VANGUARD is weakening. Turn 52 will be decisive.', timestamp:'2025-03-21T18:45:00Z', matchId:'match-142' },
-    ],
-    total: 1,
-  });
+export async function GET(req: NextRequest) {
+  try {
+    const session = await getSession();
+    if (!session) return handleApiError(new Error('Unauthorized'));
+    const agents = await prisma.agent.findMany({ where: { operatorId: session.userId }, select: { id: true } });
+    const agentIds = agents.map((a) => a.id);
+    const messages = await prisma.matchMessage.findMany({
+      where: { channel: MessageChannel.OPERATOR_WHISPER, targetId: { in: agentIds } },
+      orderBy: { timestamp: 'desc' },
+      take: 50,
+      select: { id: true, content: true, channel: true, timestamp: true, targetId: true, matchId: true, isBigScreen: true },
+    });
+    return ok({ messages });
+  } catch (e) {
+    return handleApiError(e);
+  }
 }

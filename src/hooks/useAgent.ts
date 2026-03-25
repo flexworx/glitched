@@ -1,4 +1,7 @@
 'use client';
+import useSWR from 'swr';
+
+const fetcher = (url: string) => fetch(url).then(r => r.json());
 /**
  * RADF v3 — useAgent hook
  * Fetches real agent data from /api/agents and /api/agents/[agentId].
@@ -69,4 +72,19 @@ export function useAgent(agentId?: string) {
   }, [agentId, fetchAgent, fetchAgents]);
 
   return { agent, agents, total, loading, error, refetch: agentId ? fetchAgent : fetchAgents };
+}
+
+export function useAgents(params?: { search?: string; status?: string; page?: number }) {
+  const query = new URLSearchParams();
+  if (params?.search) query.set('search', params.search);
+  if (params?.status) query.set('status', params.status);
+  if (params?.page) query.set('page', String(params.page));
+  const qs = query.toString();
+
+  const { data, isLoading, error, mutate } = useSWR<{ agents: AgentProfile[]; total: number; page: number; totalPages: number }>(
+    `/api/agents${qs ? '?' + qs : ''}`,
+    fetcher,
+    { refreshInterval: 30000 }
+  );
+  return { agents: data?.agents ?? [], total: data?.total ?? 0, isLoading, error, mutate };
 }

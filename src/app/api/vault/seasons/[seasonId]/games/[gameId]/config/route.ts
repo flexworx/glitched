@@ -1,14 +1,19 @@
 import { NextRequest } from 'next/server';
-import { resolveGameConfig } from '@/services/game-vault';
-import { ok, handleApiError } from '@/lib/api/response';
+import { handleApiError } from '@/lib/api/response';
+import { NextResponse } from 'next/server';
 
-type Params = { params: { seasonId: string; gameId: string } };
+export async function GET() {
+  return NextResponse.json({ message: 'Game Vault schema migration pending' }, { status: 501 });
+}
 
-export async function GET(_req: NextRequest, { params }: Params) {
-  try {
-    const config = await resolveGameConfig(params.gameId);
-    return ok(config);
-  } catch (e) {
-    return handleApiError(e);
-  }
+export async function POST() {
+  return NextResponse.json({ message: 'Game Vault schema migration pending' }, { status: 501 });
+}
+
+export async function PATCH() {
+  return NextResponse.json({ message: 'Game Vault schema migration pending' }, { status: 501 });
+}
+
+export async function DELETE() {
+  return NextResponse.json({ message: 'Game Vault schema migration pending' }, { status: 501 });
 }

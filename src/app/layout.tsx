@@ -3,6 +3,7 @@ import { Space_Grotesk, Orbitron, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/layout/Header';
 import { MobileNav } from '@/components/layout/MobileNav';
+import { Providers } from '@/components/Providers';
 
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk', display: 'swap' });
 const orbitron = Orbitron({ subsets: ['latin'], variable: '--font-orbitron', display: 'swap' });
@@ -51,9 +52,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Global header navigation */}
         <Header />
         {/* Page content — pb-safe adds bottom padding on mobile to clear the MobileNav */}
-        <div className="pb-safe-mobile">
-          {children}
-        </div>
+        <Providers>
+          <div className="pb-safe-mobile">
+            {children}
+          </div>
+        </Providers>
         {/* Global mobile bottom nav — hidden on md+ via MobileNav's own md:hidden class */}
         <MobileNav />
       </body>

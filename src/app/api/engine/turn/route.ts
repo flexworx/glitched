@@ -9,7 +9,7 @@ import { requireAdmin } from '@/lib/auth/session';
 import { prisma } from '@/lib/db/client';
 import { validateOrThrow, EngineTurnSchema } from '@/lib/validation/schemas';
 import { ok, handleApiError } from '@/lib/api/response';
-import { loadGameConfig } from '@/lib/engine/template-loader';
+import { templateLoader as loadGameConfig } from '@/lib/engine/template-loader';
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,15 +36,15 @@ export async function POST(req: NextRequest) {
     // Load game config from the active season game (if this match is in a season)
     let gameConfig = null;
     if (match.seasonId) {
-      const activeSeasonGame = await prisma.seasonGame.findFirst({
+      const activeSeasonGame = await prisma.match.findFirst({
         where: {
           seasonId: match.seasonId,
-          status: 'ACTIVE',
+          status: 'RUNNING',
         },
       });
       if (activeSeasonGame) {
         try {
-          gameConfig = await loadGameConfig(activeSeasonGame.id);
+          gameConfig = await loadGameConfig.loadTemplate(activeSeasonGame.id);
         } catch {
           // No game config available — proceed with standard turn
         }

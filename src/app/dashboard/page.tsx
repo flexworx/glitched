@@ -4,6 +4,10 @@ import { XPBar } from '@/components/gamification/XPBar';
 import { StreakCounter } from '@/components/gamification/StreakCounter';
 import { LevelBadge } from '@/components/gamification/LevelBadge';
 import Link from 'next/link';
+import AchievementPopup from '@/components/gamification/AchievementPopup';
+import DailyReward from '@/components/gamification/DailyReward';
+import BattlePassProgress from '@/components/economy/BattlePassProgress';
+
 
 export default function DashboardPage() {
   const { user, loading, checkin } = useUser();

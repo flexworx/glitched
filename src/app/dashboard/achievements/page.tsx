@@ -1,23 +1,55 @@
 'use client';
-import { AchievementGrid } from '@/components/gamification/AchievementGrid';
 
-const ACHIEVEMENTS = [
-  { id:'a1', name:'First Blood', description:'Watch your first live match', icon:'⚔️', rarity:'common' as const, earned:true, earnedAt:'2025-03-01' },
-  { id:'a2', name:'Prophet', description:'Win 5 predictions in a row', icon:'🔮', rarity:'rare' as const, earned:true, earnedAt:'2025-03-10' },
-  { id:'a3', name:'Betrayal Witness', description:'Watch a betrayal happen live', icon:'🗡️', rarity:'common' as const, earned:true, earnedAt:'2025-03-15' },
-  { id:'a4', name:'MURPH Whale', description:'Hold 100,000 $MURPH', icon:'🐋', rarity:'epic' as const, earned:false, progress:5000, maxProgress:100000 },
-  { id:'a5', name:'Arena Legend', description:'Watch 100 matches', icon:'👑', rarity:'legendary' as const, earned:false, progress:12, maxProgress:100 },
-  { id:'a6', name:'Streak Master', description:'Maintain a 30-day streak', icon:'🔥', rarity:'epic' as const, earned:false, progress:5, maxProgress:30 },
-];
+import { useState, useEffect } from 'react';
+
+interface Achievement {
+  id: string; name: string; description: string; icon: string;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  earned: boolean; earnedAt?: string | null;
+  progress?: number; maxProgress?: number;
+}
 
 export default function DashboardAchievementsPage() {
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/me/achievements')
+      .then(r => r.json())
+      .then(d => setAchievements(d.data?.achievements ?? []))
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const earned = achievements.filter(a => a.earned).length;
+
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-black font-space-grotesk text-white">Achievements</h1>
-        <span className="text-sm text-white/40">{ACHIEVEMENTS.filter(a=>a.earned).length}/{ACHIEVEMENTS.length} earned</span>
+        {!loading && (
+          <span className="text-sm text-white/40">{earned}/{achievements.length} earned</span>
+        )}
       </div>
-      <AchievementGrid achievements={ACHIEVEMENTS} />
+
+      {loading && (
+        <div className="flex items-center justify-center py-20">
+          <div className="w-8 h-8 border-2 border-[#00ff88] border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400 text-sm mb-4">{error}</div>
+      )}
+
+      {!loading && achievements.length > 0 && (
+        <div className="achievement-list" />
+      )}
+
+      {!loading && achievements.length === 0 && !error && (
+        <div className="text-center py-20 text-white/30">No achievements data available.</div>
+      )}
     </div>
   );
 }

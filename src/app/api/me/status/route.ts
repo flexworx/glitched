@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/db/client';
 import { getTierProgress, getNextTier, STATUS_TIERS } from '@/lib/utils/status-tiers';
 import type { HumanStatusTierName } from '@/lib/utils/status-tiers';
 
-const prisma = new PrismaClient();
+
 
 export async function GET(request: Request) {
   try {
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 
     const lifetimeMurph = user.lifetimeMurph ?? 0;
     const seasonMurph = user.seasonMurph ?? 0;
-    const statusTier = (user.statusTier as HumanStatusTierName) ?? 'BOOTLOADER';
+    const statusTier = (user.statusTier as HumanStatusTierName) || 'BOOTLOADER';
     const progress = getTierProgress(lifetimeMurph);
     const nextTier = getNextTier(statusTier);
 

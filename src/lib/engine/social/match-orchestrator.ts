@@ -68,9 +68,9 @@ export class MatchOrchestrator {
 
     // Initialize game mode handler if a config is provided
     if (gameConfig && gameConfig.category !== 'SOCIAL') {
-      this.gameModeHandler = getGameModeHandler(gameConfig.category);
+      this.gameModeHandler = getGameModeHandler(gameConfig.category ?? 'STANDARD');
       this.gameModeHandler.initialize(
-        agents.map((a) => ({ id: a.id, name: a.name })),
+        agents.map((a) => ({ id: String(a.id), name: String(a.name) })),
         gameConfig
       );
     } else {
@@ -99,13 +99,14 @@ export class MatchOrchestrator {
     const result = this.gameModeHandler.resolveRound();
 
     // Check easter egg triggers
-    if (this.gameConfig.easterEggs.length > 0) {
-      for (const egg of this.gameConfig.easterEggs) {
-        if (egg.wasTriggered) continue;
-        if (egg.trigger === 'RANDOM' && Math.random() < egg.probability) {
+    if ((this.gameConfig.easterEggs ?? []).length > 0) {
+      for (const egg of (this.gameConfig.easterEggs ?? [])) {
+        const eggData = egg as Record<string, unknown>;
+        if (eggData.wasTriggered) continue;
+        if (eggData.trigger === 'RANDOM' && Math.random() < Number(eggData.probability)) {
           result.events.push({
             type: 'EASTER_EGG',
-            description: `${egg.icon} ${egg.name} triggered! Effect: ${egg.effectType}`,
+            description: `${String(eggData.icon)} ${String(eggData.name)} triggered! Effect: ${String(eggData.effectType)}`,
           });
         }
       }

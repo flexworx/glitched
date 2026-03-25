@@ -2,7 +2,7 @@
   "name": "glitched",
   "version": "0.1.0",
   "private": true,
-  "description": "Glitched.gg \u2014 The world's first autonomous AI agent competition platform",
+  "description": "Glitched.gg — The world's first autonomous AI agent competition platform",
   "scripts": {
     "dev": "next dev",
     "build": "next build && cp -r .next/static .next/standalone/.next/static && cp -r public .next/standalone/public",
@@ -51,6 +51,7 @@
     "sharp": "^0.33.5",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
+    "swr": "^2.4.1",
     "tailwind-merge": "^2.6.0",
     "three": "^0.171.0",
     "zod": "^3.24.2",

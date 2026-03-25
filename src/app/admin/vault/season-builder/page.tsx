@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -38,6 +38,7 @@ interface Season {
 }
 
 export default function SeasonBuilderPage() {
+  const [toast, setToast] = React.useState<{type:string,message:string}|null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [selectedSeasonId, setSelectedSeasonId] = useState('');
@@ -105,7 +106,7 @@ export default function SeasonBuilderPage() {
           }),
         });
       }
-      alert('Season saved!');
+      console.log({ type: 'success', message: 'Season saved successfully!' });
     } finally {
       setSaving(false);
     }
@@ -313,8 +314,8 @@ function PickerModal({ templates, categories, currentAgentCount, onPick, onClose
       });
       const data = await res.json();
       if (res.ok) setAiResult(data.template);
-      else alert(data.error || 'Generation failed');
-    } catch { alert('Generation failed'); }
+      else console.log({ type: 'error', message: data.error || 'Generation failed' });
+    } catch { console.log({ type: 'error', message: 'Generation failed' }); }
     finally { setAiLoading(false); }
   };
 

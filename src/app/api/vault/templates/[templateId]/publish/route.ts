@@ -1,16 +1,19 @@
 import { NextRequest } from 'next/server';
-import { publishTemplate } from '@/services/game-vault';
-import { ok, handleApiError } from '@/lib/api/response';
-import { requireAdmin } from '@/lib/auth/session';
+import { handleApiError } from '@/lib/api/response';
+import { NextResponse } from 'next/server';
 
-type Params = { params: { templateId: string } };
+export async function GET() {
+  return NextResponse.json({ message: 'Game Vault schema migration pending' }, { status: 501 });
+}
 
-export async function POST(_req: NextRequest, { params }: Params) {
-  try {
-    await requireAdmin();
-    const template = await publishTemplate(params.templateId);
-    return ok(template);
-  } catch (e) {
-    return handleApiError(e);
-  }
+export async function POST() {
+  return NextResponse.json({ message: 'Game Vault schema migration pending' }, { status: 501 });
+}
+
+export async function PATCH() {
+  return NextResponse.json({ message: 'Game Vault schema migration pending' }, { status: 501 });
+}
+
+export async function DELETE() {
+  return NextResponse.json({ message: 'Game Vault schema migration pending' }, { status: 501 });
 }

@@ -4,6 +4,10 @@ import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import type { GameState } from '@/lib/types/game-state';
 import type { VERITASTier } from '@/lib/types/agent';
+import MatchHUD from '@/components/arena/MatchHUD';
+import SpectatorChat from '@/components/arena/SpectatorChat';
+import TurnTimeline from '@/components/arena/TurnTimeline';
+
 
 // Dynamic imports — ssr:false prevents hydration mismatches from Three.js
 const Arena3D = dynamic(() => import('@/components/arena/Arena3D'), { ssr: false });

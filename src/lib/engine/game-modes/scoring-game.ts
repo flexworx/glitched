@@ -57,7 +57,7 @@ class ScoringGameHandler implements GameModeHandler {
   }
 
   resolveRound(): PhaseResult {
-    const config = this.config;
+    const config = this.config as Record<string, unknown> | null;
     if (!config) {
       return {
         phase: 'SCORING',
@@ -68,8 +68,8 @@ class ScoringGameHandler implements GameModeHandler {
       };
     }
 
-    const scoringMethod = config.scoringMethod;
-    const creditRewards = config.creditRewards;
+    const scoringMethod = config?.scoringMethod;
+    const creditRewards = (config?.creditRewards as Record<string, unknown>) || {};
     const events: PhaseResult['events'] = [];
     const creditChanges: Record<string, number> = {};
 
@@ -120,15 +120,15 @@ class ScoringGameHandler implements GameModeHandler {
     // Apply elimination rule
     const eliminations = applyEliminationRule(
       this.scores,
-      config.eliminationRule,
-      config.eliminationCount,
+      String(config?.eliminationRule || 'BOTTOM'),
+      Number(config?.eliminationCount || 1),
       this.agents.length
     );
 
     // Award credits to survivors
     for (const agent of this.agents) {
       if (!eliminations.includes(agent.id)) {
-        creditChanges[agent.id] = creditRewards.survive || 200;
+        creditChanges[agent.id] = Number(creditRewards.survive || 200);
       }
     }
 
@@ -137,9 +137,9 @@ class ScoringGameHandler implements GameModeHandler {
       (a, b) => b[1] - a[1]
     );
     if (sortedScores.length > 0) {
-      const winnerId = sortedScores[0][0];
+      const winnerId = String(sortedScores[0][0]);
       creditChanges[winnerId] =
-        (creditChanges[winnerId] || 0) + (creditRewards.win || 500);
+        (creditChanges[winnerId] || 0) + Number(creditRewards.win || 500);
       events.push({
         type: 'GAME_WINNER',
         description: `Agent won the scoring round`,

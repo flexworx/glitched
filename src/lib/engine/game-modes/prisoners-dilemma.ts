@@ -60,15 +60,15 @@ class PrisonersDilemmaHandler implements GameModeHandler {
   }
 
   resolveRound(): PhaseResult {
-    const config = this.config;
-    const creditRewards = config?.creditRewards || {};
+    const config = this.config as Record<string, unknown> | null;
+    const creditRewards = (config?.creditRewards as Record<string, unknown>) || {};
     const events: PhaseResult['events'] = [];
     const creditChanges: Record<string, number> = {};
 
     // Default payoffs
-    const cooperateBoth = creditRewards.cooperateBoth ?? 200;
-    const betrayWin = creditRewards.betrayWin ?? 500;
-    const betrayBothLoss = creditRewards.betrayBothLoss ?? -300;
+    const cooperateBoth = Number(creditRewards.cooperateBoth ?? 200);
+    const betrayWin = Number(creditRewards.betrayWin ?? 500);
+    const betrayBothLoss = Number(creditRewards.betrayBothLoss ?? -300);
 
     // Resolve each pairing
     for (const pair of this.pairings) {
@@ -96,7 +96,7 @@ class PrisonersDilemmaHandler implements GameModeHandler {
         events.push({
           type: 'BETRAYAL',
           description: 'Agent A betrayed Agent B',
-          agentId: pair.agentA,
+          agentId: String(pair.agentA),
         });
       } else if (choiceA === 'cooperate' && choiceB === 'defect') {
         this.credits[pair.agentB] =
@@ -106,7 +106,7 @@ class PrisonersDilemmaHandler implements GameModeHandler {
         events.push({
           type: 'BETRAYAL',
           description: 'Agent B betrayed Agent A',
-          agentId: pair.agentB,
+          agentId: String(pair.agentB),
         });
       } else {
         // Both defect
@@ -129,8 +129,8 @@ class PrisonersDilemmaHandler implements GameModeHandler {
     const eliminations = config
       ? applyEliminationRule(
           this.credits,
-          config.eliminationRule,
-          config.eliminationCount,
+          String(config?.eliminationRule || 'BOTTOM'),
+          Number(config?.eliminationCount || 1),
           this.agents.length
         )
       : [];

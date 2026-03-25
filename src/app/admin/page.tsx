@@ -2,6 +2,10 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import GameControlPanel from '@/components/admin/GameControlPanel';
+import EconomyDashboard from '@/components/admin/EconomyDashboard';
+import EmergencyStop from '@/components/admin/EmergencyStop';
+
 
 const SYSTEM_METRICS = [
   { label: 'Active Matches', value: '3', status: 'ok', color: '#39FF14' },

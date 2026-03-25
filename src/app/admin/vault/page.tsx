@@ -1,4 +1,5 @@
 'use client';
+import React from 'react';
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -69,6 +70,7 @@ interface Template {
 
 export default function GameVaultPage() {
   const router = useRouter();
+  const [toast, setToast] = React.useState<{type:string,message:string}|null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterCat, setFilterCat] = useState('ALL');
@@ -120,10 +122,10 @@ export default function GameVaultPage() {
       if (res.ok) {
         setAiResult(data.template);
       } else {
-        alert(data.error || 'Generation failed');
+        setToast({ type: 'error', message: data.error || 'Generation failed' });
       }
     } catch {
-      alert('Generation failed');
+      setToast({ type: 'error', message: 'Generation failed' });
     } finally {
       setAiLoading(false);
     }
