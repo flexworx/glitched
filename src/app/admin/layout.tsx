@@ -3,7 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutGrid, Play, Cpu, Coins, Shield, Users, Server, Trophy, Film, Menu, X,
+  LayoutGrid, Play, Cpu, Coins, Shield, Users, Server, Trophy, Film, Menu, X, Gamepad2,
 } from 'lucide-react';
 
 const ADMIN_NAV = [
@@ -15,6 +15,7 @@ const ADMIN_NAV = [
   { href: '/admin/users',       label: 'Users',      Icon: Users },
   { href: '/admin/system',      label: 'System',     Icon: Server },
   { href: '/admin/seasons',     label: 'Seasons',    Icon: Trophy },
+  { href: '/admin/vault',       label: 'Game Vault', Icon: Gamepad2 },
   { href: '/admin/media',       label: 'Media',      Icon: Film },
 ];
 

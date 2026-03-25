@@ -9,6 +9,13 @@ import type {
   SocialGameState,
   ChallengeResult,
 } from '../../types/glitch-engine';
+import type { GameConfig } from '../template-loader';
+import {
+  getGameModeHandler,
+  type GameModeHandler,
+  type PhaseResult,
+} from '../game-modes';
+
 interface OrchestratorAgent {
   id: string;
   name: string;
@@ -34,15 +41,19 @@ export class MatchOrchestrator {
   private actionResolver: SocialActionResolver;
   private challengeEngine: ChallengeEngine;
   private agents: OrchestratorAgent[];
+  private gameConfig: GameConfig | null;
+  private gameModeHandler: GameModeHandler | null;
   private roundCallbacks: Array<
     (round: number, phase: SocialPhase, state: SocialGameState) => void
   > = [];
 
   constructor(
     matchId: string,
-    agents: OrchestratorAgent[]
+    agents: OrchestratorAgent[],
+    gameConfig?: GameConfig
   ) {
     this.agents = agents;
+    this.gameConfig = gameConfig ?? null;
     this.stateManager = new SocialGameStateManager(
       matchId,
       agents.map((a) => ({
@@ -54,6 +65,54 @@ export class MatchOrchestrator {
     );
     this.actionResolver = new SocialActionResolver(this.stateManager);
     this.challengeEngine = new ChallengeEngine(this.stateManager);
+
+    // Initialize game mode handler if a config is provided
+    if (gameConfig && gameConfig.category !== 'SOCIAL') {
+      this.gameModeHandler = getGameModeHandler(gameConfig.category);
+      this.gameModeHandler.initialize(
+        agents.map((a) => ({ id: a.id, name: a.name })),
+        gameConfig
+      );
+    } else {
+      this.gameModeHandler = null;
+    }
+  }
+
+  /** Get the loaded game configuration (if any). */
+  getGameConfig(): GameConfig | null {
+    return this.gameConfig;
+  }
+
+  /**
+   * Run a template-driven round using the appropriate game mode handler.
+   * Falls back to the standard social elimination flow for SOCIAL category.
+   */
+  async runTemplateDrivenRound(
+    agentActions: Map<string, Record<string, unknown>>
+  ): Promise<PhaseResult | null> {
+    if (!this.gameModeHandler || !this.gameConfig) return null;
+
+    for (const [agentId, action] of agentActions) {
+      this.gameModeHandler.processAgentAction(agentId, action);
+    }
+
+    const result = this.gameModeHandler.resolveRound();
+
+    // Check easter egg triggers
+    if (this.gameConfig.easterEggs.length > 0) {
+      for (const egg of this.gameConfig.easterEggs) {
+        if (egg.wasTriggered) continue;
+        if (egg.trigger === 'RANDOM' && Math.random() < egg.probability) {
+          result.events.push({
+            type: 'EASTER_EGG',
+            description: `${egg.icon} ${egg.name} triggered! Effect: ${egg.effectType}`,
+          });
+        }
+      }
+    }
+
+    this.emitUpdate();
+    return result;
   }
 
   onRoundUpdate(

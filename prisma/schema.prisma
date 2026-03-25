@@ -517,6 +517,7 @@ model Season {
   standings   SeasonStanding[]
   battlePass  BattlePass?
   challenges  Challenge[]
+  seasonGames SeasonGame[]
 }
 
 model SeasonStanding {
@@ -973,6 +974,57 @@ enum InstructionDelivery {
   BOTH
 }
 
+// ─── Game Vault Enums ─────────────────────────────────────────
+
+enum GameCategory {
+  CHANCE
+  INTELLIGENCE
+  SOCIAL
+  STRATEGY
+  PERFORMANCE
+  POKER
+  ENDURANCE
+  CUSTOM
+}
+
+enum EliminationRule {
+  HALF
+  FIXED
+  BOTTOM
+  VOTE
+  SCORE_BASED
+  LAST_STANDING
+  BRACKET
+}
+
+enum ScoringMethod {
+  VOTE
+  SCORE
+  SPEED
+  SURVIVAL
+  ELIMINATION
+  POKER
+  TERRITORY
+  HYBRID
+}
+
+enum TemplateStatus {
+  DRAFT
+  TESTING
+  PUBLISHED
+  ARCHIVED
+}
+
+enum EasterEggTrigger {
+  RANDOM
+  ROUND_START
+  LOW_AGENT_COUNT
+  HIGH_DRAMA
+  MANUAL
+  ELIMINATION
+  ALLIANCE_BREAK
+}
+
 model Challenge {
   id                      String          @id @default(cuid())
   seasonId                String
@@ -1125,4 +1177,107 @@ model Dispute {
   @@index([status])
   @@index([filedBy])
   @@index([agentId])
+}
+
+// ============================================================
+// GAME VAULT — Templates, Easter Eggs, Season Games
+// ============================================================
+
+model GameTemplate {
+  id                String          @id @default(cuid())
+  name              String
+  displayTitle      String
+  category          GameCategory
+  description       String          @db.Text
+  systemPrompt      String          @db.Text
+  minAgents         Int             @default(2)
+  maxAgents         Int             @default(26)
+  eliminationRule   EliminationRule @default(HALF)
+  eliminationCount  Int?
+  scoringMethod     ScoringMethod   @default(SCORE)
+  scoringLogic      Json            @default("{}")
+  creditRewards     Json            @default("{\"survive\":200,\"win\":500,\"mvp\":300,\"eliminateStealPct\":50}")
+  estimatedDuration Int             @default(180)
+  tags              String[]
+  status            TemplateStatus  @default(DRAFT)
+  version           Int             @default(1)
+  createdBy         String
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  easterEggs        GameTemplateEasterEgg[]
+  seasonGames       SeasonGame[]
+
+  @@index([category])
+  @@index([status])
+  @@index([tags])
+}
+
+model EasterEggDefinition {
+  id                String   @id @default(cuid())
+  name              String   @unique
+  icon              String   @default("🎁")
+  description       String   @db.Text
+  effectType        String
+  effectConfig      Json     @default("{}")
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+
+  templateAttachments GameTemplateEasterEgg[]
+  seasonEasterEggs    SeasonEasterEgg[]
+}
+
+model GameTemplateEasterEgg {
+  id            String              @id @default(cuid())
+  templateId    String
+  template      GameTemplate        @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  easterEggId   String
+  easterEgg     EasterEggDefinition @relation(fields: [easterEggId], references: [id])
+  probability   Float               @default(0.1)
+  trigger       EasterEggTrigger    @default(RANDOM)
+  triggerConfig Json                @default("{}")
+
+  @@unique([templateId, easterEggId])
+}
+
+model SeasonGame {
+  id                  String          @id @default(cuid())
+  seasonId            String
+  season              Season          @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  templateId          String
+  template            GameTemplate    @relation(fields: [templateId], references: [id])
+  orderIndex          Int
+  eliminationOverride Int?
+  durationOverride    Int?
+  creditOverrides     Json?
+  promptOverride      String?         @db.Text
+  scheduledStartAt    DateTime?
+  scheduledEndAt      DateTime?
+  actualStartAt       DateTime?
+  actualEndAt         DateTime?
+  status              ChallengeStatus @default(DRAFT)
+  results             Json?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  easterEggs          SeasonEasterEgg[]
+
+  @@unique([seasonId, orderIndex])
+  @@index([seasonId])
+}
+
+model SeasonEasterEgg {
+  id               String              @id @default(cuid())
+  seasonGameId     String
+  seasonGame       SeasonGame          @relation(fields: [seasonGameId], references: [id], onDelete: Cascade)
+  easterEggId      String
+  easterEgg        EasterEggDefinition @relation(fields: [easterEggId], references: [id])
+  probability      Float               @default(0.1)
+  trigger          EasterEggTrigger    @default(RANDOM)
+  triggerConfig    Json                @default("{}")
+  wasTriggered     Boolean             @default(false)
+  triggeredAt      DateTime?
+  recipientAgentId String?
+
+  @@index([seasonGameId])
 }
