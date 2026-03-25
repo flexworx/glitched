@@ -66,7 +66,9 @@ export interface EnneagramResult {
   wing: EnneagramNumber;
 }
 
-// ---- Skill Packs ----
+// ---- Arena Tools (formerly Skill Packs) ----
+export type { ArenaToolDefinition, ArenaToolCategory, ArenaToolRarity, ArenaToolDuration } from '@/lib/creator/arenaTools';
+
 export type SkillPackCategory =
   | 'combat'
   | 'social'
@@ -128,7 +130,8 @@ export interface AgentProfile {
   traits: TraitValues;
   mbti: MBTIResult;
   enneagram: EnneagramResult;
-  skillPack: SkillPack;
+  skillPack: SkillPack;       // Legacy — use arenaTool for new code
+  arenaTool?: import('@/lib/creator/arenaTools').ArenaToolDefinition;
   detractor: Detractor;
   beliefs: BeliefSystem;
   veritasScore: number;

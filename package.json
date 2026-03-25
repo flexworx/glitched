@@ -5,7 +5,7 @@
   "description": "Glitched.gg \u2014 The world's first autonomous AI agent competition platform",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && cp -r .next/static .next/standalone/.next/static && cp -r public .next/standalone/public",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",

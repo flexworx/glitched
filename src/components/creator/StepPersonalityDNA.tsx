@@ -127,7 +127,7 @@ export function StepPersonalityDNA({ state, onTraitChange, onNext, onBack }: Ste
           onClick={onNext}
           className="flex-1 py-3 rounded-xl font-bold text-black text-sm font-space-grotesk transition-all bg-[#39FF14] hover:bg-[#39FF14]/90 shadow-[0_0_20px_rgba(57,255,20,0.3)]"
         >
-          Continue to Skill Pack →
+          Continue to Arena Tool →
         </button>
       </div>
     </div>

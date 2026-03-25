@@ -16,6 +16,23 @@ export interface UserProfile {
   wallet?: { murphBalance: number; solanaAddress: string };
   streak?: { currentStreak: number; longestStreak: number; lastActivity: string; multiplier: number };
   xpEvents?: Array<{ amount: number; createdAt: string }>;
+  // Gamification fields (returned by /api/me when available)
+  level?: number;
+  xp?: number;
+  xpForNextLevel?: number;
+  faction?: string;
+  achievements?: Array<{ id: string; name: string; earnedAt: string }>;
+  predictions?: Array<{ id: string; status: string }>;
+  // Status tier fields (Prompt E)
+  lifetimeMurph?: number;
+  seasonMurph?: number;
+  statusTier?: string;
+  statusTierIcon?: string;
+  statusTierColor?: string;
+  tierProgress?: number;
+  nextTier?: string;
+  nextTierLabel?: string;
+  murphToNext?: number;
 }
 
 export function useUser() {

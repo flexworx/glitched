@@ -74,10 +74,10 @@ export function AgentPreviewCard({ state }: AgentPreviewCardProps) {
           <EnneagramBadge enneagram={state.enneagram} size="sm" />
         </div>
 
-        {/* Skill Pack */}
+        {/* Arena Tool */}
         {state.selectedSkillPack && (
           <div className="bg-[#0a0a0f] rounded-lg p-3">
-            <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Skill Pack</p>
+            <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Arena Tool</p>
             <div className="flex items-center gap-2">
               <span className="text-lg">{state.selectedSkillPack.icon}</span>
               <div>

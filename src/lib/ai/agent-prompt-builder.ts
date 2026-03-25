@@ -3,6 +3,7 @@
  * Constructs system prompts from GLITCH.json data and injects
  * OPERATOR_WHISPER instructions directly into the agent context window.
  */
+import { buildCompetitiveFraming } from './competitive-framing';
 
 export interface AgentPromptConfig {
   name: string;
@@ -20,6 +21,10 @@ export interface AgentPromptConfig {
   operatorInstructions?: OperatorInstruction[];
   /** Active challenge context visible to the agent */
   activeChallenge?: ActiveChallengeContext;
+  /** Economy context block (wallet, bets, tools, shop) */
+  economyContext?: string;
+  /** Game template system prompt (if running a vault game) */
+  gameTemplatePrompt?: string;
 }
 
 export interface OperatorInstruction {
@@ -120,8 +125,9 @@ ${challengeBlock}
 CURRENT MATCH CONTEXT:
 ${config.currentMatchContext}
 
-Respond with a JSON object: { "action": "...", "target": "...", "narrative": "...", "reasoning": "..." }
-Action must be one of: attack, defend, negotiate, betray, ally, observe, retreat, heal, sabotage, inspire
-Narrative should be 1-2 sentences in your authentic voice. Reasoning is private (not shown to other agents).
+${buildCompetitiveFraming(config.traits)}
+${config.economyContext ? `\n═══ IN-GAME ECONOMY ═══\n${config.economyContext}\n` : ''}
+${config.gameTemplatePrompt ? `\n═══ GAME RULES ═══\n${config.gameTemplatePrompt}\n` : ''}
+Respond with a JSON object: { "thinking": "...", "speech": "...", "action": { "type": "...", "target": "...", "parameters": {} }, "economyAction": { "type": "...", "target": "...", "amount": 0 } }
 ${hasInstructions ? 'IMPORTANT: Your first action must directly address the operator directive above.' : ''}`;
 }

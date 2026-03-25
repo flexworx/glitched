@@ -53,7 +53,7 @@ export function StepBeliefs({ data, onChange, onNext, onBack }: StepProps) {
 
       <div className="flex justify-between">
         <button onClick={onBack} className="px-5 py-2.5 bg-white/5 border border-white/10 text-white font-bold rounded-xl hover:bg-white/10 transition-all">← Back</button>
-        <button onClick={onNext} disabled={!valid} className="px-6 py-2.5 bg-[#8b5cf6] text-white font-bold rounded-xl hover:bg-[#8b5cf6]/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed">Next: Skill Packs →</button>
+        <button onClick={onNext} disabled={!valid} className="px-6 py-2.5 bg-[#8b5cf6] text-white font-bold rounded-xl hover:bg-[#8b5cf6]/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed">Next: Arena Tools →</button>
       </div>
     </div>
   );

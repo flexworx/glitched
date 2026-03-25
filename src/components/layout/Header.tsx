@@ -73,6 +73,20 @@ export function Header() {
               <span className="text-xs text-red-400 font-medium">LIVE</span>
             </div>
 
+            {/* Status tier badge */}
+            {wallet.connected && wallet.statusTier && (
+              <span
+                className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border"
+                style={{
+                  color: wallet.statusTierColor ?? '#94a3b8',
+                  borderColor: `${wallet.statusTierColor ?? '#94a3b8'}40`,
+                  background: `${wallet.statusTierColor ?? '#94a3b8'}10`,
+                }}
+              >
+                {wallet.statusTierIcon} {wallet.statusTier}
+              </span>
+            )}
+
             {/* Wallet button */}
             {wallet.connected ? (
               <button

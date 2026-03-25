@@ -39,7 +39,7 @@ export function CreditCounter({
         )}
         {skillPackCost > 0 && (
           <div className="flex justify-between text-xs text-purple-400/70">
-            <span>Skill Pack</span>
+            <span>Arena Tool</span>
             <span className="font-mono">+{skillPackCost} cr</span>
           </div>
         )}

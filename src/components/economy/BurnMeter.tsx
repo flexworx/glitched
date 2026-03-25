@@ -1,13 +1,13 @@
 'use client';
 
 interface BurnMeterProps {
-  totalBurned: number;
+  totalBurned?: number;
   totalSupply?: number;
   dailyBurn?: number;
   size?: 'sm' | 'md' | 'lg';
 }
 
-export function BurnMeter({ totalBurned, totalSupply = 1_000_000_000, dailyBurn = 0, size = 'md' }: BurnMeterProps) {
+export function BurnMeter({ totalBurned = 0, totalSupply = 1_000_000_000, dailyBurn = 0, size = 'md' }: BurnMeterProps) {
   const burnPct = (totalBurned / totalSupply) * 100;
 
   return (

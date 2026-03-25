@@ -112,7 +112,7 @@ export function StepPreview({ state, onNext, onBack, onGoToStep }: StepPreviewPr
           {[
             { label: 'Edit Identity', step: 1 },
             { label: 'Edit Traits', step: 2 },
-            { label: 'Edit Skill Pack', step: 3 },
+            { label: 'Edit Arena Tool', step: 3 },
             { label: 'Edit Beliefs', step: 5 },
           ].map((item) => (
             <button

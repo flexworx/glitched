@@ -41,7 +41,6 @@ export function StepDeploy({ state, onBack }: StepDeployProps) {
         await new Promise((r) => setTimeout(r, DEPLOY_STEPS[i].duration));
       }
 
-      // Simulate API call
       const payload = {
         name: state.name,
         tagline: state.tagline,
@@ -49,20 +48,25 @@ export function StepDeploy({ state, onBack }: StepDeployProps) {
         archetype: state.archetype,
         avatarUrl: state.avatarUrl,
         traits: state.traits,
-        skillPackId: state.selectedSkillPack?.id,
+        arenaToolId: state.selectedSkillPack?.id,
         detractorId: state.detractor?.id,
         beliefs: state.beliefs,
       };
 
-      // In production, this would call the actual API
-      // For now, simulate success
-      await new Promise((r) => setTimeout(r, 500));
+      const res = await fetch('/api/v1/soul-forge/deploy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-      const mockAgentId = `agent_${Math.random().toString(36).slice(2, 10)}`;
-      const mockDID = `did:polygon:${Math.random().toString(36).slice(2, 18)}`;
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Deployment failed' }));
+        throw new Error(err.error ?? `Deploy failed (${res.status})`);
+      }
 
-      setAgentId(mockAgentId);
-      setPolygonDID(mockDID);
+      const result = await res.json();
+      setAgentId(result.agentId ?? result.id);
+      setPolygonDID(result.polygonDID ?? result.did ?? null);
       setStatus('success');
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Deployment failed. Please try again.');
@@ -106,7 +110,7 @@ export function StepDeploy({ state, onBack }: StepDeployProps) {
               <span className="text-white capitalize">{state.archetype?.replace('_', ' ')}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-white/50">Skill Pack</span>
+              <span className="text-white/50">Arena Tool</span>
               <span className="text-white">{state.selectedSkillPack?.name ?? 'None'}</span>
             </div>
             <div className="flex justify-between text-sm">

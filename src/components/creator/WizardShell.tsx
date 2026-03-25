@@ -8,7 +8,7 @@ import { deriveMBTI } from '@/lib/creator/mbti';
 import { deriveEnneagram } from '@/lib/creator/enneagram';
 import { StepIdentity } from './StepIdentity';
 import { StepPersonalityDNA } from './StepPersonalityDNA';
-import { StepSkillPack } from './StepSkillPack';
+import { StepArenaTools } from './StepArenaTools';
 import { StepDetractor } from './StepDetractor';
 import { StepBeliefs } from './StepBeliefs';
 import { StepPreview } from './StepPreview';
@@ -17,7 +17,7 @@ import { StepDeploy } from './StepDeploy';
 const STEPS = [
   { id: 1, label: 'Identity', icon: '✍️', description: 'Name & personality foundation' },
   { id: 2, label: 'DNA', icon: '🧬', description: '34 personality trait sliders' },
-  { id: 3, label: 'Skill Pack', icon: '⚡', description: 'Choose your arena ability' },
+  { id: 3, label: 'Arena Tools', icon: '⚡', description: 'Choose your arena tool' },
   { id: 4, label: 'Detractor', icon: '⚠️', description: 'Your assigned weakness' },
   { id: 5, label: 'Beliefs', icon: '💭', description: 'Core values & mantras' },
   { id: 6, label: 'Preview', icon: '👁️', description: 'Review & interview' },
@@ -212,7 +212,7 @@ export function WizardShell() {
           />
         )}
         {state.step === 3 && (
-          <StepSkillPack
+          <StepArenaTools
             state={state}
             onSelect={(pack) => dispatch({ type: 'SET_SKILL_PACK', pack })}
             onNext={next}

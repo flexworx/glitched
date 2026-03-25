@@ -1,7 +1,7 @@
 'use client';
 import { useState, useCallback } from 'react';
 
-export interface WalletState { connected: boolean; address: string|null; balance: number; murphBalance: number; loading: boolean; }
+export interface WalletState { connected: boolean; address: string|null; balance: number; murphBalance: number; loading: boolean; statusTier?: string; statusTierIcon?: string; statusTierColor?: string; }
 
 export function useWallet() {
   const [wallet, setWallet] = useState<WalletState>({ connected: false, address: null, balance: 0, murphBalance: 0, loading: false });

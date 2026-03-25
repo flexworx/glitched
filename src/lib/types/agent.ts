@@ -265,7 +265,8 @@ export interface AgentProfile {
   traits: TraitValues;
   mbti: MBTIResult;
   enneagram: EnneagramResult;
-  skillPack: SkillPack;
+  skillPack: SkillPack;       // Legacy — use arenaTool for new code
+  arenaTool?: import('@/lib/creator/arenaTools').ArenaToolDefinition;
   detractor: Detractor;
   beliefs: CreatorBeliefSystem;
   veritasScore: number;

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { StepIdentity } from './StepIdentity';
 import { StepPersonality } from './StepPersonality';
 import { StepBeliefs } from './StepBeliefs';
-import { StepSkillPacks } from './StepSkillPacks';
+import { StepArenaTools } from './StepArenaTools';
 import { StepPreview } from './StepPreview';
 import { StepDeploy } from './StepDeploy';
 
@@ -11,7 +11,7 @@ const STEPS = [
   { id:1, label:'Identity', icon:'✍️' },
   { id:2, label:'Personality', icon:'🎛️' },
   { id:3, label:'Beliefs', icon:'💭' },
-  { id:4, label:'Skill Packs', icon:'⚡' },
+  { id:4, label:'Arena Tools', icon:'⚡' },
   { id:5, label:'Preview', icon:'👁️' },
   { id:6, label:'Deploy', icon:'🚀' },
 ];
@@ -21,7 +21,7 @@ export function BuilderWizard() {
   const [agentData, setAgentData] = useState({
     name: '', archetype: '', bio: '', beliefs: ['', '', ''], fears: ['', ''], goals: ['', ''],
     traits: { openness:0.5, conscientiousness:0.5, extraversion:0.5, agreeableness:0.5, neuroticism:0.5, aggressiveness:0.5, deceptiveness:0.5, loyalty:0.5, riskTolerance:0.5, adaptability:0.5, charisma:0.5, patience:0.5, ambition:0.5, empathy:0.5, creativity:0.5 },
-    skillPacks: [] as string[],
+    arenaTools: [] as string[],
   });
 
   const update = (partial: Partial<typeof agentData>) => setAgentData(prev => ({ ...prev, ...partial }));
@@ -49,7 +49,7 @@ export function BuilderWizard() {
         {step === 1 && <StepIdentity data={agentData} onChange={update} onNext={() => setStep(2)} />}
         {step === 2 && <StepPersonality data={agentData} onChange={update} onNext={() => setStep(3)} onBack={() => setStep(1)} />}
         {step === 3 && <StepBeliefs data={agentData} onChange={update} onNext={() => setStep(4)} onBack={() => setStep(2)} />}
-        {step === 4 && <StepSkillPacks data={agentData} onChange={update} onNext={() => setStep(5)} onBack={() => setStep(3)} />}
+        {step === 4 && <StepArenaTools data={agentData} onChange={update} onNext={() => setStep(5)} onBack={() => setStep(3)} />}
         {step === 5 && <StepPreview data={agentData} onNext={() => setStep(6)} onBack={() => setStep(4)} />}
         {step === 6 && <StepDeploy data={agentData} onBack={() => setStep(5)} />}
       </div>
