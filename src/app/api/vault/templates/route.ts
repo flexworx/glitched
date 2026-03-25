@@ -27,6 +27,9 @@ const CreateTemplateSchema = z.object({
   estimatedDuration: z.number().int().positive().optional(),
   tags: z.array(z.string()).optional(),
   status: z.enum(['DRAFT', 'TESTING', 'PUBLISHED', 'ARCHIVED']).optional(),
+  recommendedRounds: z.array(z.string()).optional(),
+  recommendedAgents: z.array(z.string()).optional(),
+  teamFormation: z.record(z.unknown()).optional(),
 });
 
 export async function GET(req: NextRequest) {

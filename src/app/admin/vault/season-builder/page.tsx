@@ -1,6 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const CATEGORIES: Record<string, { icon: string; color: string }> = {
   CHANCE: { icon: '🎲', color: '#f59e0b' },
@@ -247,21 +248,144 @@ export default function SeasonBuilderPage() {
           </div>
         </div>
 
-        {/* Template Picker Modal */}
+        {/* Template Picker Modal — Pick from Vault or Create New */}
         {showPicker && (
-          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={() => setShowPicker(false)}>
-            <div className="bg-arena-dark border border-white/10 rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-              <h3 className="text-lg font-bold text-white mb-4">Select a Game Template</h3>
+          <PickerModal
+            templates={templates}
+            categories={CATEGORIES}
+            currentAgentCount={(() => {
+              let r = startAgents;
+              for (const g of games) r = Math.max(1, r - (g.eliminationOverride || 0));
+              return r;
+            })()}
+            onPick={(id) => addGame(id)}
+            onClose={() => setShowPicker(false)}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Picker Modal ─────────────────────────────────────────────
+
+function PickerModal({ templates, categories, currentAgentCount, onPick, onClose }: {
+  templates: Template[];
+  categories: Record<string, { icon: string; color: string }>;
+  currentAgentCount: number;
+  onPick: (id: string) => void;
+  onClose: () => void;
+}) {
+  const router = useRouter();
+  const [tab, setTab] = useState<'vault' | 'ai'>('vault');
+  const [filterRound, setFilterRound] = useState('ALL');
+  const [aiDesc, setAiDesc] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResult, setAiResult] = useState<any>(null);
+
+  // Auto-determine recommended round based on agent count
+  const suggestedRound = currentAgentCount > 20 ? 'early' : currentAgentCount > 8 ? 'mid' : currentAgentCount > 3 ? 'late' : 'finale';
+  const suggestedAgentRange = currentAgentCount > 25 ? '25+' : currentAgentCount > 10 ? '10-25' : currentAgentCount > 5 ? '6-10' : currentAgentCount > 2 ? '3-5' : '2';
+
+  const sorted = useMemo(() => {
+    let list = [...templates];
+    if (filterRound !== 'ALL') {
+      list = list.filter((t: any) => (t.recommendedRounds || []).includes(filterRound));
+    }
+    // Sort: recommended for current agent count first
+    list.sort((a: any, b: any) => {
+      const aMatch = (a.recommendedAgents || []).includes(suggestedAgentRange) ? 1 : 0;
+      const bMatch = (b.recommendedAgents || []).includes(suggestedAgentRange) ? 1 : 0;
+      return bMatch - aMatch;
+    });
+    return list;
+  }, [templates, filterRound, suggestedAgentRange]);
+
+  const generateGame = async () => {
+    if (!aiDesc.trim()) return;
+    setAiLoading(true);
+    setAiResult(null);
+    try {
+      const res = await fetch('/api/vault/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: aiDesc }),
+      });
+      const data = await res.json();
+      if (res.ok) setAiResult(data.template);
+      else alert(data.error || 'Generation failed');
+    } catch { alert('Generation failed'); }
+    finally { setAiLoading(false); }
+  };
+
+  const saveAndPick = async () => {
+    if (!aiResult) return;
+    const res = await fetch('/api/vault/templates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...aiResult, status: 'PUBLISHED' }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      onPick(data.id);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-arena-dark border border-white/10 rounded-2xl max-w-3xl w-full max-h-[85vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+        {/* Header with tabs */}
+        <div className="px-6 pt-5 pb-0 border-b border-white/5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-bold text-white">Add Game to Season</h3>
+            <div className="text-xs text-white/30">
+              ~{currentAgentCount} agents remaining &middot; Suggested: <span className="text-neon-green">{suggestedRound}</span>
+            </div>
+          </div>
+          <div className="flex gap-1">
+            <button onClick={() => setTab('vault')}
+              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-all ${tab === 'vault' ? 'border-neon-green text-neon-green' : 'border-transparent text-white/40 hover:text-white/60'}`}>
+              📚 Pick from Vault
+            </button>
+            <button onClick={() => setTab('ai')}
+              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-all ${tab === 'ai' ? 'border-purple-400 text-purple-400' : 'border-transparent text-white/40 hover:text-white/60'}`}>
+              🤖 AI Create New
+            </button>
+            <Link href="/admin/vault/new" className="px-4 py-2.5 text-sm font-medium text-white/40 hover:text-white/60 border-b-2 border-transparent">
+              ✏️ Manual Create
+            </Link>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6">
+          {tab === 'vault' && (
+            <div>
+              {/* Round filter */}
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-[10px] text-white/30">Filter:</span>
+                {['ALL', 'early', 'mid', 'late', 'finale'].map((r) => (
+                  <button key={r} onClick={() => setFilterRound(r)}
+                    className={`text-[10px] px-2.5 py-1 rounded-full border transition-all ${filterRound === r ? 'border-neon-green/50 bg-neon-green/10 text-neon-green' : 'border-white/5 text-white/40 hover:border-white/15'}`}>
+                    {r === 'ALL' ? 'All' : r}
+                  </button>
+                ))}
+              </div>
+
               <div className="grid grid-cols-1 gap-2">
-                {templates.map((tpl) => {
-                  const cat = CATEGORIES[tpl.category];
+                {sorted.map((tpl) => {
+                  const cat = categories[tpl.category];
+                  const isRecommended = (tpl as any).recommendedAgents?.includes(suggestedAgentRange);
                   return (
-                    <button key={tpl.id} onClick={() => addGame(tpl.id)}
-                      className="flex items-center gap-4 p-4 rounded-xl border border-white/5 hover:border-neon-green/30 hover:bg-neon-green/5 transition-all text-left">
+                    <button key={tpl.id} onClick={() => onPick(tpl.id)}
+                      className={`flex items-center gap-4 p-4 rounded-xl border transition-all text-left ${isRecommended ? 'border-neon-green/20 bg-neon-green/[0.03]' : 'border-white/5'} hover:border-neon-green/30 hover:bg-neon-green/5`}>
                       <div className="text-2xl">{cat?.icon}</div>
                       <div className="flex-1">
-                        <div className="font-bold text-white text-sm">{tpl.displayTitle}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-white text-sm">{tpl.displayTitle}</span>
+                          {isRecommended && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-neon-green/10 text-neon-green border border-neon-green/20">Recommended</span>}
+                        </div>
                         <div className="text-xs text-white/40">{tpl.name} &middot; {tpl.minAgents}-{tpl.maxAgents} agents</div>
+                        <div className="text-xs text-white/30 mt-0.5 line-clamp-1">{tpl.description}</div>
                       </div>
                       <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: (cat?.color || '#fff') + '20', color: cat?.color }}>
                         {tpl.category}
@@ -271,8 +395,43 @@ export default function SeasonBuilderPage() {
                 })}
               </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {tab === 'ai' && (
+            <div>
+              <p className="text-xs text-white/40 mb-3">
+                Describe a game and the Game Master will generate a complete template, then add it to your season.
+              </p>
+              <textarea value={aiDesc} onChange={(e) => setAiDesc(e.target.value)} rows={3}
+                placeholder={`e.g. A negotiation game for ${currentAgentCount} agents where they trade resources and form temporary alliances...`}
+                className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500/50 resize-none mb-3"
+                disabled={aiLoading} />
+
+              {!aiResult && (
+                <button onClick={generateGame} disabled={aiLoading || !aiDesc.trim()}
+                  className="w-full py-3 text-sm font-bold text-white bg-purple-600 rounded-lg hover:bg-purple-500 disabled:opacity-50">
+                  {aiLoading ? '🤖 Game Master is thinking...' : '⚡ Generate & Add to Season'}
+                </button>
+              )}
+
+              {aiResult && (
+                <div className="bg-purple-500/5 border border-purple-500/20 rounded-xl p-4 mt-2">
+                  <h4 className="text-lg font-bold text-white">{aiResult.displayTitle}</h4>
+                  <p className="text-sm text-white/50">{aiResult.name}</p>
+                  <p className="text-xs text-white/40 mt-2">{aiResult.description}</p>
+                  <div className="flex gap-2 mt-3">
+                    <button onClick={() => setAiResult(null)} className="flex-1 py-2 text-xs text-white/50 border border-white/10 rounded-lg">
+                      Regenerate
+                    </button>
+                    <button onClick={saveAndPick} className="flex-1 py-2 text-xs font-bold text-black bg-neon-green rounded-lg">
+                      Add to Season
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -77,6 +77,9 @@ export async function createTemplate(data: {
   tags?: string[];
   status?: TemplateStatus;
   createdBy: string;
+  recommendedRounds?: string[];
+  recommendedAgents?: string[];
+  teamFormation?: object;
 }) {
   return prisma.gameTemplate.create({
     data: {
@@ -101,6 +104,9 @@ export async function createTemplate(data: {
       tags: data.tags ?? [],
       status: data.status ?? 'DRAFT',
       createdBy: data.createdBy,
+      recommendedRounds: data.recommendedRounds ?? [],
+      recommendedAgents: data.recommendedAgents ?? [],
+      teamFormation: data.teamFormation ?? {},
     },
   });
 }
@@ -123,6 +129,9 @@ export async function updateTemplate(
     estimatedDuration: number;
     tags: string[];
     status: TemplateStatus;
+    recommendedRounds: string[];
+    recommendedAgents: string[];
+    teamFormation: object;
   }>
 ) {
   const shouldVersion =
@@ -173,6 +182,9 @@ export async function duplicateTemplate(id: string, createdBy: string) {
       tags: original.tags,
       status: 'DRAFT',
       createdBy,
+      recommendedRounds: original.recommendedRounds,
+      recommendedAgents: original.recommendedAgents,
+      teamFormation: original.teamFormation as object,
     },
   });
 }

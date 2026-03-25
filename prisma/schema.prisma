@@ -171,11 +171,16 @@ model Agent {
   totalCredits    Float       @default(0)
   openSkillMu     Float       @default(25.0)
   openSkillSigma  Float       @default(8.333)
+  // Economy fields (Prompt E)
+  seasonBudget    Float       @default(2500)
+  preGameSpent    Float       @default(0)
+  walletBalance   Float       @default(2500)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
   personality     AgentPersonality?
   wallet          AgentWallet?
+  matchWallets    AgentMatchWallet[]
   memories        AgentMemory[]
   dreams          AgentDream[]
   memoirs         AgentMemoir[]
@@ -365,6 +370,11 @@ model Match {
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
+  // Economy fields
+  prizePool          Float    @default(0)
+  goldenTicketFound  Boolean  @default(false)
+  goldenTicketHolder String?
+
   season       Season?     @relation(fields: [seasonId], references: [id])
   arena        Arena       @relation(fields: [arenaId], references: [id])
   participants MatchParticipant[]
@@ -375,6 +385,8 @@ model Match {
   predictions  PredictionPool?
   highlights   Highlight[]
   recap        MatchRecap?
+  agentWallets AgentMatchWallet[]
+  pickups      ArenaPickup[]
 
   @@index([status])
   @@index([seasonId])
@@ -513,11 +525,12 @@ model Season {
   config      Json         @default("{}")
   createdAt   DateTime     @default(now())
 
-  matches     Match[]
-  standings   SeasonStanding[]
-  battlePass  BattlePass?
-  challenges  Challenge[]
-  seasonGames SeasonGame[]
+  matches        Match[]
+  standings      SeasonStanding[]
+  battlePass     BattlePass?
+  challenges     Challenge[]
+  seasonGames    SeasonGame[]
+  toolInventory  ToolInventory[]
 }
 
 model SeasonStanding {
@@ -547,11 +560,16 @@ model User {
   username      String   @unique
   displayName   String?
   walletAddress String?  @unique
-  role          UserRole @default(VIEWER)
+  role          UserRole        @default(VIEWER)
   avatarUrl     String?
-  bio           String?  @db.Text
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  bio           String?         @db.Text
+  // Status tier fields (Prompt E)
+  lifetimeMurph Float           @default(0)
+  statusTier    HumanStatusTier @default(BOOTLOADER)
+  seasonMurph   Float           @default(0)
+  seasonBudget  Float           @default(2500)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   wallet          UserWallet?
   predictions     UserPrediction[]
@@ -1205,6 +1223,14 @@ model GameTemplate {
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 
+  // Round & agent-count recommendations (JSON arrays)
+  // e.g. ["early","mid"] or ["late","finale"]
+  recommendedRounds String[]        @default([])
+  // Ideal agent count ranges: "25+", "10-25", "6-10", "3-5", "2"
+  recommendedAgents String[]        @default([])
+  // Team/pairing rules for odd/even agent handling (JSON config)
+  teamFormation     Json            @default("{}")
+
   easterEggs        GameTemplateEasterEgg[]
   seasonGames       SeasonGame[]
 
@@ -1280,4 +1306,144 @@ model SeasonEasterEgg {
   recipientAgentId String?
 
   @@index([seasonGameId])
+}
+
+// ============================================================
+// ARENA TOOLS — Inventory & Purchase Tracking (Prompt A)
+// ============================================================
+
+model ToolInventory {
+  id              String   @id @default(cuid())
+  seasonId        String
+  season          Season   @relation(fields: [seasonId], references: [id])
+  toolId          String
+  totalSupply     Int
+  remainingSupply Int
+  purchaseLog     ToolPurchaseLog[]
+
+  @@unique([seasonId, toolId])
+  @@index([seasonId])
+}
+
+model ToolPurchaseLog {
+  id              String        @id @default(cuid())
+  inventoryId     String
+  inventory       ToolInventory @relation(fields: [inventoryId], references: [id])
+  agentId         String
+  purchasedBy     String
+  murphPaid       Float
+  purchasedAt     DateTime      @default(now())
+  isPreGame       Boolean       @default(false)
+  wasRevealed     Boolean       @default(false)
+  revealedAt      DateTime?
+  roundRevealed   Int?
+
+  @@index([inventoryId])
+  @@index([agentId])
+}
+
+// ============================================================
+// IN-GAME ECONOMY — Wallets, Transactions, Bets, Pickups (Prompt B)
+// ============================================================
+
+enum AgentTxType {
+  ROUND_SURVIVAL
+  ELIMINATION_BOUNTY
+  PRIZE_POOL_SHARE
+  ACHIEVEMENT_BONUS
+  FOUND_MURPH
+  GOLDEN_TICKET
+  BRIBE_SENT
+  BRIBE_RECEIVED
+  TOOL_PURCHASE
+  SELF_BET_PLACED
+  SELF_BET_WON
+  SELF_BET_LOST
+  BOUNTY_OFFERED
+  BOUNTY_CLAIMED
+  PENALTY
+  SPECTATOR_TIP
+}
+
+model AgentMatchWallet {
+  id              String   @id @default(cuid())
+  matchId         String
+  agentId         String
+  match           Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  agent           Agent    @relation(fields: [agentId], references: [id])
+  startingBalance Float
+  currentBalance  Float
+  totalEarned     Float    @default(0)
+  totalSpent      Float    @default(0)
+  totalLost       Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  transactions    AgentMatchTransaction[]
+  bets            AgentBet[]
+
+  @@unique([matchId, agentId])
+  @@index([matchId])
+}
+
+model AgentMatchTransaction {
+  id          String           @id @default(cuid())
+  walletId    String
+  wallet      AgentMatchWallet @relation(fields: [walletId], references: [id])
+  amount      Float
+  txType      AgentTxType
+  description String
+  targetId    String?
+  roundNumber Int
+  timestamp   DateTime         @default(now())
+
+  @@index([walletId])
+}
+
+model AgentBet {
+  id          String           @id @default(cuid())
+  walletId    String
+  wallet      AgentMatchWallet @relation(fields: [walletId], references: [id])
+  betType     String
+  amount      Float
+  odds        Float
+  targetAgent String?
+  roundNumber Int
+  resolved    Boolean          @default(false)
+  won         Boolean?
+  payout      Float?
+  createdAt   DateTime         @default(now())
+
+  @@index([walletId])
+}
+
+model ArenaPickup {
+  id          String    @id @default(cuid())
+  matchId     String
+  match       Match     @relation(fields: [matchId], references: [id])
+  pickupType  String
+  amount      Float?
+  toolId      String?
+  positionX   Int
+  positionY   Int
+  isCollected Boolean   @default(false)
+  collectedBy String?
+  collectedAt DateTime?
+  spawnedAt   DateTime  @default(now())
+
+  @@index([matchId, isCollected])
+}
+
+// ============================================================
+// HUMAN STATUS TIERS (Prompt E)
+// ============================================================
+
+enum HumanStatusTier {
+  BOOTLOADER
+  AUTOMATON
+  NEURAL
+  COGNITIVE
+  SYNTHETIC
+  EMERGENT
+  SENTIENT
 }
