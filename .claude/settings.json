@@ -2,6 +2,9 @@
   "permissions": {
     "allow": [
       "Read(//etc/nginx/sites-enabled/**)"
+    ],
+    "additionalDirectories": [
+      "/etc/nginx/sites-enabled"
     ]
   }
 }
