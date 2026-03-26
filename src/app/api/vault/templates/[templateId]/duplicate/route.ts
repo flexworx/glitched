@@ -1,19 +1,62 @@
 import { NextRequest } from 'next/server';
-import { handleApiError } from '@/lib/api/response';
-import { NextResponse } from 'next/server';
+import { getSession } from '@/lib/auth/session';
+import { created, handleApiError } from '@/lib/api/response';
+import prisma from '@/lib/db/client';
 
-export async function GET() {
-  return NextResponse.json({ message: 'Game Vault schema migration pending' }, { status: 501 });
-}
+type Params = { params: { templateId: string } };
 
-export async function POST() {
-  return NextResponse.json({ message: 'Game Vault schema migration pending' }, { status: 501 });
-}
+export async function POST(_req: NextRequest, { params }: Params) {
+  try {
+    const session = await getSession();
+    if (!session || session.role !== 'admin') return handleApiError(new Error('Forbidden'));
 
-export async function PATCH() {
-  return NextResponse.json({ message: 'Game Vault schema migration pending' }, { status: 501 });
-}
+    const source = await prisma.gameTemplate.findUnique({
+      where: { id: params.templateId },
+      include: { easterEggs: true },
+    });
+    if (!source) return handleApiError(new Error('Template not found'));
 
-export async function DELETE() {
-  return NextResponse.json({ message: 'Game Vault schema migration pending' }, { status: 501 });
+    // Create the copy without easter eggs first
+    const copy = await prisma.gameTemplate.create({
+      data: {
+        name: `${source.name}_copy`,
+        displayTitle: `${source.displayTitle} (Copy)`,
+        category: source.category,
+        description: source.description,
+        systemPrompt: source.systemPrompt,
+        minAgents: source.minAgents,
+        maxAgents: source.maxAgents,
+        eliminationRule: source.eliminationRule,
+        eliminationCount: source.eliminationCount,
+        scoringMethod: source.scoringMethod,
+        scoringLogic: source.scoringLogic as object,
+        creditRewards: source.creditRewards as object,
+        estimatedDuration: source.estimatedDuration,
+        tags: source.tags,
+        status: 'DRAFT',
+        version: 1,
+        recommendedRounds: source.recommendedRounds,
+        recommendedAgents: source.recommendedAgents,
+        teamFormation: source.teamFormation as object,
+        createdBy: session.userId,
+      },
+    });
+
+    // Copy easter egg attachments
+    if (source.easterEggs.length > 0) {
+      await prisma.gameTemplateEasterEgg.createMany({
+        data: source.easterEggs.map((ee) => ({
+          templateId: copy.id,
+          easterEggId: ee.easterEggId,
+          probability: ee.probability,
+          trigger: ee.trigger,
+          triggerConfig: ee.triggerConfig as object,
+        })),
+      });
+    }
+
+    return created({ template: copy });
+  } catch (e) {
+    return handleApiError(e);
+  }
 }
