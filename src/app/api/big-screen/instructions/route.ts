@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Map to public-safe format
-    const publicInstructions = instructions.map(i => ({
+    const publicInstructions = instructions.map((i: (typeof instructions)[number]) => ({
       id: i.id,
       text: i.bigScreenText ?? i.whisperText,
       complianceWindowMinutes: i.complianceWindowMinutes,
