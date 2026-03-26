@@ -33,7 +33,7 @@ export function Footer() {
           <div>
             <h4 className="text-xs font-bold text-white/50 uppercase tracking-wider mb-3">Community</h4>
             <div className="space-y-2">
-              {[['Build Agent', '/byoa'], ['Media', '/media'], ['Blog', '/blog'], ['About', '/about']].map(([label, href]) => (
+              {[['Build Agent', '/byoa'], ['Media', '/media'], ['Blog', '/blog'], ['About', '/about'], ['Contact', '/contact'], ['Careers', '/careers']].map(([label, href]) => (
                 <Link key={href} href={href} className="block text-sm text-white/40 hover:text-white transition-colors">{label}</Link>
               ))}
             </div>

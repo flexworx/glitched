@@ -4,7 +4,7 @@
  * Models: ToolInventory, ToolPurchaseLog
  */
 
-import prisma from '@/lib/db/client';
+import { prisma } from '@/lib/db/client';
 
 // ─── Tool definitions (static catalog) ────────────────────────────────────────
 export const TOOL_CATALOG: Record<string, {

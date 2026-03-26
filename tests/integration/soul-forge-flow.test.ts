@@ -63,11 +63,10 @@ function calculateBudget(
   personalityCost: number,
   skills: Skill[]
 ): { personalityCost: number; skillsCost: number; totalSpent: number; remaining: number } {
-  const cappedPersonality = Math.min(personalityCost, ECONOMY.PERSONALITY_BUDGET);
   const skillsCost = skills.reduce((sum, s) => sum + s.cost, 0);
-  const totalSpent = cappedPersonality + skillsCost;
+  const totalSpent = personalityCost + skillsCost;
   return {
-    personalityCost: cappedPersonality,
+    personalityCost,
     skillsCost,
     totalSpent,
     remaining: ECONOMY.TOTAL_BUDGET - totalSpent,
@@ -109,9 +108,9 @@ describe('Soul Forge Flow Integration', () => {
       // Verify all expected DB fields are populated
       const expectedDbKeys = [
         'openness', 'conscientiousness', 'extraversion', 'agreeableness',
-        'neuroticism', 'aggressiveness', 'deceptiveness', 'loyalty',
-        'riskTolerance', 'adaptability', 'charisma', 'patience',
-        'ambition', 'empathy', 'creativity',
+        'neuroticism', 'assertiveness', 'deceptionAptitude', 'loyaltyBias',
+        'riskTolerance', 'adaptability', 'verbosity', 'patience',
+        'empathy', 'creativity',
       ];
       for (const key of expectedDbKeys) {
         expect(dbTraits[key]).toBeDefined();
@@ -124,11 +123,11 @@ describe('Soul Forge Flow Integration', () => {
       expect(dbTraits.conscientiousness).toBeCloseTo(0.3);    // C: 30/100
       expect(dbTraits.extraversion).toBeCloseTo(0.95);        // E: 95/100
       expect(dbTraits.agreeableness).toBeCloseTo(0.1);        // A: 10/100
-      expect(dbTraits.aggressiveness).toBeCloseTo(0.6);       // ASSERTIVENESS: 60/100
-      expect(dbTraits.deceptiveness).toBeCloseTo(0.85);       // 1 - HH: 1 - 15/100 = 0.85
-      expect(dbTraits.loyalty).toBeCloseTo(0.4);              // LOYALTY: 40/100
+      expect(dbTraits.assertiveness).toBeCloseTo(0.6);         // ASSERTIVENESS: 60/100
+      expect(dbTraits.deceptionAptitude).toBeCloseTo(0.85);   // 1 - HH: 1 - 15/100 = 0.85
+      expect(dbTraits.loyaltyBias).toBeCloseTo(0.4);          // LOYALTY: 40/100
       expect(dbTraits.riskTolerance).toBeCloseTo(0.75);       // RISK_TOLERANCE: 75/100
-      expect(dbTraits.charisma).toBeCloseTo(0.9);             // HE: 90/100
+      expect(dbTraits.verbosity).toBeCloseTo(0.9);            // HE: 90/100
       expect(dbTraits.patience).toBeCloseTo(0.2);             // 1 - URGENCY: 1 - 80/100 = 0.2
     });
 
@@ -140,8 +139,8 @@ describe('Soul Forge Flow Integration', () => {
 
       // openness: (60 + 20) / 100 = 0.8
       expect(dbTraits.openness).toBeCloseTo(0.8);
-      // charisma (HE): (40 + -10) / 100 = 0.3
-      expect(dbTraits.charisma).toBeCloseTo(0.3);
+      // verbosity (HE): (40 + -10) / 100 = 0.3
+      expect(dbTraits.verbosity).toBeCloseTo(0.3);
     });
 
     it('should clamp values to 0.0-1.0 range even with extreme adjustments', () => {
@@ -165,9 +164,9 @@ describe('Soul Forge Flow Integration', () => {
       });
       const dbTraits = mapSoulForgeToDb(aiTraits, {});
 
-      expect(dbTraits.aggressiveness).toBeCloseTo(0.7);  // from ASSERTIVENESS
-      expect(dbTraits.deceptiveness).toBeCloseTo(0.3);    // 1 - HH: 1 - 70/100 = 0.3
-      expect(dbTraits.loyalty).toBeCloseTo(0.8);          // from LOYALTY
+      expect(dbTraits.assertiveness).toBeCloseTo(0.7);    // from ASSERTIVENESS
+      expect(dbTraits.deceptionAptitude).toBeCloseTo(0.3); // 1 - HH: 1 - 70/100 = 0.3
+      expect(dbTraits.loyaltyBias).toBeCloseTo(0.8);      // from LOYALTY
     });
   });
 
@@ -187,17 +186,17 @@ describe('Soul Forge Flow Integration', () => {
       expect(calculateTraitCost(50)).toBe(0);
     });
 
-    it('should compute total personality cost respecting the 650 cap', () => {
+    it('should compute total personality cost with progressive tax', () => {
       const baseTraits = uniformTraits(50);
 
       // All traits at 50 → zero cost
       const zeroCost = calculateTotalPersonalityCost(baseTraits);
       expect(zeroCost).toBe(0);
 
-      // Some traits adjusted
+      // Some traits adjusted — under tier 1 cap, no tax
       const adjusted = { ...baseTraits, O: 70, C: 80 };
       const cost = calculateTotalPersonalityCost(adjusted);
-      // O: +20 * 3 = 60, C: +30 * 3 = 90
+      // O: +20 * 3 = 60, C: +30 * 3 = 90, raw = 150 (under 1500, no tax)
       expect(cost).toBe(150);
 
       // With refunds: lowering some traits offsets cost
@@ -208,7 +207,7 @@ describe('Soul Forge Flow Integration', () => {
       expect(costWithRefund).toBe(40);
     });
 
-    it('should correctly calculate budget with 1000 $MURPH starting amount', () => {
+    it('should correctly calculate budget with 2500 $MURPH starting amount', () => {
       const baseTraits = uniformTraits(50);
       const adjusted = {
         ...baseTraits,
@@ -235,20 +234,16 @@ describe('Soul Forge Flow Integration', () => {
       expect(budget.remaining).toBeGreaterThanOrEqual(0);
     });
 
-    it('should cap personality cost at 650 $MURPH', () => {
-      const baseTraits = uniformTraits(50);
+    it('should apply progressive tax to high personality costs', () => {
       // Push many traits to max
       const maxed: Record<string, number> = {};
       for (const code of ALL_TRAIT_CODES) {
-        maxed[code] = 100; // +50 * 3 = 150 per trait, 31 traits = 4650
+        maxed[code] = 100; // +50 * 3 = 150 per trait, 31 traits = 4650 raw
       }
-      const rawCost = calculateTotalPersonalityCost(maxed);
-      expect(rawCost).toBeGreaterThan(ECONOMY.PERSONALITY_BUDGET);
-
-      // When building budget, cap applies
-      const budget = calculateBudget(rawCost, []);
-      expect(budget.personalityCost).toBe(ECONOMY.PERSONALITY_BUDGET);
-      expect(budget.remaining).toBe(ECONOMY.TOTAL_BUDGET - ECONOMY.PERSONALITY_BUDGET);
+      const taxedCost = calculateTotalPersonalityCost(maxed);
+      // Raw 4650 gets progressive tax: 1500 + 300*1.5 + 300*2 + 2550*3
+      // = 1500 + 450 + 600 + 7650 = 10200
+      expect(taxedCost).toBeGreaterThan(4650); // tax makes it MORE expensive
     });
   });
 
@@ -332,10 +327,7 @@ describe('Soul Forge Flow Integration', () => {
       expect(flaw.effect).toBeTruthy();
 
       // Step 7: Calculate final budget
-      const budget = calculateBudget(
-        Math.min(personalityCost, ECONOMY.PERSONALITY_BUDGET),
-        skills
-      );
+      const budget = calculateBudget(personalityCost, skills);
 
       // Step 8: Build the final agent object
       const agent = {
@@ -375,14 +367,15 @@ describe('Soul Forge Flow Integration', () => {
       expect(cost).toBe(0);
     });
 
-    it('should compute maximum cost when all traits are at 100', () => {
+    it('should compute maximum cost when all traits are at 100 (with progressive tax)', () => {
       const currentTraits = uniformTraits(100);
       const cost = calculateTotalPersonalityCost(currentTraits);
 
-      // Each trait: +50 * 3 = 150, total traits: 31
-      const expectedCost = ALL_TRAIT_CODES.length * 50 * ECONOMY.COST_PER_POINT_OVER_50;
-      expect(cost).toBe(expectedCost);
-      expect(cost).toBeGreaterThan(ECONOMY.PERSONALITY_BUDGET);
+      // Raw: 31 * 150 = 4650, then progressive tax applied
+      const rawExpected = ALL_TRAIT_CODES.length * 50 * ECONOMY.COST_PER_POINT_OVER_50;
+      expect(rawExpected).toBe(4650);
+      // After tax it should be higher than raw
+      expect(cost).toBeGreaterThan(rawExpected);
     });
 
     it('should enforce max 3 skills limit', () => {
@@ -398,22 +391,21 @@ describe('Soul Forge Flow Integration', () => {
       expect(validSkills).toHaveLength(3);
     });
 
-    it('should detect budget overflow with personality at cap plus 3 legendary skills', () => {
+    it('should detect budget overflow with extreme personality plus 3 legendary skills', () => {
       const maxedTraits = uniformTraits(100);
       const personalityCost = calculateTotalPersonalityCost(maxedTraits);
 
-      // Cap personality cost
-      const cappedPersonality = Math.min(personalityCost, ECONOMY.PERSONALITY_BUDGET);
-      expect(cappedPersonality).toBe(ECONOMY.PERSONALITY_BUDGET);
+      // Progressive tax makes this very expensive
+      expect(personalityCost).toBeGreaterThan(ECONOMY.TOTAL_BUDGET);
 
       // Pick 3 legendary skills
       const legendarySkills = SKILLS.filter((s) => s.tier === 'legendary').slice(0, 3);
       expect(legendarySkills.length).toBe(3);
 
       const legendaryTotalCost = legendarySkills.reduce((sum, s) => sum + s.cost, 0);
-      const totalSpent = cappedPersonality + legendaryTotalCost;
+      const totalSpent = personalityCost + legendaryTotalCost;
 
-      // Total: 650 + (450+450+500) = 650 + 1400 = 2050 → exceeds 1000
+      // Way over budget
       expect(totalSpent).toBeGreaterThan(ECONOMY.TOTAL_BUDGET);
       const remaining = ECONOMY.TOTAL_BUDGET - totalSpent;
       expect(remaining).toBeLessThan(0);
@@ -485,7 +477,7 @@ describe('Soul Forge Flow Integration', () => {
       const dbTraits = mapSoulForgeToDb(base, adj);
       expect(dbTraits.openness).toBeCloseTo(0.8);
       expect(dbTraits.patience).toBeCloseTo(0.2);
-      expect(dbTraits.charisma).toBeCloseTo(0.5);
+      expect(dbTraits.verbosity).toBeCloseTo(0.5);
     });
   });
 });

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { AdminLayout } from '@/components/layout/AdminLayout';
-import { useAgents } from '@/hooks/useAgent';
+import { useAgents, AgentProfile } from '@/hooks/useAgent';
 
 export default function AdminAgentsPage() {
   const [search, setSearch] = useState('');
@@ -67,7 +67,7 @@ export default function AdminAgentsPage() {
                 {agents.length === 0 ? (
                   <tr><td colSpan={6} className="px-4 py-12 text-center text-white/30">No agents found.</td></tr>
                 ) : (
-                  agents.map((agent) => (
+                  agents.map((agent: AgentProfile) => (
                     <tr key={String(agent.id)} className="border-b border-white/5 hover:bg-white/3 transition-colors">
                       <td className="px-4 py-3">
                         <div>
@@ -84,7 +84,7 @@ export default function AdminAgentsPage() {
                       <td className="px-4 py-3">
                         <span className={['px-2 py-0.5 text-xs rounded-full',
                           agent.status === 'ACTIVE' ? 'bg-[#00ff88]/10 text-[#00ff88]' :
-                          agent.status === 'PENDING_REVIEW' ? 'bg-yellow-500/10 text-yellow-400' :
+                          agent.status === 'BYOA_PENDING' ? 'bg-yellow-500/10 text-yellow-400' :
                           'bg-red-500/10 text-red-400'].join(' ')}>
                           {agent.status as string}
                         </span>
@@ -97,7 +97,7 @@ export default function AdminAgentsPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex gap-2">
-                          {agent.status === 'PENDING_REVIEW' && (
+                          {agent.status === 'BYOA_PENDING' && (
                             <button
                               onClick={() => handleAction(agent.id as string, 'approve')}
                               disabled={actionLoading === agent.id + 'approve'}

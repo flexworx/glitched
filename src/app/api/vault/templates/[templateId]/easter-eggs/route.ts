@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getSession } from '@/lib/auth/session';
 import { ok, created, handleApiError } from '@/lib/api/response';
-import prisma from '@/lib/db/client';
+import { prisma } from '@/lib/db/client';
 import type { EasterEggTrigger } from '@prisma/client';
 
 type Params = { params: { templateId: string } };

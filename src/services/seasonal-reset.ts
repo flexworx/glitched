@@ -4,7 +4,7 @@
  * Models: Agent, User, Season, SeasonStanding, MurphTransaction, UserAchievement
  */
 
-import prisma from '@/lib/db/client';
+import { prisma } from '@/lib/db/client';
 import type { HumanStatusTier } from '@prisma/client';
 
 // ─── Status Tier Thresholds ────────────────────────────────────────────────────

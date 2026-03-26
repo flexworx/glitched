@@ -4,7 +4,7 @@
  * Models: KnowledgePack, BattlePass, BattlePassProgress, MurphTransaction
  */
 
-import prisma from '@/lib/db/client';
+import { prisma } from '@/lib/db/client';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 export interface VaultItem {

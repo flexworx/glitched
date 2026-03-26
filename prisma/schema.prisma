@@ -1447,3 +1447,22 @@ enum HumanStatusTier {
   EMERGENT
   SENTIENT
 }
+
+// ============================================================
+// WEBHOOK EVENTS
+// ============================================================
+
+model WebhookEvent {
+  id          String    @id @default(cuid())
+  source      String    // e.g. "elevenlabs", "solana"
+  eventType   String
+  payload     Json      @default("{}")
+  headers     Json      @default("{}")
+  status      String    @default("received") // received, processed, failed
+  error       String?
+  receivedAt  DateTime  @default(now())
+  processedAt DateTime?
+
+  @@index([source, eventType])
+  @@index([receivedAt])
+}

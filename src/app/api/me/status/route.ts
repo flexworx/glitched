@@ -1,19 +1,19 @@
-import { NextResponse } from 'next/server';
-import prisma from '@/lib/db/client';
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db/client';
+import { getSession } from '@/lib/auth/session';
 import { getTierProgress, getNextTier, STATUS_TIERS } from '@/lib/utils/status-tiers';
 import type { HumanStatusTierName } from '@/lib/utils/status-tiers';
 
 
 
-export async function GET(request: Request) {
+export async function GET(_req: NextRequest) {
   try {
-    // In production, get userId from auth session
-    const url = new URL(request.url);
-    const userId = url.searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json({ error: 'userId required' }, { status: 400 });
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const userId = session.userId;
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {

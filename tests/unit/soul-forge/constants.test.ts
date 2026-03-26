@@ -205,12 +205,22 @@ describe('FLAWS / getRandomFlaw', () => {
 // ---------------------------------------------------------------------------
 
 describe('ECONOMY', () => {
-  it('TOTAL_BUDGET is 1000', () => {
-    expect(ECONOMY.TOTAL_BUDGET).toBe(1000);
+  it('TOTAL_BUDGET is 2500', () => {
+    expect(ECONOMY.TOTAL_BUDGET).toBe(2500);
   });
 
-  it('PERSONALITY_BUDGET is 650', () => {
-    expect(ECONOMY.PERSONALITY_BUDGET).toBe(650);
+  it('has progressive tax tiers', () => {
+    expect(ECONOMY.TIER_1_CAP).toBe(1500);
+    expect(ECONOMY.TIER_2_CAP).toBe(1800);
+    expect(ECONOMY.TIER_3_CAP).toBe(2100);
+    expect(ECONOMY.TIER_1_MULT).toBe(1);
+    expect(ECONOMY.TIER_2_MULT).toBe(1.5);
+    expect(ECONOMY.TIER_3_MULT).toBe(2);
+    expect(ECONOMY.TIER_4_MULT).toBe(3);
+  });
+
+  it('SKILLS_BUDGET is 1000', () => {
+    expect(ECONOMY.SKILLS_BUDGET).toBe(1000);
   });
 
   it('COST_PER_POINT_OVER_50 is 3', () => {
@@ -303,20 +313,20 @@ describe('mapSoulForgeToDb', () => {
     expect(result.openness).toBeCloseTo(0.8);
   });
 
-  it('maps ASSERTIVENESS to aggressiveness DB field', () => {
+  it('maps ASSERTIVENESS to assertiveness DB field', () => {
     const result = mapSoulForgeToDb({ ASSERTIVENESS: 70 }, {});
-    expect(result.aggressiveness).toBeCloseTo(0.7);
+    expect(result.assertiveness).toBeCloseTo(0.7);
   });
 
-  it('maps HH (Honesty-Humility) inversely to deceptiveness DB field', () => {
-    // High HH = low deceptiveness
+  it('maps HH (Honesty-Humility) inversely to deceptionAptitude DB field', () => {
+    // High HH = low deceptionAptitude
     const result = mapSoulForgeToDb({ HH: 80 }, {});
-    expect(result.deceptiveness).toBeCloseTo(0.2);
+    expect(result.deceptionAptitude).toBeCloseTo(0.2);
   });
 
-  it('maps LOYALTY to loyalty DB field', () => {
+  it('maps LOYALTY to loyaltyBias DB field', () => {
     const result = mapSoulForgeToDb({ LOYALTY: 90 }, {});
-    expect(result.loyalty).toBeCloseTo(0.9);
+    expect(result.loyaltyBias).toBeCloseTo(0.9);
   });
 
   it('defaults missing traits to 50 (i.e. 0.5)', () => {
@@ -343,8 +353,12 @@ describe('mapSoulForgeToDb', () => {
     const result = mapSoulForgeToDb({}, {});
     const expectedFields = [
       'openness', 'conscientiousness', 'extraversion', 'agreeableness', 'neuroticism',
-      'aggressiveness', 'deceptiveness', 'loyalty', 'riskTolerance', 'adaptability',
-      'charisma', 'patience', 'ambition', 'empathy', 'creativity',
+      'directness', 'formality', 'verbosity', 'humor', 'empathy',
+      'riskTolerance', 'deceptionAptitude', 'loyaltyBias', 'competitiveness', 'adaptability',
+      'emotionality', 'impulsivity', 'resilience', 'jealousy', 'pride',
+      'assertiveness', 'persuasiveness', 'trustingness', 'dominance', 'cooperativeness',
+      'analyticalThinking', 'creativity', 'patience', 'decisionSpeed', 'memoryRetention',
+      'moralFlexibility', 'vengefulness', 'generosity', 'urgencyBias',
     ];
     for (const field of expectedFields) {
       expect(result).toHaveProperty(field);

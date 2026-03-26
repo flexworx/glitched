@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { ok, handleApiError } from '@/lib/api/response';
-import prisma from '@/lib/db/client';
+import { prisma } from '@/lib/db/client';
 
 export async function GET(req: NextRequest) {
   try {

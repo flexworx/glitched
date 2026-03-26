@@ -4,8 +4,9 @@
  * Models: AgentMatchWallet, AgentMatchTransaction, AgentBet, ArenaPickup
  */
 
-import prisma from '@/lib/db/client';
+import { prisma } from '@/lib/db/client';
 import type { AgentTxType } from '@prisma/client';
+import { SeededRNG, createMatchTurnSeed } from '@/lib/engine/seeded-rng';
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 const STARTING_BALANCE = 2500;
@@ -25,9 +26,11 @@ const PICKUP_TYPES = [
 // ─── EconomyEngine Class ───────────────────────────────────────────────────────
 export class EconomyEngine {
   private matchId: string;
+  private rng: SeededRNG;
 
-  constructor(matchId: string) {
+  constructor(matchId: string, rng?: SeededRNG) {
     this.matchId = matchId;
+    this.rng = rng ?? new SeededRNG(createMatchTurnSeed(matchId, 0));
   }
 
   // ── Wallet Initialization ──────────────────────────────────────────────────
@@ -56,7 +59,7 @@ export class EconomyEngine {
     const pickups = [];
 
     for (let i = 0; i < count; i++) {
-      const roll = Math.random() * 100;
+      const roll = this.rng.next() * 100;
       let cumulative = 0;
       let selected = PICKUP_TYPES[0];
       for (const pt of PICKUP_TYPES) {
@@ -68,8 +71,8 @@ export class EconomyEngine {
         matchId: this.matchId,
         pickupType: selected.type,
         amount: selected.amount,
-        positionX: Math.floor(Math.random() * gridWidth),
-        positionY: Math.floor(Math.random() * gridHeight),
+        positionX: Math.floor(this.rng.next() * gridWidth),
+        positionY: Math.floor(this.rng.next() * gridHeight),
       });
     }
 

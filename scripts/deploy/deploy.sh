@@ -39,8 +39,9 @@ npm ci --prefer-offline 2>&1 | tail -5 | tee -a "$LOG_FILE"
 log "Generating Prisma client..."
 npx prisma generate 2>&1 | tail -3 | tee -a "$LOG_FILE"
 
-# 4. Build Next.js (standalone mode)
+# 4. Build Next.js (standalone mode) — clean rebuild
 log "Building Next.js..."
+rm -rf .next/standalone
 npx next build 2>&1 | tail -10 | tee -a "$LOG_FILE"
 
 # 5. Copy static assets into standalone (required for output: 'standalone')

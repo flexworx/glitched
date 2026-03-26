@@ -593,7 +593,7 @@ export default function SoulForgePage() {
                     <a href="/arena" className="flex items-center justify-center gap-2 py-4 bg-neon-green text-arena-black font-orbitron text-sm uppercase tracking-wider font-bold rounded-xl hover:shadow-neon-green transition-all" style={{ boxShadow: '0 0 20px #39FF14, 0 0 40px #39FF1440' }}>
                       <Swords className="w-5 h-5" />Enter the Arena
                     </a>
-                    <a href="/agents" className="flex items-center justify-center gap-2 py-4 bg-white/5 border border-white/10 text-white font-orbitron text-sm uppercase tracking-wider font-bold rounded-xl hover:bg-white/10 transition-all">View All Agents</a>
+                    <a href="/dashboard/my-agents" className="flex items-center justify-center gap-2 py-4 bg-white/5 border border-white/10 text-white font-orbitron text-sm uppercase tracking-wider font-bold rounded-xl hover:bg-white/10 transition-all">View My Agents</a>
                   </div>
                   <div className="text-center">
                     <button onClick={() => { setStep('forge'); setProfile(null); setAgentName(''); setCurrentTraits({}); setEquippedSkills([]); setBeliefs(['']); setGuardrails(['']); setDeployComplete(false); setFlaw(null); setDescription(''); setAiDescription(''); }} className="text-xs text-white/30 hover:text-white/60 transition-colors underline">Build another agent</button>
