@@ -1,11 +1,12 @@
 /**
  * RADF v3 — Match State Route
  * GET /api/matches/[matchId]/state
- * Returns full match state including participants and latest game state.
+ * Returns full match state including participants, season challenge info, and latest game state.
  */
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db/client';
 import { ok, handleApiError } from '@/lib/api/response';
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   _req: NextRequest,
@@ -23,6 +24,14 @@ export async function GET(
         dramaScore: true,
         startedAt: true,
         endedAt: true,
+        gameMode: true,
+        season: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+          },
+        },
         participants: {
           select: {
             agentId: true,
@@ -52,8 +61,19 @@ export async function GET(
     });
 
     if (!match) return handleApiError(new Error('Match not found'));
-    const { states, ...matchData } = match;
-    return ok({ ...matchData, latestState: states[0] ?? null });
+    const { states, startedAt, endedAt, season, ...matchData } = match;
+    return ok({
+      ...matchData,
+      startedAt: startedAt?.toISOString() ?? null,
+      endedAt: endedAt?.toISOString() ?? null,
+      season: season ? {
+        id: season.id,
+        name: season.name,
+        challengeTitle: season.name,
+        challengeDescription: season.description ?? null,
+      } : null,
+      latestState: states[0] ?? null,
+    });
   } catch (e) {
     return handleApiError(e);
   }
